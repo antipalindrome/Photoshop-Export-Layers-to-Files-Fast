@@ -10,14 +10,19 @@ The question may be found [here](http://graphicdesign.stackexchange.com/q/1961/4
 As well as [my answer](http://graphicdesign.stackexchange.com/a/1962/408).
 
 
-DESCRIPTION:
+Desciptions:
 -------------------------------
 Saves each layer in the active document to a PNG or JPG file named after the layer. 
 
 These files will be created in the current document folder (the same directory the workng PSD is in).
 
+Features:
+-------------------------------
+* Allows exporting of layers as either PNG or JPEGs
+* Can export JPEGs on a quality range from 1 - 12
+* Handles nesting in grouped layers
 
-REQUIREMENTS: 
+Requirements: 
 -------------------------------
 Adobe Photoshop CS2 or higher.
 
@@ -27,7 +32,7 @@ How To Use:
 2. File -> Scripts -> Browse...
 3. Locate the file, and open it.
 
-VERSIONS:
+Versions:
 -------------------------------
 
 <b>24 May 2013</b> by Hanna Walter  (graphicdesign.stackexchange/users/408/hanna)
