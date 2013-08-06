@@ -19,13 +19,13 @@ Adobe Photoshop CS2 or higher
 VERSIONS:
 -------------------------------
 
-24 May 2013 by Hanna Walter  (graphicdesign.stackexchange/users/408/hanna)
+<b>24 May 2013</b> by Hanna Walter  (graphicdesign.stackexchange/users/408/hanna)
 
 * Nesting properly handled
 *  All layers save seperately again (no more stacking).
 
 
-27 March 2013 by Robin Parmar (robin@robinparmar.com)
+<b>27 March 2013</b> by Robin Parmar (robin@robinparmar.com)
 
 * preferences stored in object
 * auto-increment file names to prevent collisions
@@ -37,6 +37,6 @@ VERSIONS:
 * many little code improvements
 
 
-26 Sept 2012 by Hanna Walter on stackexchange (graphicdesign.stackexchange/users/408/hanna)
+<b>26 Sept 2012</b> by Hanna Walter on stackexchange (graphicdesign.stackexchange/users/408/hanna)
 
 * Original version
