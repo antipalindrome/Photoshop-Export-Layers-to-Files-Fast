@@ -10,7 +10,7 @@ The question may be found [here](http://graphicdesign.stackexchange.com/q/1961/4
 As well as [my answer](http://graphicdesign.stackexchange.com/a/1962/408).
 
 
-Desciptions:
+Descriptions:
 -------------------------------
 Saves each layer in the active document to a PNG or JPG file named after the layer. 
 
