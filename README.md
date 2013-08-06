@@ -3,6 +3,11 @@ Photoshop-Export-Layers-as-Images
 
 This script allows you to export your layers as individual JPGs / PNGs at a speed much faster than the built-in script from adobe.
 
+This script was originally built as a response to a question on [graphicdesign.stackexchange.com](http://graphicdesign.stackexchange.com/).
+
+The question may be found [here](http://graphicdesign.stackexchange.com/q/1961/408).
+
+As well as [my answer](http://graphicdesign.stackexchange.com/a/1962/408).
 
 
 DESCRIPTION:
