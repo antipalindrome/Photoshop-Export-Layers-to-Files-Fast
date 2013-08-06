@@ -8,6 +8,8 @@
 // REQUIRES: 
 // 	Adobe Photoshop CS2 or higher
 
+//Most current version always available at: https://github.com/hsw107/Photoshop-Export-Layers-as-Images
+
 // enable double-clicking from Finder/Explorer (CS2 and higher)
 #target photoshop
 app.bringToFront();
