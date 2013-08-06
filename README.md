@@ -9,12 +9,18 @@ DESCRIPTION:
 -------------------------------
 Saves each layer in the active document to a PNG or JPG file named after the layer. 
 
-These files will be created in the current document folder.
+These files will be created in the current document folder (the same directory the workng PSD is in).
 
 
 REQUIREMENTS: 
 -------------------------------
-Adobe Photoshop CS2 or higher
+Adobe Photoshop CS2 or higher.
+
+How To Use: 
+-------------------------------
+1. Open Photoshop
+2. File -> Scripts -> Browse...
+3. Locate the file, and open it.
 
 VERSIONS:
 -------------------------------
