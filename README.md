@@ -63,3 +63,8 @@ Versions:
 <b>26 Sept 2012</b> by Johannes Walter on stackexchange (graphicdesign.stackexchange/users/408/johannes)
 
 * Original version
+
+
+Contact:
+-------------------------------
+Please feel free to email feedback/bugs/suggestions to: johannesgdse@gmx.com
