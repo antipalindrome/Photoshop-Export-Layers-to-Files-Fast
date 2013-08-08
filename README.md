@@ -63,3 +63,8 @@ Versions:
 <b>26 Sept 2012</b> by Hanna Walter on stackexchange (graphicdesign.stackexchange/users/408/hanna)
 
 * Original version
+
+
+Contact:
+-------------------------------
+Please feel free to email feedback/bugs/suggestions to: hannagdse@gmx.com
