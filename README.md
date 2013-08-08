@@ -65,6 +65,6 @@ Version History:
 * Original version
 
 
-Contact Me:
+Contact:
 -------------------------------
 Please feel free to email feedback/bugs/suggestions to: hannagdse(at)gmx(dot)com
