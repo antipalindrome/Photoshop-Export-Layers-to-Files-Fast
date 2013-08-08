@@ -48,7 +48,7 @@ Version History:
 *  All layers save seperately again (no more stacking).
 
 
-<b>27 March 2013</b> by Robin Parmar (robin@robinparmar.com)
+<b>27 March 2013</b> by Robin Parmar (robin(at)robinparmar(dot)com)
 
 * preferences stored in object
 * auto-increment file names to prevent collisions
@@ -67,4 +67,4 @@ Version History:
 
 Contact:
 -------------------------------
-Please feel free to email feedback/bugs/suggestions to: hannagdse(at)gmx(dot)com
+Please feel free to email feedback/bugs/suggestions to: github(at)hannawalter(dot)com
