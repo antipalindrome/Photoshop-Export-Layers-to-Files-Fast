@@ -26,7 +26,7 @@ Features:
 * Can export JPEGs on a quality range from 1 - 12
 * Handles nesting in grouped layers
 
-Requirements: 
+Requirement: 
 -------------------------------
 Adobe Photoshop CS2 or higher.
 
@@ -39,7 +39,7 @@ How To Use:
 
 [View Screenshots](http://imgur.com/a/os9XV)
 
-Versions:
+Version History:
 -------------------------------
 
 <b>24 May 2013</b> by Hanna Walter  (graphicdesign.stackexchange/users/408/hanna)
@@ -65,6 +65,6 @@ Versions:
 * Original version
 
 
-Contact:
+Contact Me:
 -------------------------------
 Please feel free to email feedback/bugs/suggestions to: hannagdse(at)gmx(dot)com
