@@ -67,4 +67,4 @@ Versions:
 
 Contact:
 -------------------------------
-Please feel free to email feedback/bugs/suggestions to: johannesgdse@gmx.com
+Please feel free to email feedback/bugs/suggestions to: johannesgdse(at)gmx(dot)com
