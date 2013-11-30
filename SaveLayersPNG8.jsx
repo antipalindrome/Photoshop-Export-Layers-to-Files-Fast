@@ -80,7 +80,7 @@ function saveImage(layerName) {
 	prefs.count++;
     
     if(prefs.fileType=="PNG") {
-        SavePNG(handle); 
+        SavePNG8(handle); 
 	} else {
         SaveJPEG(handle); 
     }
@@ -107,9 +107,9 @@ function padder(input, padLength) {
 	return result;
 }
 
-function SavePNG(saveFile) { 
-    pngSaveOptions = new PNGSaveOptions(); 
-	activeDocument.saveAs(saveFile, pngSaveOptions, true, Extension.LOWERCASE); 
+function SavePNG8(saveFile) { 
+    exportOptionsSaveForWeb = new ExportOptionsSaveForWeb();
+    activeDocument.exportDocument( saveFile, ExportType.SAVEFORWEB, exportOptionsSaveForWeb );
 } 
 
 function SaveJPEG(saveFile) { 
