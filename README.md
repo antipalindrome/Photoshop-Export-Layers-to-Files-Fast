@@ -44,7 +44,7 @@ Version History:
 
 * Added support for both PNG-24 and PNG-8
 
-<b>24 May 2013</b> by [Hanna Walter](http://www.graphicdesign.stackexchange/users/408/hanna)
+<b>24 May 2013</b> by [Hanna Walter](http://www.graphicdesign.stackexchange.com/users/408/hanna)
 
 * Nesting properly handled
 *  All layers save seperately again (no more stacking).
@@ -62,7 +62,7 @@ Version History:
 * many little code improvements
 
 
-<b>26 Sept 2012</b> by [Hanna Walter](http://www.graphicdesign.stackexchange/users/408/hanna)
+<b>26 Sept 2012</b> by [Hanna Walter](http://www.graphicdesign.stackexchange.com/users/408/hanna)
 
 * Original version
 
