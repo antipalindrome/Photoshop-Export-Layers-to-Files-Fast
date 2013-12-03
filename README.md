@@ -42,6 +42,10 @@ How To Use:
 Version History:
 -------------------------------
 
+<b>2 December 2013</b> by Justin Wang  (github(dot)com/Tangleworm)
+
+* Added support for both PNG-24 and PNG-8
+
 <b>24 May 2013</b> by Hanna Walter  (graphicdesign.stackexchange/users/408/hanna)
 
 * Nesting properly handled
