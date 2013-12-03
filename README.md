@@ -5,8 +5,7 @@ Photoshop-Export-Layers-as-Images
 
 This script was originally built as a response to a question on [graphicdesign.stackexchange.com](http://graphicdesign.stackexchange.com/).
 
-The question may be found [here](http://graphicdesign.stackexchange.com/q/1961/408).
-As well as [my answer](http://graphicdesign.stackexchange.com/a/1962/408).
+The question may be found [here](http://graphicdesign.stackexchange.com/q/1961/408), as well as [my answer](http://graphicdesign.stackexchange.com/a/1962/408).
 
 
 Descriptions:
