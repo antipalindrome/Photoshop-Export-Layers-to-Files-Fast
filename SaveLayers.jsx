@@ -2,7 +2,7 @@
 // 	SaveLayers
 
 // DESCRIPTION: 
-//	Saves each layer in the active document to a PNG-8, PNG-24 or JPG file named after the layer. 
+//	Saves each layer in the active document to a PNG or JPG file named after the layer. 
 //	These files will be created in the current document folder (same as working PSD).
 
 // REQUIRES: 
@@ -111,6 +111,8 @@ function padder(input, padLength) {
 
 function SavePNG8(saveFile) { 
     exportOptionsSaveForWeb = new ExportOptionsSaveForWeb();
+    exportOptionsSaveForWeb.format = SaveDocumentType.PNG
+    exportOptionsSaveForWeb.dither = Dither.NONE;
     activeDocument.exportDocument( saveFile, ExportType.SAVEFORWEB, exportOptionsSaveForWeb );
 } 
 
