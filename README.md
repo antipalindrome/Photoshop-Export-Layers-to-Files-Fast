@@ -40,11 +40,11 @@ How To Use:
 Version History:
 -------------------------------
 
-<b>2 December 2013</b> by Justin Wang  (github(dot)com/Tangleworm)
+<b>2 December 2013</b> by [Justin Wang](github.com/Tangleworm)
 
 * Added support for both PNG-24 and PNG-8
 
-<b>24 May 2013</b> by Johannes Walter  (graphicdesign.stackexchange/users/408/johannes)
+<b>24 May 2013</b> by [Johannes Walter](graphicdesign.stackexchange/users/408/johannes)
 
 * Nesting properly handled
 *  All layers save seperately again (no more stacking).
@@ -62,7 +62,7 @@ Version History:
 * many little code improvements
 
 
-<b>26 Sept 2012</b> by Johannes Walter on stackexchange (graphicdesign.stackexchange/users/408/johannes)
+<b>26 Sept 2012</b> by [Johannes Walter](graphicdesign.stackexchange/users/408/johannes)
 
 * Original version
 
