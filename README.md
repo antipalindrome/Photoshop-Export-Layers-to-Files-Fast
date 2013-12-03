@@ -6,7 +6,6 @@ Photoshop-Export-Layers-as-Images
 This script was originally built as a response to a question on [graphicdesign.stackexchange.com](http://graphicdesign.stackexchange.com/).
 
 The question may be found [here](http://graphicdesign.stackexchange.com/q/1961/408).
-
 As well as [my answer](http://graphicdesign.stackexchange.com/a/1962/408).
 
 
@@ -22,7 +21,7 @@ _Disclaimer:_ Please use script at your own risk. I have not tested it thoroughl
 
 Features:
 -------------------------------
-* Allows exporting of layers as either PNG (8 or 24) or JPEGs
+* Allows exporting of layers as either PNG (8 or 24 bit) or JPEGs
 * Can export JPEGs on a quality range from 1 - 12
 * Handles nesting in grouped layers
 
