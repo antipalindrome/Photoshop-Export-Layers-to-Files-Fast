@@ -22,7 +22,7 @@ _Disclaimer:_ Please use script at your own risk. I have not tested it thoroughl
 
 Features:
 -------------------------------
-* Allows exporting of layers as either PNG or JPEGs
+* Allows exporting of layers as either PNG (8 or 24) or JPEGs
 * Can export JPEGs on a quality range from 1 - 12
 * Handles nesting in grouped layers
 
