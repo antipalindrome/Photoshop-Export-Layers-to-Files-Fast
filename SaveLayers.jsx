@@ -76,7 +76,9 @@ function saveLayers(ref) {
 }
 
 function saveImage(layerName) {
-    var handle = getUniqueName(prefs.filePath + "/" + layerName);
+    var fileName = layerName.replace(/[\\\*\/\?:"\|<> ]/g,''); 
+    if(fileName.length ==0) fileName = "autoname";
+    var handle = getUniqueName(prefs.filePath + "/" + fileName);
     prefs.count++;
     
     if(prefs.fileType=="PNG" && prefs.fileQuality=="8") {
