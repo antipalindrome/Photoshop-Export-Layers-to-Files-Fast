@@ -21,23 +21,23 @@ function main() {
         return; 
     }
     
-    var len = activeDocument.layers.length;
-    var ok = confirm("Note: All layers will be saved in same directory as your PSD.\nThis document contains " + len + " top level layers.\nBe aware that large numbers of layers may take some time!\nContinue?");
-    if(!ok) return
-
     // user preferences
     prefs = new Object();
     prefs.fileType = "";
     prefs.fileQuality = 12;
     prefs.filePath = app.activeDocument.path;
     prefs.count = 0;
+	prefs.layerNames = false;
+	prefs.reverse = true;
 
     //instantiate dialogue
-    Dialog();
-    hideLayers(activeDocument);
-    saveLayers(activeDocument);
-    toggleVisibility(activeDocument);
-    alert("Saved " + prefs.count + " files.");
+    if(Dialog())
+	{
+		hideLayers(activeDocument);
+		saveLayers(activeDocument);
+		toggleVisibility(activeDocument);
+		alert("Saved " + prefs.count + " files.");
+	}
 }
 
 function hideLayers(ref) {
@@ -61,7 +61,12 @@ function saveLayers(ref) {
     var len = ref.layers.length;
     // rename layers top to bottom
     for (var i = 0; i < len; i++) {
-        var layer = ref.layers[i];
+        var frameIndex = i;
+		if(prefs.reverse)
+		{
+			frameIndex = len - 1 - frameIndex;
+		}
+		var layer = ref.layers[frameIndex];
         if (layer.typename == 'LayerSet') {
             // recurse if current layer is a group
             hideLayers(layer);
@@ -76,9 +81,17 @@ function saveLayers(ref) {
 }
 
 function saveImage(layerName) {
-    var fileName = layerName.replace(/[\\\*\/\?:"\|<> ]/g,''); 
-    if(fileName.length ==0) fileName = "autoname";
-    var handle = getUniqueName(prefs.filePath + "/" + fileName);
+	var fileName = prefs.filePath + "/";
+    if(prefs.layerNames)
+	{
+		fileName += layerName;
+	}
+	else
+	{
+		var documentName = app.activeDocument.name.substring(0, app.activeDocument.name.lastIndexOf("."));
+		fileName += documentName + padder(prefs.count, 4);
+	}
+	var handle = getUniqueName(fileName);
     prefs.count++;
     
     if(prefs.fileType=="PNG" && prefs.fileQuality=="8") {
@@ -131,12 +144,24 @@ function SaveJPEG(saveFile) {
 
 function Dialog() {
     // build dialogue
-    var dlg = new Window ('dialog', 'Select Type'); 
-    dlg.saver = dlg.add("dropdownlist", undefined, ""); 
-    dlg.quality = dlg.add("dropdownlist", undefined, "");
-    dlg.pngtype = dlg.add("dropdownlist", undefined, "");
-
-
+    var dlg = new Window ('dialog', 'Save frames'); 
+	
+	//dlg.alignChildren = 'left';
+    
+	// add warning
+    var warning = dlg.add("statictext", undefined, "Note: All layers will be saved in same directory as your PSD.", { multiline: true });
+    
+	
+	// add options
+	dlg.options = dlg.add("panel", undefined, "options");
+	dlg.options.alignChildren = "left";
+	
+	dlg.saver = dlg.options.add("dropdownlist", undefined, ""); 
+    dlg.quality = dlg.options.add("dropdownlist", undefined, "");
+    dlg.pngtype = dlg.options.add("dropdownlist", undefined, "");
+	dlg.layerNames = dlg.options.add("checkbox", undefined, "use layer names as filename for frames");
+	dlg.reverse = dlg.options.add("checkbox", undefined, "run animation reversed");
+	
     // file type
     var saveOpt = [];
     saveOpt[0] = "PNG"; 
@@ -156,7 +181,7 @@ function Dialog() {
             dlg.quality.hide();
             dlg.pngtype.show();
         }
-    }; 
+    };
 	  	   
     // jpg quality
     var qualityOpt = [];
@@ -173,27 +198,55 @@ function Dialog() {
     dlg.pngtype.add ('item', "" + 24);
 
     // trigger functions
+	dlg.layerNames.onClick = function() {
+		if(dlg.layerNames.value)
+		{
+			dlg.reverse.hide();
+		}
+		else
+		{
+			dlg.reverse.show();
+		}
+		//dlg.layout(true);
+	}
+	
     dlg.quality.onChange = function() {
         prefs.fileQuality = qualityOpt[12-parseInt(this.selection)];
+		//dlg.layout(true);
     };
     dlg.pngtype.onChange = function() {
-       prefs.fileQuality = pngtypeOpt[parseInt(this.selection)]; 
+        prefs.fileQuality = pngtypeOpt[parseInt(this.selection)]; 
+		//dlg.layout(true);
     };
 
     // remainder of UI
-    var uiButtonRun = "Continue"; 
 
-    dlg.btnRun = dlg.add("button", undefined, uiButtonRun ); 
-    dlg.btnRun.onClick = function() {	
-        this.parent.close(0); 
-    }; 
+	var warning2 = dlg.add("statictext", undefined, "This document contains " + activeDocument.layers.length + " top level layers. Be aware that large numbers of layers may take some time!", { multiline: true });
+	
+	var buttonPanel = dlg.add("group", undefined, { orientation: "row", alignChildren: "right" });
+	
+	var buttonOkay = buttonPanel.add("button", undefined, "Okay");    
+	buttonOkay.onClick = function() {
+        dlg.close(5);
+    };
+	var buttonCancel = buttonPanel.add("button", undefined, "Cancel");
+	buttonCancel.onClick = function() {
+		dlg.close(1);
+	}; 
 
     dlg.orientation = 'column'; 
 
-    dlg.saver.selection = dlg.saver.items[0] ;
-    dlg.quality.selection = dlg.quality.items[0] ;
+    dlg.saver.selection = dlg.saver.items[0];
+	dlg.pngtype.selection = dlg.pngtype.items[1];
+    dlg.quality.selection = dlg.quality.items[0];
     dlg.center(); 
-    dlg.show();
+    var result = dlg.show();
+	
+	prefs.layerNames = dlg.layerNames.value;
+	prefs.reverse = dlg.reverse.value;
+	
+	// return true when ok was pressed
+	return result == 5;
 }
 
 function okDocument() {
