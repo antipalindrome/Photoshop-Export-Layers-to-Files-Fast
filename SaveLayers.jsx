@@ -15,12 +15,18 @@
 app.bringToFront();
 
 function main() {
+
+    var originalWidth,originalHeight;
     // two quick checks
 	if(!okDocument()) {
         alert("Document must be saved and be a layered PSD.");
         return; 
     }
     
+    //Store original canvas w and h because the trimming process alters it.
+    originalWidth = activeDocument.width;
+    originalHeight = activeDocument.height;
+
     var len = activeDocument.layers.length;
     var ok = confirm("Note: All layers will be saved in same directory as your PSD.\nThis document contains " + len + " top level layers.\nBe aware that large numbers of layers may take some time!\nContinue?");
     if(!ok) return
@@ -37,6 +43,10 @@ function main() {
     hideLayers(activeDocument);
     saveLayers(activeDocument);
     toggleVisibility(activeDocument);
+
+    //Restore document canvas size
+    activeDocument.resizeCanvas(originalWidth,originalHeight);
+
     alert("Saved " + prefs.count + " files.");
 }
 
@@ -69,6 +79,11 @@ function saveLayers(ref) {
         } else {
             // otherwise make sure the layer is visible and save it
             layer.visible = true;
+            //Set as active layer and trim document to show only visible layer
+            app.activeDocument.activeLayer = layer;
+            app.activeDocument.revealAll();
+            app.activeDocument.trim(TrimType.TRANSPARENT); 
+
             saveImage(layer.name);
             layer.visible = false;
         }
@@ -76,6 +91,7 @@ function saveLayers(ref) {
 }
 
 function saveImage(layerName) {
+
     var fileName = layerName.replace(/[\\\*\/\?:"\|<> ]/g,''); 
     if(fileName.length ==0) fileName = "autoname";
     var handle = getUniqueName(prefs.filePath + "/" + fileName);
