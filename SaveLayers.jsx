@@ -28,16 +28,18 @@ function main() {
     // user preferences
     prefs = new Object();
     prefs.fileType = "";
-    prefs.fileQuality = 12;
     prefs.filePath = app.activeDocument.path;
     prefs.count = 0;
+	prefs.formatArgs = null;
 
     //instantiate dialogue
     Dialog();
-    hideLayers(activeDocument);
-    saveLayers(activeDocument);
-    toggleVisibility(activeDocument);
-    alert("Saved " + prefs.count + " files.");
+	if (prefs.fileType) {
+		hideLayers(activeDocument);
+		saveLayers(activeDocument);
+		toggleVisibility(activeDocument);
+		alert("Saved " + prefs.count + " files.");
+	}
 }
 
 function hideLayers(ref) {
@@ -76,18 +78,18 @@ function saveLayers(ref) {
 }
 
 function saveImage(layerName) {
-    var fileName = layerName.replace(/[\\\*\/\?:"\|<> ]/g,''); 
+    var fileName = layerName.replace(/[\\\*\/\?:"\|<>]/g,''); 
+    fileName = fileName.replace(/[ ]/g, '_'); 
     if(fileName.length ==0) fileName = "autoname";
     var handle = getUniqueName(prefs.filePath + "/" + fileName);
     prefs.count++;
     
-    if(prefs.fileType=="PNG" && prefs.fileQuality=="8") {
-        SavePNG8(handle); 
-    } else if (prefs.fileType=="PNG" && prefs.fileQuality=="24") {
-        SavePNG24(handle);
-    } else {
-        SaveJPEG(handle); 
-    }
+	if (prefs.formatArgs instanceof ExportOptionsSaveForWeb) {
+		activeDocument.exportDocument(handle, ExportType.SAVEFORWEB, prefs.formatArgs);
+	}
+	else {
+		activeDocument.saveAs(handle, prefs.formatArgs, true, Extension.LOWERCASE); 
+	}
 }
 
 function getUniqueName(fileroot) { 
@@ -95,8 +97,9 @@ function getUniqueName(fileroot) {
     // if the file name exists, a numeric suffix will be added to disambiguate
 	
     var filename = fileroot;
+	var ext = prefs.fileType.toLowerCase();
     for (var i=1; i<100; i++) {
-        var handle = File(filename + "." + prefs.fileType); 
+        var handle = File(filename + "." + ext); 
         if(handle.exists) {
             filename = fileroot + "-" + padder(i, 3);
         } else {
@@ -111,89 +114,117 @@ function padder(input, padLength) {
     return result;
 }
 
-function SavePNG8(saveFile) { 
-    exportOptionsSaveForWeb = new ExportOptionsSaveForWeb();
-    exportOptionsSaveForWeb.format = SaveDocumentType.PNG
-    exportOptionsSaveForWeb.dither = Dither.NONE;
-    activeDocument.exportDocument( saveFile, ExportType.SAVEFORWEB, exportOptionsSaveForWeb );
-} 
-
-function SavePNG24(saveFile) { 
-    pngSaveOptions = new PNGSaveOptions(); 
-    activeDocument.saveAs(saveFile, pngSaveOptions, true, Extension.LOWERCASE); 
-} 
-
-function SaveJPEG(saveFile) { 
-    jpegSaveOptions = new JPEGSaveOptions(); 
-    jpegSaveOptions.quality = prefs.fileQuality;
-    activeDocument.saveAs(saveFile, jpegSaveOptions, true, Extension.LOWERCASE); 
-} 
-
 function Dialog() {
     // build dialogue
     var dlg = new Window ('dialog', 'Select Type'); 
-    dlg.saver = dlg.add("dropdownlist", undefined, ""); 
-    dlg.quality = dlg.add("dropdownlist", undefined, "");
-    dlg.pngtype = dlg.add("dropdownlist", undefined, "");
+	
+    dlg.saver = dlg.add("dropdownlist", undefined, "");
+	dlg.params = dlg.add("group");
+	dlg.params.orientation = 'stack';
 
-
-    // file type
+    // file type - call cloned getDialogParams*() for new file formats here
+	// (add a single line, the rest is taken care of)
     var saveOpt = [];
-    saveOpt[0] = "PNG"; 
-    saveOpt[1] = "JPG"; 
+	saveOpt.push(getDialogParamsPNG(dlg.params));
+	saveOpt.push(getDialogParamsJPEG(dlg.params));
+	saveOpt.push(getDialogParamsTarga(dlg.params));
     for (var i=0, len=saveOpt.length; i<len; i++) {
-        dlg.saver.add ("item", "Save as " + saveOpt[i]);
+        dlg.saver.add ("item", "Save as " + saveOpt[i].type);
+    }
+	
+    // show proper file type options
+    dlg.saver.onChange = function() {
+		for (var i = saveOpt.length - 1; i >= 0; --i) {
+			if (this.items[i].selected) {
+				saveOpt[i].controlRoot.show();
+			}
+			else {
+				saveOpt[i].controlRoot.hide();
+			}
+		}
     }; 
 	
-    // trigger function
-    dlg.saver.onChange = function() {
-        prefs.fileType = saveOpt[parseInt(this.selection)]; 
-        // decide whether to show JPG or PNG options
-        if(prefs.fileType==saveOpt[1]){
-            dlg.quality.show();
-            dlg.pngtype.hide();
-        } else {
-            dlg.quality.hide();
-            dlg.pngtype.show();
-        }
-    }; 
+    dlg.saver.selection = 0;
 	  	   
-    // jpg quality
-    var qualityOpt = [];
-    for(var i=12; i>=1; i--) {
-        qualityOpt[i] = i;
-        dlg.quality.add ('item', "" + i);
-    }; 
-
-    // png type
-    var pngtypeOpt = [];
-    pngtypeOpt[0]=8;
-    pngtypeOpt[1]=24;
-    dlg.pngtype.add ('item', ""+ 8 );
-    dlg.pngtype.add ('item', "" + 24);
-
-    // trigger functions
-    dlg.quality.onChange = function() {
-        prefs.fileQuality = qualityOpt[12-parseInt(this.selection)];
-    };
-    dlg.pngtype.onChange = function() {
-       prefs.fileQuality = pngtypeOpt[parseInt(this.selection)]; 
-    };
-
     // remainder of UI
-    var uiButtonRun = "Continue"; 
-
-    dlg.btnRun = dlg.add("button", undefined, uiButtonRun ); 
-    dlg.btnRun.onClick = function() {	
+    dlg.btnRun = dlg.add("button", undefined, "Continue");
+    dlg.btnRun.onClick = function() {
+		// collect arguments for saving and proceed
+		var selIdx = dlg.saver.selection.index;
+		saveOpt[selIdx].handler(saveOpt[selIdx].controlRoot);
         this.parent.close(0); 
     }; 
 
     dlg.orientation = 'column'; 
-
-    dlg.saver.selection = dlg.saver.items[0] ;
-    dlg.quality.selection = dlg.quality.items[0] ;
     dlg.center(); 
     dlg.show();
+}
+
+// Clone these two functions to add a new export file format - GUI
+function getDialogParamsTarga(parent)
+{
+	var controls = parent.add("group");
+	
+	controls.alpha = controls.add("checkbox", undefined, "With alpha channel");
+	controls.alpha.value = true;
+	
+	var bitsPerPixelLabels = ["16 bit", "24 bit", "32 bit"];
+	controls.bitsPerPixel = controls.add("dropdownlist", undefined, bitsPerPixelLabels);
+	controls.bitsPerPixel.selection = 2;
+	
+	controls.rle = controls.add("checkbox", undefined, "RLE compression");
+	controls.rle.value = true;
+	
+	return {type: "TGA", controlRoot: controls, handler: onDialogSelectTarga};
+}
+
+// Clone these two functions to add a new export file format - result handler
+function onDialogSelectTarga(controlRoot)
+{
+	prefs.fileType = "TGA";
+	prefs.formatArgs = new TargaSaveOptions();
+	prefs.formatArgs.alphaChannels = controlRoot.alpha.value;
+	prefs.formatArgs.rleCompression = controlRoot.rle.value;
+	var resolution_enum = [TargaBitsPerPixels.SIXTEEN, TargaBitsPerPixels.TWENTYFOUR, TargaBitsPerPixels.THIRTYTWO];
+	prefs.formatArgs.resolution = resolution_enum[controlRoot.bitsPerPixel.selection.index];
+}
+
+function getDialogParamsJPEG(parent)
+{
+	quality = parent.add("dropdownlist");
+	
+    for (var i=12; i>=1; --i) {
+		quality.add('item', "" + i);
+    }
+	
+	quality.selection = 0;
+	
+	return {type: "JPG", controlRoot: quality, handler: onDialogSelectJPEG};
+}
+
+function onDialogSelectJPEG(controlRoot)
+{
+	prefs.fileType = "JPG";
+	prefs.formatArgs = new JPEGSaveOptions();
+	prefs.formatArgs.quality = 12 - controlRoot.selection.index;
+}
+
+function getDialogParamsPNG(parent)
+{
+	var resolution_items = ["8 bit", "24 bit"];
+	var resolution = parent.add("dropdownlist", undefined, resolution_items);	
+	resolution.selection = 1;
+	
+	return {type: "PNG", controlRoot: resolution, handler: onDialogSelectPNG};
+}
+
+function onDialogSelectPNG(controlRoot)
+{
+	prefs.fileType = "PNG";
+	prefs.formatArgs = new ExportOptionsSaveForWeb();
+	prefs.formatArgs.format = SaveDocumentType.PNG;
+	prefs.formatArgs.PNG8 = controlRoot.items[0].selected;
+	prefs.formatArgs.dither = Dither.NONE;
 }
 
 function okDocument() {
