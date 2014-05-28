@@ -33,10 +33,6 @@ function main() {
         return; 
     }
     
-    /*var len = activeDocument.layers.length;
-    var ok = confirm("Note: All layers will be saved in same directory as your PSD.\nThis document contains " + len + " top level layers.\nBe aware that large numbers of layers may take some time!\nContinue?");
-    if(!ok) return;*/
-	
 	// read resource file
 	var rsrcString;
 	var rsrcFile = new File(env.scriptFileDirectory + "/dialog.json");
@@ -160,25 +156,31 @@ function showDialog(rsrc)
 	}
 	
 	// destination path
-	//dlg.funcArea.content.grpDest.txtDest.text = prefs.filePath;
+	dlg.funcArea.content.grpDest.txtDest.text = prefs.filePath.fsName;
+	// FIXME: file browser functionality
 	
-	/*	
-    dlg.saver = dlg.add("dropdownlist", undefined, "");
-	dlg.params = dlg.add("group");
-	dlg.params.orientation = 'stack';
+	// FIXME: layer option functionality
+	
+	var formatDropDown = dlg.funcArea.content.grpFileType.drdFileType;
+	var optionsPanel = dlg.funcArea.content.pnlOptions;
 
     // file type - call cloned getDialogParams*() for new file formats here
 	// (add a single line, the rest is taken care of)
     var saveOpt = [];
-	saveOpt.push(getDialogParamsPNG(dlg.params));
-	saveOpt.push(getDialogParamsJPEG(dlg.params));
-	saveOpt.push(getDialogParamsTarga(dlg.params));
-    for (var i=0, len=saveOpt.length; i<len; i++) {
-        dlg.saver.add ("item", "Save as " + saveOpt[i].type);
+	var paramFuncs = [getDialogParamsPNG, getDialogParamsJPEG, getDialogParamsTarga];
+    for (var i = 0, len = paramFuncs.length; i < len; ++i) {
+		var optionsRoot = optionsPanel.add("group");
+		optionsRoot.orientation = "column";
+		optionsRoot.alignChildren = "left";
+		var opts = paramFuncs[i](optionsRoot);
+		opts.controlRoot = optionsRoot;
+		saveOpt.push(opts);
+		
+        formatDropDown.add("item", saveOpt[i].type);
     }
 	
     // show proper file type options
-    dlg.saver.onChange = function() {
+    formatDropDown.onChange = function() {
 		for (var i = saveOpt.length - 1; i >= 0; --i) {
 			if (this.items[i].selected) {
 				saveOpt[i].controlRoot.show();
@@ -189,18 +191,23 @@ function showDialog(rsrc)
 		}
     }; 
 	
-    dlg.saver.selection = 0;
+    formatDropDown.selection = 0;
 	  	   
-    // remainder of UI
-    dlg.btnRun = dlg.add("button", undefined, "Continue");
-    dlg.btnRun.onClick = function() {
+    // buttons
+    dlg.funcArea.buttons.btnRun.onClick = function() {
 		// collect arguments for saving and proceed
-		var selIdx = dlg.saver.selection.index;
+		var selIdx = formatDropDown.selection.index;
 		saveOpt[selIdx].handler(saveOpt[selIdx].controlRoot);
-        this.parent.close(0); 
+        dlg.close(0); 
     }; 
+    dlg.funcArea.buttons.btnCancel.onClick = function() {
+        dlg.close(0); 
+    }; 
+	
+	// warning message
+	// FIXME: get real layer count
+	dlg.warning.message.text = formatString(dlg.warning.message.text, activeDocument.layers.length, activeDocument.layers.length);
 
-    dlg.orientation = 'column'; */
     dlg.center(); 
     dlg.show();
 }
@@ -208,19 +215,19 @@ function showDialog(rsrc)
 // Clone these two functions to add a new export file format - GUI
 function getDialogParamsTarga(parent)
 {
-	var controls = parent.add("group");
-	
-	controls.alpha = controls.add("checkbox", undefined, "With alpha channel");
-	controls.alpha.value = true;
-	
+	var depth = parent.add("group");
+	depth.add("statictext", undefined, "Depth:");
 	var bitsPerPixelLabels = ["16 bit", "24 bit", "32 bit"];
-	controls.bitsPerPixel = controls.add("dropdownlist", undefined, bitsPerPixelLabels);
-	controls.bitsPerPixel.selection = 2;
+	parent.bitsPerPixel = depth.add("dropdownlist", undefined, bitsPerPixelLabels);
+	parent.bitsPerPixel.selection = 2;
 	
-	controls.rle = controls.add("checkbox", undefined, "RLE compression");
-	controls.rle.value = true;
+	parent.alpha = parent.add("checkbox", undefined, "With alpha channel");
+	parent.alpha.value = true;
+		
+	parent.rle = parent.add("checkbox", undefined, "RLE compression");
+	parent.rle.value = true;
 	
-	return {type: "TGA", controlRoot: controls, handler: onDialogSelectTarga};
+	return {type: "TGA", handler: onDialogSelectTarga};
 }
 
 // Clone these two functions to add a new export file format - result handler
@@ -236,31 +243,35 @@ function onDialogSelectTarga(controlRoot)
 
 function getDialogParamsJPEG(parent)
 {
-	quality = parent.add("dropdownlist");
+	var qualityRow = parent.add("group");
+	qualityRow.add("statictext", undefined, "Quality:");
+	parent.quality = qualityRow.add("dropdownlist");
 	
     for (var i=12; i>=1; --i) {
-		quality.add('item', "" + i);
+		parent.quality.add('item', "" + i);
     }
 	
-	quality.selection = 0;
+	parent.quality.selection = 0;
 	
-	return {type: "JPG", controlRoot: quality, handler: onDialogSelectJPEG};
+	return {type: "JPG", handler: onDialogSelectJPEG};
 }
 
 function onDialogSelectJPEG(controlRoot)
 {
 	prefs.fileType = "JPG";
 	prefs.formatArgs = new JPEGSaveOptions();
-	prefs.formatArgs.quality = 12 - controlRoot.selection.index;
+	prefs.formatArgs.quality = 12 - controlRoot.quality.selection.index;
 }
 
 function getDialogParamsPNG(parent)
 {
+	var type = parent.add("group");
+	type.add("statictext", undefined, "Resolution:");
 	var resolution_items = ["8 bit", "24 bit"];
-	var resolution = parent.add("dropdownlist", undefined, resolution_items);	
-	resolution.selection = 1;
+	parent.resolution = type.add("dropdownlist", undefined, resolution_items);	
+	parent.resolution.selection = 1;
 	
-	return {type: "PNG", controlRoot: resolution, handler: onDialogSelectPNG};
+	return {type: "PNG", handler: onDialogSelectPNG};
 }
 
 function onDialogSelectPNG(controlRoot)
@@ -268,7 +279,7 @@ function onDialogSelectPNG(controlRoot)
 	prefs.fileType = "PNG";
 	prefs.formatArgs = new ExportOptionsSaveForWeb();
 	prefs.formatArgs.format = SaveDocumentType.PNG;
-	prefs.formatArgs.PNG8 = controlRoot.items[0].selected;
+	prefs.formatArgs.PNG8 = controlRoot.resolution.items[0].selected;
 	prefs.formatArgs.dither = Dither.NONE;
 }
 
@@ -338,3 +349,10 @@ function bootstrap()
 // Utilities
 //
 
+function formatString(text) 
+{
+	var args = Array.prototype.slice.call(arguments, 1);
+	return text.replace(/\{(\d+)\}/g, function(match, number) { 
+			return (typeof args[number] != 'undefined') ? args[number] : match;
+		});
+}
