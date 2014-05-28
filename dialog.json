@@ -44,7 +44,7 @@
 	warning: Panel {
 		alignChildren: "fill",
 		message: StaticText {
-			text: "Note: All layers will be saved in the same directory as your PSD.\nThis document contains XX top level layers.\nBe aware that large numbers of layers may take some time!",
+			text: "Note: All layers will be saved in the same directory as your PSD.\n\nThis document has {0} layers, {1} of them visible.\n\nProcessing a large number of layers may take some time!",
 			properties: {
 				multiline: true
 			}
