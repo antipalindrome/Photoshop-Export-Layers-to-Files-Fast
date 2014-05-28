@@ -1,29 +1,62 @@
 // NAME: 
-// 	SaveLayers
+// 	Export Layers To Files
 
 // DESCRIPTION: 
-//	Saves each layer in the active document to a PNG or JPG file named after the layer. 
+//  Improved version of the built-in "Export Layers To Files" script:
+//  * Supports PNG and possibly other formats in the future.
+//  * Does not create document duplicates, so it's much faster.
+//	Saves each layer in the active document to a file in a preferred format named after the layer. Supported formats:
+//  * PNG
+//  * JPEG
+//  * Targa
 //	These files will be created in the current document folder (same as working PSD).
 
 // REQUIRES: 
 // 	Adobe Photoshop CS2 or higher
 
-//Most current version always available at: https://github.com/hsw107/Photoshop-Export-Layers-as-Images
+//Most current version always available at: https://github.com/skjorn/Photoshop-Export-Layers-as-Images
 
 // enable double-clicking from Finder/Explorer (CS2 and higher)
 #target photoshop
 app.bringToFront();
 
+bootstrap();
+
+//
+// Application code
+//
+
 function main() {
     // two quick checks
-	if(!okDocument()) {
+	if(! okDocument()) {
         alert("Document must be saved and be a layered PSD.");
         return; 
     }
     
-    var len = activeDocument.layers.length;
+    /*var len = activeDocument.layers.length;
     var ok = confirm("Note: All layers will be saved in same directory as your PSD.\nThis document contains " + len + " top level layers.\nBe aware that large numbers of layers may take some time!\nContinue?");
-    if(!ok) return
+    if(!ok) return;*/
+	
+	// read resource file
+	var rsrcString;
+	var rsrcFile = new File(env.scriptFileDirectory + "/dialog.json");
+	if (! rsrcFile.exists) {
+		alert("Resource file for the export dialog is missing! Please, download the rest of the files that come with this script.");
+		return;
+	}
+	try {
+		rsrcFile.open("r");
+		if (rsrcFile.error) throw rsrcFile.error;
+		rsrcString = rsrcFile.read();
+		if (rsrcFile.error) throw rsrcFile.error;
+		if (! rsrcFile.close()) {
+			throw rsrcFile.error;
+		}
+	}
+	catch (error) {
+		alert("Failed to read the resource file '" + rsrcFile + "'!\n\nReason: " + error + "\n\nPlease, check it's available for reading and redownload it in case it became corrupted.");
+		return;
+	}
 
     // user preferences
     prefs = new Object();
@@ -33,7 +66,7 @@ function main() {
 	prefs.formatArgs = null;
 
     //instantiate dialogue
-    Dialog();
+    showDialog(rsrcString);
 	if (prefs.fileType) {
 		hideLayers(activeDocument);
 		saveLayers(activeDocument);
@@ -114,10 +147,22 @@ function padder(input, padLength) {
     return result;
 }
 
-function Dialog() {
+function showDialog(rsrc) 
+{
     // build dialogue
-    var dlg = new Window ('dialog', 'Select Type'); 
+	var dlg;
+	try {
+		dlg = new Window(rsrc);
+	}	
+	catch (e) {
+		alert("Dialog resource is corrupt! Please, redownload the script with all files.");
+		return;
+	}
 	
+	// destination path
+	//dlg.funcArea.content.grpDest.txtDest.text = prefs.filePath;
+	
+	/*	
     dlg.saver = dlg.add("dropdownlist", undefined, "");
 	dlg.params = dlg.add("group");
 	dlg.params.orientation = 'stack';
@@ -155,7 +200,7 @@ function Dialog() {
         this.parent.close(0); 
     }; 
 
-    dlg.orientation = 'column'; 
+    dlg.orientation = 'column'; */
     dlg.center(); 
     dlg.show();
 }
@@ -237,22 +282,59 @@ function okDocument() {
     return fileExt.toLowerCase() == 'psd'
 }
 
-function wrapper() {
+//
+// Bootstrapper (version support, getting additional environment settings, error handling...)
+//
+
+function bootstrap() 
+{
     function showError(err) {
         alert(err + ': on line ' + err.line, 'Script Error', true);
     }
 
     try {
+		env = new Object();
+		
+		var versionNumber = parseInt(version, 10);
+		
+		if (versionNumber < 9) {
+			alert("Photoshop versions before CS2 are not supported!");
+			return;
+		}
+		
+		env.cs3OrHigher = (versionNumber >= 10);
+		
+		// get script file name
+		if (env.cs3OrHigher) {
+			env.scriptFileName = $.fileName;
+		}
+		else {
+			try {
+				//throw new Error();		// doesn't provide the file name, at least in CS2
+				var illegal = RUNTIME_ERROR;
+			}
+			catch (e) {
+				env.scriptFileName = e.fileName;
+			}
+		}
+		
+		env.scriptFileDirectory = (new File(env.scriptFileName)).parent;
+		
         // suspend history for CS3 or higher
-        if (parseInt(version, 10) >= 10) {
-            activeDocument.suspendHistory('Save Layers', 'main()');
-        } else {
+        if (env.cs3OrHigher) {
+            activeDocument.suspendHistory('Export Layers To Files', 'main()');
+        } 
+		else {
             main();
         }
-    } catch(e) {
+    } 
+	catch(e) {
         // report errors unless the user cancelled
         if (e.number != 8007) showError(e);
     }
 }
 
-wrapper();
+//
+// Utilities
+//
+
