@@ -26,7 +26,8 @@ bootstrap();
 // Application code
 //
 
-function main() {
+function main()
+{
     // two quick checks
 	if(! okDocument()) {
         alert("Document must be saved and be a layered PSD.");
@@ -57,13 +58,20 @@ function main() {
     // user preferences
     prefs = new Object();
     prefs.fileType = "";
-    prefs.filePath = app.activeDocument.path;
+	try {
+		prefs.filePath = app.activeDocument.path;
+	}
+	catch (e) {
+		prefs.filePath = Folder.myDocuments;
+	}
     prefs.count = 0;
 	prefs.formatArgs = null;
+	prefs.visibleOnly = false;
 
     //instantiate dialogue
     showDialog(rsrcString);
 	if (prefs.fileType) {
+		// FIXME: layer subset functionality
 		hideLayers(activeDocument);
 		saveLayers(activeDocument);
 		toggleVisibility(activeDocument);
@@ -157,9 +165,21 @@ function showDialog(rsrc)
 	
 	// destination path
 	dlg.funcArea.content.grpDest.txtDest.text = prefs.filePath.fsName;
-	// FIXME: file browser functionality
+	dlg.funcArea.content.grpDest.btnDest.onClick = function() {
+		var newFilePath = Folder.selectDialog("Select destination folder", prefs.filePath);
+		if (newFilePath) {
+			prefs.filePath = newFilePath;
+			dlg.funcArea.content.grpDest.txtDest.text = newFilePath.fsName;
+		}
+	}
 	
-	// FIXME: layer option functionality
+	// layer subset selection
+	dlg.funcArea.content.grpLayers.radioLayersAll.onClick = function() {
+		prefs.visibleOnly = false;
+	}
+	dlg.funcArea.content.grpLayers.radioLayersVis.onClick = function() {
+		prefs.visibleOnly = true;
+	}
 	
 	var formatDropDown = dlg.funcArea.content.grpFileType.drdFileType;
 	var optionsPanel = dlg.funcArea.content.pnlOptions;
