@@ -28,7 +28,6 @@ How To Use:
 
 Roadmap:
 -------------------------------
-* Add selectable destination.
 * Support for exporting visible layers only.
 * Waive the requirement for the document to be saved and be a PSD. (But check if a document is open, and the script is run in Photoshop(?).)
 * Move format specifics to separate files if possible to improve modularity and readability.
