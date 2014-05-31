@@ -15,7 +15,7 @@
 			grpDest: Group {
 				orientation: "row",
 				alignChildren: "left",
-				txtDest: EditText {preferredSize: [200, 20]},
+				txtDest: EditText {preferredSize: [200, 20], properties: {readonly: true}},
 				btnDest: Button {text: "Browse..."}
 			},
 			grpLayers: Group {
@@ -44,7 +44,7 @@
 	warning: Panel {
 		alignChildren: "fill",
 		message: StaticText {
-			text: "Note: All layers will be saved in the same directory as your PSD.\n\nThis document has {0} layers, {1} of them visible.\n\nProcessing a large number of layers may take some time!",
+			text: "This document contains {0} layer(s), {1} of them visible.\n\nProcessing a large number of layers may take some time!",
 			properties: {
 				multiline: true
 			}
