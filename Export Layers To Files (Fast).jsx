@@ -114,12 +114,13 @@ function saveLayers(ref) {
     }
 }
 
-function saveImage(layerName) {
+function saveImage(layerName) 
+{
     var fileName = layerName.replace(/[\\\*\/\?:"\|<>]/g,''); 
     fileName = fileName.replace(/[ ]/g, '_'); 
-    if(fileName.length ==0) fileName = "autoname";
+    if(fileName.length ==0) fileName = "Layer";
     var handle = getUniqueName(prefs.filePath + "/" + fileName);
-    prefs.count++;
+    ++prefs.count;
     
 	if (prefs.formatArgs instanceof ExportOptionsSaveForWeb) {
 		activeDocument.exportDocument(handle, ExportType.SAVEFORWEB, prefs.formatArgs);
@@ -129,7 +130,8 @@ function saveImage(layerName) {
 	}
 }
 
-function getUniqueName(fileroot) { 
+function getUniqueName(fileroot) 
+{ 
     // form a full file name
     // if the file name exists, a numeric suffix will be added to disambiguate
 	
@@ -145,10 +147,29 @@ function getUniqueName(fileroot) {
     }
 } 
 
-function padder(input, padLength) {
+function padder(input, padLength) 
+{
     // pad the input with zeroes up to indicated length
     var result = (new Array(padLength + 1 - input.toString().length)).join('0') + input;
     return result;
+}
+
+function forEachLayer(inCollection, doFunc, result, traverseInvisibleSets)
+{
+	var length = inCollection.length;
+	for (var i = 0; i < length; ++i) {
+		var layer = inCollection[i];
+		if (layer.typename == "LayerSet") {
+			if (traverseInvisibleSets || layer.visible) {
+				result = forEachLayer(layer.layers, doFunc, result);
+			}
+		}
+		else {
+			result = doFunc(layer, result);
+		}
+	}
+	
+	return result;
 }
 
 function showDialog(rsrc) 
@@ -225,8 +246,22 @@ function showDialog(rsrc)
     }; 
 	
 	// warning message
-	// FIXME: get real layer count
-	dlg.warning.message.text = formatString(dlg.warning.message.text, activeDocument.layers.length, activeDocument.layers.length);
+	var count = forEachLayer(
+		activeDocument.layers,
+		function(layer, prevResult) {
+			++prevResult.count;
+			if (layer.visible) {
+				++prevResult.visibleCount;
+			}
+			return prevResult;
+		},
+		{
+			count: 0,
+			visibleCount: 0
+		},
+		false
+	);
+	dlg.warning.message.text = formatString(dlg.warning.message.text, count.count, count.visibleCount);
 
     dlg.center(); 
     dlg.show();
