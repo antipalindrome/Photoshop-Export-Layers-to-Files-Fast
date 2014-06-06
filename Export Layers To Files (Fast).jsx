@@ -160,7 +160,7 @@ function forEachLayer(inCollection, doFunc, result, traverseInvisibleSets)
 		var layer = inCollection[i];
 		if (layer.typename == "LayerSet") {
 			if (traverseInvisibleSets || layer.visible) {
-				result = forEachLayer(layer.layers, doFunc, result);
+				result = forEachLayer(layer.layers, doFunc, result, traverseInvisibleSets);
 			}
 		}
 		else {
@@ -251,7 +251,8 @@ function showDialog(rsrc)
 	// warning message
 	var count = forEachLayer(
 		activeDocument.layers,
-		function(layer, prevResult) {
+		function(layer, prevResult) 
+		{
 			++prevResult.count;
 			if (layer.visible) {
 				++prevResult.visibleCount;
@@ -262,7 +263,7 @@ function showDialog(rsrc)
 			count: 0,
 			visibleCount: 0
 		},
-		false
+		true
 	);
 	dlg.warning.message.text = formatString(dlg.warning.message.text, count.count, count.visibleCount);
 
