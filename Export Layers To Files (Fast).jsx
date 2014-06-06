@@ -9,12 +9,11 @@
 //  * PNG
 //  * JPEG
 //  * Targa
-//	These files will be created in the current document folder (same as working PSD).
 
 // REQUIRES: 
 // 	Adobe Photoshop CS2 or higher
 
-//Most current version always available at: https://github.com/skjorn/Photoshop-Export-Layers-as-Images
+// Most current version always available at: https://github.com/skjorn/Photoshop-Export-Layers-as-Images
 
 // enable double-clicking from Finder/Explorer (CS2 and higher)
 #target photoshop
@@ -23,7 +22,7 @@ app.bringToFront();
 bootstrap();
 
 //
-// Application code
+// Processing logic
 //
 
 function main()
@@ -171,6 +170,10 @@ function forEachLayer(inCollection, doFunc, result, traverseInvisibleSets)
 	
 	return result;
 }
+
+//
+// User interface
+//
 
 function showDialog(rsrc) 
 {
