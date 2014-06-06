@@ -70,14 +70,19 @@ function main()
     showDialog(rsrcString);
 	if (prefs.fileType) {
 		var count;
+		var profiler = new Profiler(env.profiling);
 		if (prefs.visibleOnly) {
 			count = exportVisibleLayers(activeDocument);
 		}
 		else {
 			count = exportAllLayers(activeDocument);
 		}
+		var exportDuration = profiler.getDuration();
 		
 		var message = "Saved " + count.count + " files.";
+		if (env.profiling) {
+			message += "\n\nExport function took " + profiler.format(exportDuration) + " to perform.";
+		}
 		if (count.error) {
 			message += "\n\nSome layers were not exported! (Are there many layers with the same name?)"
 		}
@@ -337,6 +342,16 @@ function showDialog(rsrc)
 		},
 		true
 	);
+	/*var count = {
+			count: 0,
+			visibleCount: 0
+		};
+	var len = activeDocument.layers.length;
+	for (var i = 0; i < len; ++i) {
+		if (activeDocument.layers[i]) {
+			++count.visibleCount;
+		}
+	}*/
 	dlg.warning.message.text = formatString(dlg.warning.message.text, count.count, count.visibleCount);
 
     dlg.center(); 
@@ -434,8 +449,12 @@ function bootstrap()
         alert(err + ': on line ' + err.line, 'Script Error', true);
     }
 
+	defineProfilerMethods();
+	
     try {
 		env = new Object();
+		
+		env.profiling = true;
 		
 		var versionNumber = parseInt(version, 10);
 		
@@ -486,4 +505,28 @@ function formatString(text)
 	return text.replace(/\{(\d+)\}/g, function(match, number) { 
 			return (typeof args[number] != 'undefined') ? args[number] : match;
 		});
+}
+
+function Profiler(enabled)
+{
+	this.enabled = enabled;
+	if (this.enabled) {
+		this.startTime = new Date();
+	}
+}
+
+function defineProfilerMethods()
+{
+	Profiler.prototype.getDuration = function()
+	{
+		if (this.enabled) {
+			var currentTime = new Date();
+			return new Date(currentTime.getTime() - this.startTime.getTime());
+		}
+	}
+
+	Profiler.prototype.format = function(duration)
+	{
+		return duration.getUTCHours() + ":" + duration.getUTCMinutes() + ":" + duration.getUTCSeconds() + "." + duration.getUTCMilliseconds();
+	}
 }
