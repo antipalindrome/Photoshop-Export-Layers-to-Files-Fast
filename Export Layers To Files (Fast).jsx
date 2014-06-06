@@ -70,15 +70,11 @@ function main()
     showDialog(rsrcString);
 	if (prefs.fileType) {
 		var count;
-		// FIXME: layer subset functionality
-		/*hideLayers(activeDocument);
-		saveLayers(activeDocument);
-		toggleVisibility(activeDocument);*/
 		if (prefs.visibleOnly) {
 			count = exportVisibleLayers(activeDocument);
 		}
 		else {
-			//count = exportAllLayers(activeDocument);
+			count = exportAllLayers(activeDocument);
 		}
 		
 		var message = "Saved " + count.count + " files.";
@@ -91,7 +87,7 @@ function main()
 
 function exportVisibleLayers(doc)
 {
-	var result = {
+	var retVal = {
 		count: 0,
 		error: false
 	};
@@ -117,10 +113,10 @@ function exportVisibleLayers(doc)
 		var layer = layers[i];
 		layer.visible = true;
 		if (saveImage(layer.name)) {
-			++result.count;
+			++retVal.count;
 		}
 		else {
-			result.error = true;
+			retVal.error = true;
 		}
 		layer.visible = false;
 	}
@@ -130,43 +126,57 @@ function exportVisibleLayers(doc)
 		layers[i].visible = true;
 	}
 	
-	return result;
+	return retVal;
 }
 
-/*function hideLayers(ref) {
-    var len = ref.layers.length;
-    for (var i = 0; i < len; i++) {
-        var layer = ref.layers[i];
-        if (layer.typename == 'LayerSet') hideLayers(layer);
-        else layer.visible = false;
-    }
+function exportAllLayers(doc)
+{
+	var retVal = {
+		count: 0,
+		error: false
+	};
+	
+	// capture current layer state
+	var lastHistoryState = doc.activeHistoryState;
+	var capturedState = doc.layerComps.add("ExportLayersToFilesTmp", "Temporary state for Export Layers To Files script", false, false, true);
+	
+	// turn off all layers
+	forEachLayer(
+		doc.layers,
+		function(layer, result)
+		{
+			layer.visible = false;
+		},
+		null,
+		true
+	);
+		
+	// export layers
+	forEachLayer(
+		doc.layers,
+		function(layer, result)
+		{
+			layer.visible = true;
+			if (saveImage(layer.name)) {
+				++retVal.count;
+			}
+			else {
+				retVal.error = true;
+			}
+			layer.visible = false;
+		},
+		null,
+		true
+	);
+	
+	// restore layer state
+	capturedState.apply();
+	capturedState.remove();
+	doc.activeHistoryState = lastHistoryState;
+	app.purge(PurgeTarget.HISTORYCACHES);
+	
+	return retVal;
 }
-
-function toggleVisibility(ref) {
-    var len = ref.layers.length;
-    for (var i = 0; i < len; i++) {	
-        layer = ref.layers[i];
-        layer.visible = !layer.visible;
-    }
-}
-
-function saveLayers(ref) {
-    var len = ref.layers.length;
-    // rename layers top to bottom
-    for (var i = 0; i < len; i++) {
-        var layer = ref.layers[i];
-        if (layer.typename == 'LayerSet') {
-            // recurse if current layer is a group
-            hideLayers(layer);
-            saveLayers(layer);
-        } else {
-            // otherwise make sure the layer is visible and save it
-            layer.visible = true;
-            saveImage(layer.name);
-            layer.visible = false;
-        }
-    }
-}*/
 
 function saveImage(layerName) 
 {
