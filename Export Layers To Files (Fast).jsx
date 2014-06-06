@@ -63,22 +63,77 @@ function main()
 	catch (e) {
 		prefs.filePath = Folder.myDocuments;
 	}
-    prefs.count = 0;
 	prefs.formatArgs = null;
 	prefs.visibleOnly = false;
 
-    //instantiate dialogue
+    // show dialogue
     showDialog(rsrcString);
 	if (prefs.fileType) {
+		var count;
 		// FIXME: layer subset functionality
-		hideLayers(activeDocument);
+		/*hideLayers(activeDocument);
 		saveLayers(activeDocument);
-		toggleVisibility(activeDocument);
-		alert("Saved " + prefs.count + " files.");
+		toggleVisibility(activeDocument);*/
+		if (prefs.visibleOnly) {
+			count = exportVisibleLayers(activeDocument);
+		}
+		else {
+			//count = exportAllLayers(activeDocument);
+		}
+		
+		var message = "Saved " + count.count + " files.";
+		if (count.error) {
+			message += "\n\nSome layers were not exported! (Are there many layers with the same name?)"
+		}
+		alert(message, "Finished", count.error);
 	}
 }
 
-function hideLayers(ref) {
+function exportVisibleLayers(doc)
+{
+	var result = {
+		count: 0,
+		error: false
+	};
+	
+	// collect all visible layers and make them invisible
+	var layers = forEachLayer(
+		doc.layers,
+		function(layer, result) 
+		{
+			if (layer.visible) {
+				result.push(layer);
+				layer.visible = false;
+			}
+			return result;
+		},
+		[],
+		false
+	);
+	
+	// export layers one by one
+	var count = layers.length;
+	for (var i = 0; i < count; ++i) {
+		var layer = layers[i];
+		layer.visible = true;
+		if (saveImage(layer.name)) {
+			++result.count;
+		}
+		else {
+			result.error = true;
+		}
+		layer.visible = false;
+	}
+	
+	// make layers visible again
+	for (var i = 0; i < count; ++i) {
+		layers[i].visible = true;
+	}
+	
+	return result;
+}
+
+/*function hideLayers(ref) {
     var len = ref.layers.length;
     for (var i = 0; i < len; i++) {
         var layer = ref.layers[i];
@@ -111,15 +166,17 @@ function saveLayers(ref) {
             layer.visible = false;
         }
     }
-}
+}*/
 
 function saveImage(layerName) 
 {
-    var fileName = layerName.replace(/[\\\*\/\?:"\|<>]/g,''); 
+    var fileName = layerName.replace(/[\\\*\/\?:"\|<>]/g, ''); 
     fileName = fileName.replace(/[ ]/g, '_'); 
-    if(fileName.length ==0) fileName = "Layer";
+    if(fileName.length == 0) fileName = "Layer";
     var handle = getUniqueName(prefs.filePath + "/" + fileName);
-    ++prefs.count;
+	if (! handle) {
+		return false;
+	}
     
 	if (prefs.formatArgs instanceof ExportOptionsSaveForWeb) {
 		activeDocument.exportDocument(handle, ExportType.SAVEFORWEB, prefs.formatArgs);
@@ -127,6 +184,8 @@ function saveImage(layerName)
 	else {
 		activeDocument.saveAs(handle, prefs.formatArgs, true, Extension.LOWERCASE); 
 	}
+	
+	return true;
 }
 
 function getUniqueName(fileroot) 
@@ -140,10 +199,13 @@ function getUniqueName(fileroot)
         var handle = File(filename + "." + ext); 
         if(handle.exists) {
             filename = fileroot + "-" + padder(i, 3);
-        } else {
+        } 
+		else {
             return handle; 
         }
     }
+	
+	return false;
 } 
 
 function padder(input, padLength) 
