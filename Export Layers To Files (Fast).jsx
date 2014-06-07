@@ -65,19 +65,17 @@ function main()
 	}
 	prefs.formatArgs = null;
 	prefs.visibleOnly = false;
+	
+	// collected layers, filled later when the dialogue is shown
+	layers = [];
+	visibleLayers = [];
 
     // show dialogue
     showDialog(rsrcString);
 	if (prefs.fileType) {
-		var count;
 		var profiler = new Profiler(env.profiling);
-		if (prefs.visibleOnly) {
-			count = exportVisibleLayers(activeDocument);
-		}
-		else {
-			count = exportAllLayers(activeDocument);
-		}
-		var exportDuration = profiler.getDuration();
+		var count = exportLayers(activeDocument, prefs.visibleOnly);
+		var exportDuration = profiler.getDuration(true, false);
 		
 		var message = "Saved " + count.count + " files.";
 		if (env.profiling) {
@@ -90,51 +88,7 @@ function main()
 	}
 }
 
-function exportVisibleLayers(doc)
-{
-	var retVal = {
-		count: 0,
-		error: false
-	};
-	
-	// collect all visible layers and make them invisible
-	var layers = forEachLayer(
-		doc.layers,
-		function(layer, result) 
-		{
-			if (layer.visible) {
-				result.push(layer);
-				layer.visible = false;
-			}
-			return result;
-		},
-		[],
-		false
-	);
-	
-	// export layers one by one
-	var count = layers.length;
-	for (var i = 0; i < count; ++i) {
-		var layer = layers[i];
-		layer.visible = true;
-		if (saveImage(layer.name)) {
-			++retVal.count;
-		}
-		else {
-			retVal.error = true;
-		}
-		layer.visible = false;
-	}
-	
-	// make layers visible again
-	for (var i = 0; i < count; ++i) {
-		layers[i].visible = true;
-	}
-	
-	return retVal;
-}
-
-function exportAllLayers(doc)
+function exportLayers(doc, visibleOnly)
 {
 	var retVal = {
 		count: 0,
@@ -145,41 +99,34 @@ function exportAllLayers(doc)
 	var lastHistoryState = doc.activeHistoryState;
 	var capturedState = doc.layerComps.add("ExportLayersToFilesTmp", "Temporary state for Export Layers To Files script", false, false, true);
 	
-	// turn off all layers
-	forEachLayer(
-		doc.layers,
-		function(layer, result)
-		{
-			layer.visible = false;
-		},
-		null,
-		true
-	);
+	var layersToExport = visibleOnly ? visibleLayers : layers;
+	
+	// Turn off all layers when exporting all layers - even seemingly invisible ones.
+	// When visibility is switched, the parent group becomes visible and a previously invisible child may become visible by accident.
+	var count = layersToExport.length;
+	for (var i = 0; i < count; ++i) {
+		layersToExport[i].visible = false;
+	}
 		
 	// export layers
-	forEachLayer(
-		doc.layers,
-		function(layer, result)
-		{
-			layer.visible = true;
-			if (saveImage(layer.name)) {
-				++retVal.count;
-			}
-			else {
-				retVal.error = true;
-			}
-			layer.visible = false;
-		},
-		null,
-		true
-	);
-	
+	for (var i = 0; i < count; ++i) {
+		var layer = layersToExport[i];
+		layer.visible = true;
+		if (saveImage(layer.name)) {
+			++retVal.count;
+		}
+		else {
+			retVal.error = true;
+		}
+		layer.visible = false;
+	}
+			
 	// restore layer state
 	capturedState.apply();
 	capturedState.remove();
 	doc.activeHistoryState = lastHistoryState;
 	app.purge(PurgeTarget.HISTORYCACHES);
-	
+		
 	return retVal;
 }
 
@@ -223,13 +170,6 @@ function getUniqueName(fileroot)
 	return false;
 } 
 
-function padder(input, padLength) 
-{
-    // pad the input with zeroes up to indicated length
-    var result = (new Array(padLength + 1 - input.toString().length)).join('0') + input;
-    return result;
-}
-
 function forEachLayer(inCollection, doFunc, result, traverseInvisibleSets)
 {
 	var length = inCollection.length;
@@ -246,6 +186,24 @@ function forEachLayer(inCollection, doFunc, result, traverseInvisibleSets)
 	}
 	
 	return result;
+}
+
+// Indexed access to Layers via the default provided API is very slow, so all layers should be 
+// collected into a separate collection beforehand and that should be accessed repeatedly.
+function collectLayers(doc)
+{
+	var layers = forEachLayer(
+		doc.layers,
+		function(layer, result) 
+		{
+			result.push(layer);
+			return result;
+		},
+		[],
+		true
+	);
+	
+	return layers;
 }
 
 //
@@ -325,34 +283,19 @@ function showDialog(rsrc)
         dlg.close(0); 
     }; 
 	
-	// warning message
-	var count = forEachLayer(
-		activeDocument.layers,
-		function(layer, prevResult) 
-		{
-			++prevResult.count;
-			if (layer.visible) {
-				++prevResult.visibleCount;
-			}
-			return prevResult;
-		},
-		{
-			count: 0,
-			visibleCount: 0
-		},
-		true
-	);
-	/*var count = {
-			count: 0,
-			visibleCount: 0
-		};
-	var len = activeDocument.layers.length;
-	for (var i = 0; i < len; ++i) {
-		if (activeDocument.layers[i]) {
-			++count.visibleCount;
+	// collect layers
+	// TODO: employ progress bar
+	layers = collectLayers(activeDocument);
+	visibleLayers = [];
+	var layerCount = layers.length;
+	for (var i = 0; i < layerCount; ++i) {
+		if (layers[i].visible) {
+			visibleLayers.push(layers[i]);
 		}
-	}*/
-	dlg.warning.message.text = formatString(dlg.warning.message.text, count.count, count.visibleCount);
+	}
+	
+	// warning message
+	dlg.warning.message.text = formatString(dlg.warning.message.text, layerCount, visibleLayers.length);
 
     dlg.center(); 
     dlg.show();
@@ -454,7 +397,7 @@ function bootstrap()
     try {
 		env = new Object();
 		
-		env.profiling = true;
+		env.profiling = false;
 		
 		var versionNumber = parseInt(version, 10);
 		
@@ -499,6 +442,13 @@ function bootstrap()
 // Utilities
 //
 
+function padder(input, padLength) 
+{
+    // pad the input with zeroes up to indicated length
+    var result = (new Array(padLength + 1 - input.toString().length)).join('0') + input;
+    return result;
+}
+
 function formatString(text) 
 {
 	var args = Array.prototype.slice.call(arguments, 1);
@@ -512,21 +462,30 @@ function Profiler(enabled)
 	this.enabled = enabled;
 	if (this.enabled) {
 		this.startTime = new Date();
+		this.lastTime = this.startTime;
 	}
 }
 
 function defineProfilerMethods()
 {
-	Profiler.prototype.getDuration = function()
+	Profiler.prototype.getDuration = function(rememberAsLastCall, sinceLastCall)
 	{
 		if (this.enabled) {
 			var currentTime = new Date();
-			return new Date(currentTime.getTime() - this.startTime.getTime());
+			var lastTime = sinceLastCall ? this.lastTime : this.startTime;
+			if (rememberAsLastCall) {
+				this.lastTime = currentTime;
+			}
+			return new Date(currentTime.getTime() - lastTime.getTime());
 		}
 	}
 
 	Profiler.prototype.format = function(duration)
 	{
-		return duration.getUTCHours() + ":" + duration.getUTCMinutes() + ":" + duration.getUTCSeconds() + "." + duration.getUTCMilliseconds();
+		var output = padder(duration.getUTCHours(), 2) + ":";
+		output += padder(duration.getUTCMinutes(), 2) + ":";
+		output += padder(duration.getUTCSeconds(), 2) + ".";
+		output += padder(duration.getUTCMilliseconds(), 3);
+		return output;
 	}
 }
