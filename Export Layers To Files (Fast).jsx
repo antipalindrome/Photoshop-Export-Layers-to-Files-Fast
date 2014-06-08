@@ -50,9 +50,9 @@ function main()
     showDialog(rsrcString);
 	if (prefs.fileType) {
 		// collect layers
+		var profiler = new Profiler(env.profiling);
 		layers = collectLayers(activeDocument);
 	
-		var profiler = new Profiler(env.profiling);
 		var count = exportLayers(activeDocument, prefs.visibleOnly);
 		var exportDuration = profiler.getDuration(true, false);
 		
