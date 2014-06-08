@@ -37,6 +37,16 @@ Roadmap:
 Version History:
 -------------------------------
 
+<b>8 June 2014</b> by [Skjorn](https://github.com/skjorn)
+
+* Script renamed to match the built-in version.
+* The dialog extended.
+* Destination folder made selectable.
+* Added an option to export only visible layers and fixed visibility toggling after export.
+* The script made faster!
+* The document doesn't have to be saved and be a layered PSD anymore. Exporting from a temporary working copy is fine.
+* Major rewrite of internals.
+
 <b>22 May 2014</b> by [Skjorn](https://github.com/skjorn)
 
 * Added support for Targa (TGA).
@@ -50,7 +60,6 @@ Version History:
 * Nesting properly handled
 *  All layers save seperately again (no more stacking).
 
-
 <b>27 March 2013</b> by [Robin Parmar](http://robinparmar.com/) (robin(at)robinparmar(dot)com)
 
 * preferences stored in object
@@ -61,7 +70,6 @@ Version History:
 * main() now has error catcher
 * counts number of layers
 * many little code improvements
-
 
 <b>26 Sept 2012</b> by [Johannes Walter](http://www.graphicdesign.stackexchange.com/users/408/johannes)
 
