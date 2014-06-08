@@ -27,12 +27,6 @@ bootstrap();
 
 function main()
 {
-    // two quick checks
-	if(! okDocument()) {
-        alert("Document must be saved and be a layered PSD.");
-        return; 
-    }
-
 	// read dialog resource
 	rsrcFile = new File(env.scriptFileDirectory + "/dialog.json");
 	rsrcString = loadResource(rsrcFile);
@@ -80,49 +74,61 @@ function exportLayers(doc, visibleOnly)
 		error: false
 	};
 	
-	// capture current layer state
-	var lastHistoryState = doc.activeHistoryState;
-	var capturedState = doc.layerComps.add("ExportLayersToFilesTmp", "Temporary state for Export Layers To Files script", false, false, true);
+	var layerCount = layers.length;
 	
-	var layersToExport;
-	if (visibleOnly) {
-		layersToExport = [];
-		var layerCount = layers.length;
-		for (var i = 0; i < layerCount; ++i) {
-			if (layers[i].visible) {
-				layersToExport.push(layers[i]);
-			}
-		}
-	}
-	else {
-		layersToExport = layers;
-	}
-	
-	// Turn off all layers when exporting all layers - even seemingly invisible ones.
-	// When visibility is switched, the parent group becomes visible and a previously invisible child may become visible by accident.
-	var count = layersToExport.length;
-	for (var i = 0; i < count; ++i) {
-		layersToExport[i].visible = false;
-	}
-		
-	// export layers
-	for (var i = 0; i < count; ++i) {
-		var layer = layersToExport[i];
-		layer.visible = true;
-		if (saveImage(layer.name)) {
+	if ((layerCount == 1) && layers[0].isBackgroundLayer) {
+		// Flattened images don't support LayerComps or visibility toggling, so export it directly.
+		if (saveImage(layers[0].name)) {
 			++retVal.count;
 		}
 		else {
 			retVal.error = true;
 		}
-		layer.visible = false;
 	}
+	else {	
+		// capture current layer state
+		var lastHistoryState = doc.activeHistoryState;
+		var capturedState = doc.layerComps.add("ExportLayersToFilesTmp", "Temporary state for Export Layers To Files script", false, false, true);
+		
+		var layersToExport;
+		if (visibleOnly) {
+			layersToExport = [];
+			for (var i = 0; i < layerCount; ++i) {
+				if (layers[i].visible) {
+					layersToExport.push(layers[i]);
+				}
+			}
+		}
+		else {
+			layersToExport = layers;
+		}
+		
+		// Turn off all layers when exporting all layers - even seemingly invisible ones.
+		// When visibility is switched, the parent group becomes visible and a previously invisible child may become visible by accident.
+		var count = layersToExport.length;
+		for (var i = 0; i < count; ++i) {
+			layersToExport[i].visible = false;
+		}
 			
-	// restore layer state
-	capturedState.apply();
-	capturedState.remove();
-	doc.activeHistoryState = lastHistoryState;
-	app.purge(PurgeTarget.HISTORYCACHES);
+		// export layers
+		for (var i = 0; i < count; ++i) {
+			var layer = layersToExport[i];
+			layer.visible = true;
+			if (saveImage(layer.name)) {
+				++retVal.count;
+			}
+			else {
+				retVal.error = true;
+			}
+			layer.visible = false;
+		}
+				
+		// restore layer state
+		capturedState.apply();
+		capturedState.remove();
+		doc.activeHistoryState = lastHistoryState;
+		app.purge(PurgeTarget.HISTORYCACHES);
+	}
 		
 	return retVal;
 }
@@ -218,7 +224,7 @@ function showDialog(rsrc)
 		dlg = new Window(rsrc);
 	}	
 	catch (e) {
-		alert("Dialog resource is corrupt! Please, redownload the script with all files.", true);
+		alert("Dialog resource is corrupt! Please, redownload the script with all files.", "Error", true);
 		return;
 	}
 	
@@ -361,16 +367,6 @@ function onDialogSelectPNG(controlRoot)
 	prefs.formatArgs.dither = Dither.NONE;
 }
 
-function okDocument() {
-     // check that we have a valid document
-     
-    if (!documents.length) return false;
-
-    var thisDoc = app.activeDocument; 
-    var fileExt = decodeURI(thisDoc.name).replace(/^.*\./,''); 
-    return fileExt.toLowerCase() == 'psd'
-}
-
 //
 // Bootstrapper (version support, getting additional environment settings, error handling...)
 //
@@ -381,9 +377,24 @@ function bootstrap()
         alert(err + ': on line ' + err.line, 'Script Error', true);
     }
 
+	// initialisation of class methods
 	defineProfilerMethods();
 	
+	// check if there's a document open
+	try {
+		var doc = activeDocument;		// this actually triggers the exception
+		if (! doc) {					// this is just for sure if it ever behaves differently in other versions
+			throw new Error();
+		}
+	}
+	catch (e) {
+		alert("No document is open! Nothing to export.", "Error", true);
+		return;
+	}
+	
     try {
+		// setup the environment
+		
 		env = new Object();
 		
 		env.profiling = false;
@@ -391,13 +402,13 @@ function bootstrap()
 		var versionNumber = parseInt(version, 10);
 		
 		if (versionNumber < 9) {
-			alert("Photoshop versions before CS2 are not supported!");
+			alert("Photoshop versions before CS2 are not supported!", "Error", true);
 			return;
 		}
 		
 		env.cs3OrHigher = (versionNumber >= 10);
 		
-		// get script file name
+		// get script's file name
 		if (env.cs3OrHigher) {
 			env.scriptFileName = $.fileName;
 		}
@@ -413,8 +424,9 @@ function bootstrap()
 		
 		env.scriptFileDirectory = (new File(env.scriptFileName)).parent;
 		
-        // suspend history for CS3 or higher
+		// run the script itself
         if (env.cs3OrHigher) {
+			// suspend history for CS3 or higher
             activeDocument.suspendHistory('Export Layers To Files', 'main()');
         } 
 		else {
@@ -450,7 +462,7 @@ function loadResource(file)
 {
 	var rsrcString;
 	if (! file.exists) {
-		alert("Resource file '" + file.name + "' for the export dialog is missing! Please, download the rest of the files that come with this script.", true);
+		alert("Resource file '" + file.name + "' for the export dialog is missing! Please, download the rest of the files that come with this script.", "Error", true);
 		return false;
 	}
 	try {
@@ -463,7 +475,7 @@ function loadResource(file)
 		}
 	}
 	catch (error) {
-		alert("Failed to read the resource file '" + rsrcFile + "'!\n\nReason: " + error + "\n\nPlease, check it's available for reading and redownload it in case it became corrupted.", true);
+		alert("Failed to read the resource file '" + rsrcFile + "'!\n\nReason: " + error + "\n\nPlease, check it's available for reading and redownload it in case it became corrupted.", "Error", true);
 		return false;
 	}
 	
