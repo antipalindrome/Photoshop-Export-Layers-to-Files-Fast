@@ -30,7 +30,9 @@ Roadmap:
 -------------------------------
 * Waive the requirement for the document to be saved and be a PSD. (But check if a document is open, and the script is run in Photoshop(?).)
 * Move format specifics to separate files if possible to improve modularity and readability.
-* Speed up layer retrieval, hence dialogue start-up.
+* Speed up layer retrieval.
+* Move layer retrieval at the beginning, before the dialog shows. So useful layer count can be displayed.
+* Show progress bar while executing.
 
 
 Version History:
