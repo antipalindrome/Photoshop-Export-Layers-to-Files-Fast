@@ -32,25 +32,11 @@ function main()
         alert("Document must be saved and be a layered PSD.");
         return; 
     }
-    
-	// read resource file
-	var rsrcString;
-	var rsrcFile = new File(env.scriptFileDirectory + "/dialog.json");
-	if (! rsrcFile.exists) {
-		alert("Resource file for the export dialog is missing! Please, download the rest of the files that come with this script.");
-		return;
-	}
-	try {
-		rsrcFile.open("r");
-		if (rsrcFile.error) throw rsrcFile.error;
-		rsrcString = rsrcFile.read();
-		if (rsrcFile.error) throw rsrcFile.error;
-		if (! rsrcFile.close()) {
-			throw rsrcFile.error;
-		}
-	}
-	catch (error) {
-		alert("Failed to read the resource file '" + rsrcFile + "'!\n\nReason: " + error + "\n\nPlease, check it's available for reading and redownload it in case it became corrupted.");
+
+	// read dialog resource
+	rsrcFile = new File(env.scriptFileDirectory + "/dialog.json");
+	rsrcString = loadResource(rsrcFile);
+	if (! rsrcString) {
 		return;
 	}
 
@@ -66,13 +52,12 @@ function main()
 	prefs.formatArgs = null;
 	prefs.visibleOnly = false;
 	
-	// collected layers, filled later when the dialogue is shown
-	layers = [];
-	visibleLayers = [];
-
     // show dialogue
     showDialog(rsrcString);
 	if (prefs.fileType) {
+		// collect layers
+		layers = collectLayers(activeDocument);
+	
 		var profiler = new Profiler(env.profiling);
 		var count = exportLayers(activeDocument, prefs.visibleOnly);
 		var exportDuration = profiler.getDuration(true, false);
@@ -99,7 +84,19 @@ function exportLayers(doc, visibleOnly)
 	var lastHistoryState = doc.activeHistoryState;
 	var capturedState = doc.layerComps.add("ExportLayersToFilesTmp", "Temporary state for Export Layers To Files script", false, false, true);
 	
-	var layersToExport = visibleOnly ? visibleLayers : layers;
+	var layersToExport;
+	if (visibleOnly) {
+		layersToExport = [];
+		var layerCount = layers.length;
+		for (var i = 0; i < layerCount; ++i) {
+			if (layers[i].visible) {
+				layersToExport.push(layers[i]);
+			}
+		}
+	}
+	else {
+		layersToExport = layers;
+	}
 	
 	// Turn off all layers when exporting all layers - even seemingly invisible ones.
 	// When visibility is switched, the parent group becomes visible and a previously invisible child may become visible by accident.
@@ -190,12 +187,15 @@ function forEachLayer(inCollection, doFunc, result, traverseInvisibleSets)
 
 // Indexed access to Layers via the default provided API is very slow, so all layers should be 
 // collected into a separate collection beforehand and that should be accessed repeatedly.
-function collectLayers(doc)
+function collectLayers(doc, progressBar)
 {
 	var layers = forEachLayer(
 		doc.layers,
 		function(layer, result) 
 		{
+			if (progressBar && (layer.parent == doc)) {
+				++progressBar.value;
+			}
 			result.push(layer);
 			return result;
 		},
@@ -218,7 +218,7 @@ function showDialog(rsrc)
 		dlg = new Window(rsrc);
 	}	
 	catch (e) {
-		alert("Dialog resource is corrupt! Please, redownload the script with all files.");
+		alert("Dialog resource is corrupt! Please, redownload the script with all files.", true);
 		return;
 	}
 	
@@ -283,19 +283,8 @@ function showDialog(rsrc)
         dlg.close(0); 
     }; 
 	
-	// collect layers
-	// TODO: employ progress bar
-	layers = collectLayers(activeDocument);
-	visibleLayers = [];
-	var layerCount = layers.length;
-	for (var i = 0; i < layerCount; ++i) {
-		if (layers[i].visible) {
-			visibleLayers.push(layers[i]);
-		}
-	}
-	
 	// warning message
-	dlg.warning.message.text = formatString(dlg.warning.message.text, layerCount, visibleLayers.length);
+	dlg.warning.message.text = formatString(dlg.warning.message.text, activeDocument.artLayers.length, activeDocument.layerSets.length);
 
     dlg.center(); 
     dlg.show();
@@ -455,6 +444,30 @@ function formatString(text)
 	return text.replace(/\{(\d+)\}/g, function(match, number) { 
 			return (typeof args[number] != 'undefined') ? args[number] : match;
 		});
+}
+
+function loadResource(file)
+{
+	var rsrcString;
+	if (! file.exists) {
+		alert("Resource file '" + file.name + "' for the export dialog is missing! Please, download the rest of the files that come with this script.", true);
+		return false;
+	}
+	try {
+		file.open("r");
+		if (file.error) throw file.error;
+		rsrcString = file.read();
+		if (file.error) throw file.error;
+		if (! file.close()) {
+			throw file.error;
+		}
+	}
+	catch (error) {
+		alert("Failed to read the resource file '" + rsrcFile + "'!\n\nReason: " + error + "\n\nPlease, check it's available for reading and redownload it in case it became corrupted.", true);
+		return false;
+	}
+	
+	return rsrcString;
 }
 
 function Profiler(enabled)

@@ -44,7 +44,7 @@
 	warning: Panel {
 		alignChildren: "fill",
 		message: StaticText {
-			text: "This document contains {0} layer(s), {1} of them visible.\n\nProcessing a large number of layers may take some time!",
+			text: "This document contains {0} top level layer(s) and {1} top level group(s).\n\nProcessing a large number of layers may take some time!",
 			properties: {
 				multiline: true
 			}
