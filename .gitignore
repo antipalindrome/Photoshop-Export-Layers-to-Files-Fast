@@ -1,3 +1,4 @@
 *.psd
 *.7z
-/output
+/output/
+/include/
