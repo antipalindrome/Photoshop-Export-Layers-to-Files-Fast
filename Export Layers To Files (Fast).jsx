@@ -126,8 +126,10 @@ function exportLayers(doc, visibleOnly)
 		// restore layer state
 		capturedState.apply();
 		capturedState.remove();
-		doc.activeHistoryState = lastHistoryState;
-		app.purge(PurgeTarget.HISTORYCACHES);
+		if (env.version <= 9) {
+			doc.activeHistoryState = lastHistoryState;
+			app.purge(PurgeTarget.HISTORYCACHES);
+		}
 	}
 		
 	return retVal;
@@ -266,14 +268,12 @@ function showDialog(rsrc)
 	
     // show proper file type options
     formatDropDown.onChange = function() {
+		// Note: There's a bug in CS5 and CC where ListItem.selected doesn't report correct value in onChange().
+		// A workaround is to rely on DropDownList.selection instead.
 		for (var i = saveOpt.length - 1; i >= 0; --i) {
-			if (this.items[i].selected) {
-				saveOpt[i].controlRoot.show();
-			}
-			else {
-				saveOpt[i].controlRoot.hide();
-			}
+			saveOpt[i].controlRoot.hide();
 		}
+		saveOpt[this.selection.index].controlRoot.show();
     }; 
 	
     formatDropDown.selection = 0;
@@ -292,7 +292,7 @@ function showDialog(rsrc)
 	// warning message
 	dlg.warning.message.text = formatString(dlg.warning.message.text, activeDocument.artLayers.length, activeDocument.layerSets.length);
 
-    dlg.center(); 
+	dlg.center(); 
     dlg.show();
 }
 
@@ -399,14 +399,14 @@ function bootstrap()
 		
 		env.profiling = false;
 		
-		var versionNumber = parseInt(version, 10);
+		env.version = parseInt(version, 10);
 		
-		if (versionNumber < 9) {
+		if (env.version < 9) {
 			alert("Photoshop versions before CS2 are not supported!", "Error", true);
 			return;
 		}
 		
-		env.cs3OrHigher = (versionNumber >= 10);
+		env.cs3OrHigher = (env.version >= 10);
 		
 		// get script's file name
 		if (env.cs3OrHigher) {
