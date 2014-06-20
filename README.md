@@ -5,6 +5,7 @@ Photoshop-Export-Layers-as-Images
 
 This script was originally built as a response to a question on [graphicdesign.stackexchange.com](http://graphicdesign.stackexchange.com/).
 
+<b>[Download as zip](https://github.com/hsw107/Photoshop-Export-Layers-as-Images/archive/master.zip)</b>
 
 Features:
 -------------------------------
@@ -25,6 +26,10 @@ How To Use:
 2. File -> Scripts -> Browse...
 3. Locate the file, and open it.
 
+Alternatively move the script into the /presets/scripts directory, located by in your Photoshop folder.
+
+PC:  Program Files/Adobe/Adobe Photoshop VERSION/Presets/Scripts/
+Mac: /Applications/Adobe Photoshop VERSION/Presets/Scripts/
 
 Roadmap:
 -------------------------------
