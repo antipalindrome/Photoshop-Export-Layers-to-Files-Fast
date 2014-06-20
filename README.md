@@ -5,6 +5,8 @@ Photoshop-Export-Layers-as-Images
 
 This script was originally built as a response to a [question](http://graphicdesign.stackexchange.com/questions/1961/export-photoshop-layers-to-individual-png-files-batch-process) on [graphicdesign.stackexchange.com](http://graphicdesign.stackexchange.com/).
 
+Make sure to download all files:
+
 <b>[Download as zip](https://github.com/hsw107/Photoshop-Export-Layers-as-Images/archive/master.zip)</b>
 
 Features:
@@ -15,6 +17,8 @@ Features:
   * JPEG
 * Handles nesting in grouped layers.
 * Export either all layers or visible only.
+
+You can also see [what's coming next](https://github.com/hsw107/Photoshop-Export-Layers-as-Images/wiki/Feature-Roadmap) and browse some of our [performance test results](https://github.com/hsw107/Photoshop-Export-Layers-as-Images/wiki/Performance-Test-Results).
 
 Requirements: 
 -------------------------------
@@ -28,16 +32,9 @@ How To Use:
 
 Alternatively move the script into the /presets/scripts directory, located by in your Photoshop folder.
 
-PC:  Program Files/Adobe/Adobe Photoshop VERSION/Presets/Scripts/
+Windows: /Program Files/Adobe/Adobe Photoshop VERSION/Presets/Scripts/
 
 Mac: /Applications/Adobe Photoshop VERSION/Presets/Scripts/
-
-Roadmap:
--------------------------------
-* Speed up layer retrieval.
-* Move layer retrieval at the beginning, before the dialog shows. So useful layer count can be displayed.
-* Move format specifics to separate files if possible to improve modularity and readability.
-* Show progress bar while executing.
 
 
 Version History:
