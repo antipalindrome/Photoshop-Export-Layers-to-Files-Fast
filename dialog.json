@@ -1,0 +1,53 @@
+﻿dialog {
+	text: "Export Layers To Files",
+	orientation: "column",
+	alignChildren: "fill",
+	lblDest: StaticText {
+		alignment: "left",
+		text: "Destination:"
+	},
+	funcArea: Group {
+		orientation: "row",
+		alignChildren: "top",
+		content: Group {
+			orientation: "column",
+			alignChildren: "left",
+			grpDest: Group {
+				orientation: "row",
+				alignChildren: "left",
+				txtDest: EditText {preferredSize: [200, 20], properties: {readonly: true}},
+				btnDest: Button {text: "Browse..."}
+			},
+			grpLayers: Group {
+				orientation: "row",
+				radioLayersAll: RadioButton {text: "All layers", value: true},
+				radioLayersVis: RadioButton {text: "Visible only"}
+			},
+			grpFileType: Group {
+				orientation: "row",
+				txtFileType: StaticText {text: "File type:"},
+				drdFileType: DropDownList {preferredSize: [60, 20]}
+			},
+			pnlOptions: Panel {
+				text: "Options:", 
+				orientation: "stack",
+				alignment: "fill",
+				preferredSize: [200, 100]
+			}
+		},
+		buttons: Group {
+			orientation: "column",
+			btnRun: Button {text: "Run"},
+			btnCancel: Button {text: "Cancel"}
+		}
+	},
+	warning: Panel {
+		alignChildren: "fill",
+		message: StaticText {
+			text: "This document contains {0} top level layer(s) and {1} top level group(s).\n\nProcessing a large number of layers may take some time!",
+			properties: {
+				multiline: true
+			}
+		}
+	}
+}
