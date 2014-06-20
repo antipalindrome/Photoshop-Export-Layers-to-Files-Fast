@@ -29,6 +29,7 @@ How To Use:
 Alternatively move the script into the /presets/scripts directory, located by in your Photoshop folder.
 
 PC:  Program Files/Adobe/Adobe Photoshop VERSION/Presets/Scripts/
+
 Mac: /Applications/Adobe Photoshop VERSION/Presets/Scripts/
 
 Roadmap:
