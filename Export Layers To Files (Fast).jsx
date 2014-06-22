@@ -27,13 +27,6 @@ bootstrap();
 
 function main()
 {
-	// read dialog resource
-	rsrcFile = new File(env.scriptFileDirectory + "/dialog.json");
-	rsrcString = loadResource(rsrcFile);
-	if (! rsrcString) {
-		return "cancel";
-	}
-
     // user preferences
     prefs = new Object();
     prefs.fileType = "";
@@ -46,28 +39,45 @@ function main()
 	prefs.formatArgs = null;
 	prefs.visibleOnly = false;
 	
-    // show dialogue
-    showDialog(rsrcString);
-	if (prefs.fileType) {
-		// collect layers
-		var profiler = new Profiler(env.profiling);
-		layers = collectLayers(activeDocument);
+	// create progress bar
+	var progressBarWindow = createProgressBar();
+	if (! progressBarWindow) {
+		return "cancel";
+	}
 	
-		var count = exportLayers(activeDocument, prefs.visibleOnly);
-		var exportDuration = profiler.getDuration(true, false);
+	// collect layers
+	var profiler = new Profiler(env.profiling);
+	var collected = collectLayers(activeDocument, progressBarWindow);
+	layers = collected.layers;
+	visibleLayers = collected.visibleLayers;
+	var collectionDuration = profiler.getDuration(true, true);
+	if (env.profiling) {
+		alert("Layers collected in " + profiler.format(collectionDuration), "Debug info");
+	}
+	
+    // show dialogue
+	if (showDialog()) {
+		// export
+		profiler.resetLastTime();
+	
+		var count = exportLayers(activeDocument, prefs.visibleOnly, progressBarWindow);
+		var exportDuration = profiler.getDuration(true, true);
 		
 		var message = "Saved " + count.count + " files.";
 		if (env.profiling) {
-			message += "\n\nExport function took " + profiler.format(exportDuration) + " to perform.";
+			message += "\n\nExport function took " + profiler.format(collectionDuration) + " + " + profiler.format(exportDuration) + " to perform.";
 		}
 		if (count.error) {
 			message += "\n\nSome layers were not exported! (Are there many layers with the same name?)"
 		}
 		alert(message, "Finished", count.error);
 	}
+	else {
+		return "cancel";
+	}
 }
 
-function exportLayers(doc, visibleOnly)
+function exportLayers(doc, visibleOnly, progressBarWindow)
 {
 	var retVal = {
 		count: 0,
@@ -103,9 +113,14 @@ function exportLayers(doc, visibleOnly)
 			layersToExport = layers;
 		}
 		
+		var count = layersToExport.length;
+		
+		if (progressBarWindow) {
+			showProgressBar(progressBarWindow, "Exporting 1 of " + count + "...", count);
+		}
+	
 		// Turn off all layers when exporting all layers - even seemingly invisible ones.
 		// When visibility is switched, the parent group becomes visible and a previously invisible child may become visible by accident.
-		var count = layersToExport.length;
 		for (var i = 0; i < count; ++i) {
 			layersToExport[i].visible = false;
 		}
@@ -121,6 +136,11 @@ function exportLayers(doc, visibleOnly)
 				retVal.error = true;
 			}
 			layer.visible = false;
+			
+			if (progressBarWindow) {
+				updateProgressBar(progressBarWindow, "Exporting " + (i + 1) + " of " + count + "...");
+				repaintProgressBar(progressBarWindow);
+			}
 		}
 				
 		// restore layer state
@@ -129,6 +149,10 @@ function exportLayers(doc, visibleOnly)
 		if (env.version <= 9) {
 			doc.activeHistoryState = lastHistoryState;
 			app.purge(PurgeTarget.HISTORYCACHES);
+		}
+
+		if (progressBarWindow) {
+			progressBarWindow.hide();
 		}
 	}
 		
@@ -195,21 +219,38 @@ function forEachLayer(inCollection, doFunc, result, traverseInvisibleSets)
 
 // Indexed access to Layers via the default provided API is very slow, so all layers should be 
 // collected into a separate collection beforehand and that should be accessed repeatedly.
-function collectLayers(doc, progressBar)
+function collectLayers(doc, progressBarWindow)
 {
+	if (progressBarWindow) {
+		showProgressBar(progressBarWindow, "Collecting layers... Might take up to several seconds.", doc.layers.length);
+	}
+	
 	var layers = forEachLayer(
 		doc.layers,
 		function(layer, result) 
 		{
-			if (progressBar && (layer.parent == doc)) {
-				++progressBar.value;
+			result.layers.push(layer);			
+			if (layer.visible) {
+				result.visibleLayers.push(layer);
 			}
-			result.push(layer);
+			
+			if (progressBarWindow && (layer.parent == doc)) {
+				updateProgressBar(progressBarWindow);
+				repaintProgressBar(progressBarWindow);
+			}
+			
 			return result;
 		},
-		[],
+		{
+			layers: [],
+			visibleLayers: []
+		},
 		true
 	);
+	
+	if (progressBarWindow) {
+		progressBarWindow.hide();
+	}
 	
 	return layers;
 }
@@ -218,16 +259,86 @@ function collectLayers(doc, progressBar)
 // User interface
 //
 
-function showDialog(rsrc) 
+function createProgressBar()
 {
-    // build dialogue
+ 	// read progress bar resource
+	var rsrcFile = new File(env.scriptFileDirectory + "/progress_bar.json");
+	var rsrcString = loadResource(rsrcFile);
+	if (! rsrcString) {
+		return false;
+	}
+
+   // create window
+	var win;
+	try {
+		win = new Window(rsrcString);
+	}	
+	catch (e) {
+		alert("Progress bar resource is corrupt! Please, redownload the script with all files.", "Error", true);
+		return false;
+	}
+	
+	win.onClose = function() {
+		return false;
+	};
+	
+	return win;
+}
+
+function showProgressBar(win, message, maxValue)
+{
+	win.lblMessage.text = message;
+	win.bar.maxvalue = maxValue;
+	win.bar.value = 0;
+	
+	win.center();
+	win.show();
+	repaintProgressBar(win, true);
+}
+
+function updateProgressBar(win, message)
+{
+	++win.bar.value;
+	if (message) {
+		win.lblMessage.text = message;
+	}
+}
+
+function repaintProgressBar(win, force /* = false*/) 
+{
+	if (env.version >= 11) {	// CS4 added support for UI updates; the previous method became unbearably slow, as is app.refresh()
+		if (force) {
+			app.refresh();
+		}
+		else {  
+			win.update();
+		}
+	}
+	else {	
+		// CS3 and below
+		var d = new ActionDescriptor();
+		d.putEnumerated(app.stringIDToTypeID('state'), app.stringIDToTypeID('state'), app.stringIDToTypeID('redrawComplete'));
+		executeAction(app.stringIDToTypeID('wait'), d, DialogModes.NO);
+  }
+}
+
+function showDialog() 
+{
+ 	// read dialog resource
+	var rsrcFile = new File(env.scriptFileDirectory + "/dialog.json");
+	var rsrcString = loadResource(rsrcFile);
+	if (! rsrcString) {
+		return false;
+	}
+
+   // build dialogue
 	var dlg;
 	try {
-		dlg = new Window(rsrc);
+		dlg = new Window(rsrcString);
 	}	
 	catch (e) {
 		alert("Dialog resource is corrupt! Please, redownload the script with all files.", "Error", true);
-		return;
+		return false;
 	}
 	
 	// destination path
@@ -283,17 +394,17 @@ function showDialog(rsrc)
 		// collect arguments for saving and proceed
 		var selIdx = formatDropDown.selection.index;
 		saveOpt[selIdx].handler(saveOpt[selIdx].controlRoot);
-        dlg.close(0); 
+        dlg.close(1); 
     }; 
     dlg.funcArea.buttons.btnCancel.onClick = function() {
         dlg.close(0); 
     }; 
 	
 	// warning message
-	dlg.warning.message.text = formatString(dlg.warning.message.text, activeDocument.artLayers.length, activeDocument.layerSets.length);
+	dlg.warning.message.text = formatString(dlg.warning.message.text, layers.length, visibleLayers.length);
 
 	dlg.center(); 
-    dlg.show();
+    return dlg.show();
 }
 
 // Clone these two functions to add a new export file format - GUI
@@ -504,6 +615,11 @@ function defineProfilerMethods()
 			}
 			return new Date(currentTime.getTime() - lastTime.getTime());
 		}
+	}
+	
+	Profiler.prototype.resetLastTime = function()
+	{
+		this.lastTime = new Date();
 	}
 
 	Profiler.prototype.format = function(duration)
