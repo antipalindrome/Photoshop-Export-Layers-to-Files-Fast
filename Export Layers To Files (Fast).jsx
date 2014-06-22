@@ -31,7 +31,7 @@ function main()
 	rsrcFile = new File(env.scriptFileDirectory + "/dialog.json");
 	rsrcString = loadResource(rsrcFile);
 	if (! rsrcString) {
-		return;
+		return "cancel";
 	}
 
     // user preferences
@@ -389,7 +389,7 @@ function bootstrap()
 	}
 	catch (e) {
 		alert("No document is open! Nothing to export.", "Error", true);
-		return;
+		return "cancel";
 	}
 	
     try {
@@ -403,7 +403,7 @@ function bootstrap()
 		
 		if (env.version < 9) {
 			alert("Photoshop versions before CS2 are not supported!", "Error", true);
-			return;
+			return "cancel";
 		}
 		
 		env.cs3OrHigher = (env.version >= 10);
@@ -436,6 +436,7 @@ function bootstrap()
 	catch(e) {
         // report errors unless the user cancelled
         if (e.number != 8007) showError(e);
+		return "cancel";
     }
 }
 
