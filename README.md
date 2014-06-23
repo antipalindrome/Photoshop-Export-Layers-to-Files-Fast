@@ -17,6 +17,8 @@ Features:
   * JPEG
 * Handles nesting in grouped layers.
 * Export either all layers or visible only.
+* Shows current progress and allows to cancel any time.
+* Shows proper layer count in advance.
 
 You can also see [what's coming next](https://github.com/jwa107/Photoshop-Export-Layers-as-Images/wiki/Feature-Roadmap) and browse some of our [performance test results](https://github.com/jwa107/Photoshop-Export-Layers-as-Images/wiki/Performance-Test-Results).
 
@@ -39,6 +41,12 @@ Mac: /Applications/Adobe Photoshop VERSION/Presets/Scripts/
 
 Version History:
 -------------------------------
+
+<b>23 June 2014</b> by [Skjorn](https://github.com/skjorn)
+
+* Added progress bars with cancel buttons.
+* Slow layer retrieval sped up and moved at the beginning.
+* Dialog shows the correct layer count.
 
 <b>8 June 2014</b> by [Skjorn](https://github.com/skjorn)
 
