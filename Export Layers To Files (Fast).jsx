@@ -49,7 +49,7 @@ function main()
 	
 	// collect layers	
 	var profiler = new Profiler(env.profiling);
-	var collected = collectLayers(activeDocument, progressBarWindow);
+	var collected = collectLayers(progressBarWindow);
 	if (userCancelled) {
 		return "cancel";
 	}
@@ -65,7 +65,7 @@ function main()
 		// export
 		profiler.resetLastTime();
 	
-		var count = exportLayers(activeDocument, prefs.visibleOnly, progressBarWindow);
+		var count = exportLayers(prefs.visibleOnly, progressBarWindow);
 		var exportDuration = profiler.getDuration(true, true);
 		
 		var message = "";
@@ -86,12 +86,13 @@ function main()
 	}
 }
 
-function exportLayers(doc, visibleOnly, progressBarWindow)
+function exportLayers(visibleOnly, progressBarWindow)
 {
 	var retVal = {
 		count: 0,
 		error: false
 	};
+	var doc = activeDocument;
 	
 	var layerCount = layers.length;
 	
@@ -109,20 +110,8 @@ function exportLayers(doc, visibleOnly, progressBarWindow)
 		var lastHistoryState = doc.activeHistoryState;
 		var capturedState = doc.layerComps.add("ExportLayersToFilesTmp", "Temporary state for Export Layers To Files script", false, false, true);
 		
-		var layersToExport;
-		if (visibleOnly) {
-			layersToExport = [];
-			for (var i = 0; i < layerCount; ++i) {
-				if (layers[i].visible) {
-					layersToExport.push(layers[i]);
-				}
-			}
-		}
-		else {
-			layersToExport = layers;
-		}
-		
-		var count = layersToExport.length;
+		var layersToExport = visibleOnly ? visibleLayers : layers;
+		const count = layersToExport.length;
 		
 		if (progressBarWindow) {
 			showProgressBar(progressBarWindow, "Exporting 1 of " + count + "...", count);
@@ -231,49 +220,10 @@ function forEachLayer(inCollection, doFunc, result, traverseInvisibleSets)
 
 // Indexed access to Layers via the default provided API is very slow, so all layers should be 
 // collected into a separate collection beforehand and that should be accessed repeatedly.
-function collectLayers(doc, progressBarWindow)
+function collectLayers(progressBarWindow)
 {
-	if (progressBarWindow) {
-		showProgressBar(progressBarWindow, "Collecting layers... Might take up to several seconds.", doc.layers.length);
-	}
-	
-	var layers;
-	try {
-		layers = forEachLayer(
-			doc.layers,
-			function(layer, result) 
-			{
-				result.layers.push(layer);			
-				if (layer.visible) {
-					result.visibleLayers.push(layer);
-				}
-				
-				if (progressBarWindow && (layer.parent == doc)) {
-					updateProgressBar(progressBarWindow);
-					repaintProgressBar(progressBarWindow);
-					if (userCancelled) {
-						throw new Error();
-					}
-				}
-				
-				return result;
-			},
-			{
-				layers: [],
-				visibleLayers: []
-			},
-			true
-		);
-	}
-	catch (e) {
-		// nop - already handled
-	}
-	
-	if (progressBarWindow) {
-		progressBarWindow.hide();
-	}
-	
-	return layers;
+	// proxy to lower level ActionManager code
+	return collectLayersAM(progressBarWindow);
 }
 
 //
@@ -575,6 +525,144 @@ function bootstrap()
         if (e.number != 8007) showError(e);
 		return "cancel";
     }
+}
+
+//
+// ActionManager mud
+//
+
+// Faster layer collection:
+// 	https://forums.adobe.com/message/2666611
+
+function collectLayersAM(progressBarWindow)
+{
+	var layers = [],
+		visibleLayers = [];
+	var layerCount = 0;
+
+	var ref = null;
+	var desc = null;
+	
+	const idOrdn = charIDToTypeID("Ordn");
+	
+	// Get layer count reported by the active Document object - it never includes the background.
+	ref = new ActionReference();
+	ref.putEnumerated(charIDToTypeID("Dcmn"), charIDToTypeID("Ordn"), charIDToTypeID("Trgt"));
+	desc = executeActionGet(ref);
+	layerCount = desc.getInteger(charIDToTypeID("NmbL"));
+
+	if (layerCount == 0) {
+		// This is a flattened image that contains only the background (which is always visible).
+		var bg = activeDocument.backgroundLayer;
+		layers.push(bg);
+		visibleLayers.push(bg);
+	}
+	else {
+		// There are more layers that may or may not contain a background. The background is always at 0;
+		// other layers are indexed from 1.
+		
+		const idLyr = charIDToTypeID("Lyr ");
+		const idLayerSection = stringIDToTypeID("layerSection");
+		const idVsbl = charIDToTypeID("Vsbl");
+		const idNull = charIDToTypeID("null");
+		const idSlct = charIDToTypeID("slct");
+		const idMkVs = charIDToTypeID("MkVs");
+		
+		const FEW_LAYERS = 10;
+		
+		if (layerCount <= FEW_LAYERS) {
+			// don't show the progress bar UI for only a few layers
+			progressBarWindow = null;
+		}
+		
+		if (progressBarWindow) {
+			// The layer count is actually + 1 if there's a background present, but it should be no biggie.
+			showProgressBar(progressBarWindow, "Collecting layers... Might take up to several seconds.", (layerCount + FEW_LAYERS) / FEW_LAYERS);
+		}
+	
+		ref = new ActionReference();
+		ref.putEnumerated(idLyr, idOrdn, charIDToTypeID("Trgt"));
+		var selectionDesc = executeActionGet(ref);
+		
+		try {
+			// Collect normal layers.
+			var visibleInGroup = [true];
+			var layerVisible;
+			for (var i = layerCount; i >= 1; --i) {
+				// check if it's an art layer (not a group) that can be selected
+				ref = new ActionReference();
+				ref.putIndex(idLyr, i);
+				desc = executeActionGet(ref);
+				layerVisible = desc.getBoolean(idVsbl);
+				layerSection = typeIDToStringID(desc.getEnumerationValue(idLayerSection));
+				if (layerSection == "layerSectionContent") {
+					// select the layer and then retrieve it via Document.activeLayer
+					desc.clear();
+					desc.putReference(idNull, ref);  
+					desc.putBoolean(idMkVs, false);  
+					executeAction(idSlct, desc, DialogModes.NO);
+					
+					var activeLayer = activeDocument.activeLayer;
+					layers.push(activeLayer);
+					if (layerVisible && visibleInGroup[visibleInGroup.length - 1]) {
+						visibleLayers.push(activeLayer);
+					}				
+				}
+				else if (layerSection == "layerSectionStart") {
+					visibleInGroup.push(layerVisible && visibleInGroup[visibleInGroup.length - 1]);
+				}
+				else if (layerSection == "layerSectionEnd") {
+					visibleInGroup.pop();
+				}
+				
+				if (progressBarWindow && ((i % FEW_LAYERS == 0) || (i == layerCount))) {
+					updateProgressBar(progressBarWindow);
+					repaintProgressBar(progressBarWindow);
+					if (userCancelled) {
+						throw new Error("cancel");
+					}
+				}
+			}
+			
+			// Collect the background.
+			ref = new ActionReference();
+			ref.putIndex(idLyr, 0);
+			try {
+				desc = executeActionGet(ref);
+				var bg = activeDocument.backgroundLayer;
+				layers.push(bg);
+				if (bg.visible) {
+					visibleLayers.push(bg);
+				}
+				
+				if (progressBarWindow) {
+					updateProgressBar(progressBarWindow);
+					repaintProgressBar(progressBarWindow);
+				}
+			}
+			catch (e) {
+				// no background, move on
+			}		
+		}
+		catch (e) {
+			if (e.message != "cancel") throw e;
+		}
+
+		// restore selection (unfortunately CS2 doesn't support multiselection, so only the topmost layer is re-selected)
+		desc.clear();
+		ref = new ActionReference();
+		const totalLayerCount = selectionDesc.getInteger(charIDToTypeID("Cnt "));
+		ref.putIndex(idLyr, selectionDesc.getInteger(charIDToTypeID("ItmI")) - (totalLayerCount - layerCount));
+		desc.putReference(idNull, ref);  
+		desc.putBoolean(idMkVs, false);  
+		executeAction(idSlct, desc, DialogModes.NO);
+		
+		if (progressBarWindow) {
+			progressBarWindow.hide();
+		}
+	}
+		
+	return {layers: layers, visibleLayers: visibleLayers};
 }
 
 //
