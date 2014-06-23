@@ -39,18 +39,23 @@ function main()
 	prefs.formatArgs = null;
 	prefs.visibleOnly = false;
 	
+	userCancelled = false;
+	
 	// create progress bar
 	var progressBarWindow = createProgressBar();
 	if (! progressBarWindow) {
 		return "cancel";
 	}
 	
-	// collect layers
+	// collect layers	
 	var profiler = new Profiler(env.profiling);
 	var collected = collectLayers(activeDocument, progressBarWindow);
+	if (userCancelled) {
+		return "cancel";
+	}
 	layers = collected.layers;
 	visibleLayers = collected.visibleLayers;
-	var collectionDuration = profiler.getDuration(true, true);
+	var collectionDuration = profiler.getDuration(true, true);		
 	if (env.profiling) {
 		alert("Layers collected in " + profiler.format(collectionDuration), "Debug info");
 	}
@@ -63,12 +68,16 @@ function main()
 		var count = exportLayers(activeDocument, prefs.visibleOnly, progressBarWindow);
 		var exportDuration = profiler.getDuration(true, true);
 		
-		var message = "Saved " + count.count + " files.";
+		var message = "";
+		if (userCancelled) {
+			message += "Export cancelled!\n\n";
+		}
+		message += "Saved " + count.count + " files.";
 		if (env.profiling) {
 			message += "\n\nExport function took " + profiler.format(collectionDuration) + " + " + profiler.format(exportDuration) + " to perform.";
 		}
 		if (count.error) {
-			message += "\n\nSome layers were not exported! (Are there many layers with the same name?)"
+			message += "\n\nSome layers failed to export! (Are there many layers with the same name?)"
 		}
 		alert(message, "Finished", count.error);
 	}
@@ -140,6 +149,9 @@ function exportLayers(doc, visibleOnly, progressBarWindow)
 			if (progressBarWindow) {
 				updateProgressBar(progressBarWindow, "Exporting " + (i + 1) + " of " + count + "...");
 				repaintProgressBar(progressBarWindow);
+				if (userCancelled) {
+					break;
+				}
 			}
 		}
 				
@@ -225,28 +237,37 @@ function collectLayers(doc, progressBarWindow)
 		showProgressBar(progressBarWindow, "Collecting layers... Might take up to several seconds.", doc.layers.length);
 	}
 	
-	var layers = forEachLayer(
-		doc.layers,
-		function(layer, result) 
-		{
-			result.layers.push(layer);			
-			if (layer.visible) {
-				result.visibleLayers.push(layer);
-			}
-			
-			if (progressBarWindow && (layer.parent == doc)) {
-				updateProgressBar(progressBarWindow);
-				repaintProgressBar(progressBarWindow);
-			}
-			
-			return result;
-		},
-		{
-			layers: [],
-			visibleLayers: []
-		},
-		true
-	);
+	var layers;
+	try {
+		layers = forEachLayer(
+			doc.layers,
+			function(layer, result) 
+			{
+				result.layers.push(layer);			
+				if (layer.visible) {
+					result.visibleLayers.push(layer);
+				}
+				
+				if (progressBarWindow && (layer.parent == doc)) {
+					updateProgressBar(progressBarWindow);
+					repaintProgressBar(progressBarWindow);
+					if (userCancelled) {
+						throw new Error();
+					}
+				}
+				
+				return result;
+			},
+			{
+				layers: [],
+				visibleLayers: []
+			},
+			true
+		);
+	}
+	catch (e) {
+		// nop - already handled
+	}
 	
 	if (progressBarWindow) {
 		progressBarWindow.hide();
@@ -278,7 +299,12 @@ function createProgressBar()
 		return false;
 	}
 	
+	win.barRow.cancelBtn.onClick = function() {
+		userCancelled = true;
+	};
+	
 	win.onClose = function() {
+		userCancelled = true;
 		return false;
 	};
 	
@@ -288,8 +314,8 @@ function createProgressBar()
 function showProgressBar(win, message, maxValue)
 {
 	win.lblMessage.text = message;
-	win.bar.maxvalue = maxValue;
-	win.bar.value = 0;
+	win.barRow.bar.maxvalue = maxValue;
+	win.barRow.bar.value = 0;
 	
 	win.center();
 	win.show();
@@ -298,7 +324,7 @@ function showProgressBar(win, message, maxValue)
 
 function updateProgressBar(win, message)
 {
-	++win.bar.value;
+	++win.barRow.bar.value;
 	if (message) {
 		win.lblMessage.text = message;
 	}
