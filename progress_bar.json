@@ -3,7 +3,15 @@
 	preferredSize: [350, 60],
 	orientation: "column",
 	alignChildren: "fill",
-	bar: Progressbar {},
+	barRow: Group {
+		orientation: "row",
+		bar: Progressbar {
+			preferredSize: [300, 16]
+		},
+		cancelBtn: Button {
+			text: "Cancel"
+		}
+	},
 	lblMessage: StaticText {
 		alignment: "left",
 		text: ""
