@@ -26,7 +26,7 @@
 			grpFileType: Group {
 				orientation: "row",
 				txtFileType: StaticText {text: "File type:"},
-				drdFileType: DropDownList {preferredSize: [60, 20]}
+				drdFileType: DropDownList {preferredSize: [70, 20]}
 			},
 			pnlOptions: Panel {
 				text: "Options:", 

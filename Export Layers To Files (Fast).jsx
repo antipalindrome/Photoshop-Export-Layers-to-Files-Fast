@@ -29,7 +29,8 @@ function main()
 {
     // user preferences
     prefs = new Object();
-    prefs.fileType = "";
+    prefs.format = "";
+	prefs.fileExtension = "";
 	try {
 		prefs.filePath = app.activeDocument.path;
 	}
@@ -171,6 +172,7 @@ function saveImage(layerName)
 	}
     
 	if (prefs.formatArgs instanceof ExportOptionsSaveForWeb) {
+		// FIXME: built-in export is buggy; bypass it using ActionManager
 		activeDocument.exportDocument(handle, ExportType.SAVEFORWEB, prefs.formatArgs);
 	}
 	else {
@@ -186,9 +188,8 @@ function getUniqueName(fileroot)
     // if the file name exists, a numeric suffix will be added to disambiguate
 	
     var filename = fileroot;
-	var ext = prefs.fileType.toLowerCase();
     for (var i=1; i<100; i++) {
-        var handle = File(filename + "." + ext); 
+        var handle = File(filename + prefs.fileExtension.toLowerCase()); 
         if(handle.exists) {
             filename = fileroot + "-" + padder(i, 3);
         } 
@@ -341,7 +342,7 @@ function showDialog()
     // file type - call cloned getDialogParams*() for new file formats here
 	// (add a single line, the rest is taken care of)
     var saveOpt = [];
-	var paramFuncs = [getDialogParamsPNG, getDialogParamsJPEG, getDialogParamsTarga];
+	var paramFuncs = [getDialogParamsPNG24, getDialogParamsPNG8, getDialogParamsJPEG, getDialogParamsTarga];
     for (var i = 0, len = paramFuncs.length; i < len; ++i) {
 		var optionsRoot = optionsPanel.add("group");
 		optionsRoot.orientation = "column";
@@ -402,14 +403,15 @@ function getDialogParamsTarga(parent)
 }
 
 // Clone these two functions to add a new export file format - result handler
-function onDialogSelectTarga(controlRoot)
+function onDialogSelectTarga(parent)
 {
-	prefs.fileType = "TGA";
+	prefs.format = "TGA";
+	prefs.fileExtension = ".tga";
 	prefs.formatArgs = new TargaSaveOptions();
-	prefs.formatArgs.alphaChannels = controlRoot.alpha.value;
-	prefs.formatArgs.rleCompression = controlRoot.rle.value;
+	prefs.formatArgs.alphaChannels = parent.alpha.value;
+	prefs.formatArgs.rleCompression = parent.rle.value;
 	var resolution_enum = [TargaBitsPerPixels.SIXTEEN, TargaBitsPerPixels.TWENTYFOUR, TargaBitsPerPixels.THIRTYTWO];
-	prefs.formatArgs.resolution = resolution_enum[controlRoot.bitsPerPixel.selection.index];
+	prefs.formatArgs.resolution = resolution_enum[parent.bitsPerPixel.selection.index];
 }
 
 function getDialogParamsJPEG(parent)
@@ -432,8 +434,8 @@ function getDialogParamsJPEG(parent)
 	
 	// matte
 	row = parent.add("group");
-	var blurLabel = row.add("statictext", undefined, "Matte:");
-	blurLabel.preferredSize = [40, ROW_HEIGHT];
+	var matteLabel = row.add("statictext", undefined, "Matte:");
+	matteLabel.preferredSize = [40, ROW_HEIGHT];
 	parent.matte = row.add("dropdownlist", undefined, ["White", "Black", "Gray", "-", "Background", "Foreground"]);
 	parent.matte.selection = 0;
 	
@@ -455,7 +457,8 @@ function getDialogParamsJPEG(parent)
 
 function onDialogSelectJPEG(parent)
 {
-	prefs.fileType = "JPG";
+	prefs.format = "JPG";
+	prefs.fileExtension = ".jpg";
 	prefs.formatArgs = new JPEGSaveOptions();
 	const matteValue = [MatteType.WHITE, MatteType.BLACK, MatteType.SEMIGRAY, MatteType.NONE, MatteType.BACKGROUND, MatteType.FOREGROUND];
 	with (prefs.formatArgs) {
@@ -475,23 +478,74 @@ function onDialogSelectJPEG(parent)
 	}
 }
 
-function getDialogParamsPNG(parent)
+function getDialogParamsPNG24(parent)
 {
-	var type = parent.add("group");
-	type.add("statictext", undefined, "Resolution:");
-	var resolution_items = ["8 bit", "24 bit"];
-	parent.resolution = type.add("dropdownlist", undefined, resolution_items);	
-	parent.resolution.selection = 1;
+	const ROW_HEIGHT = 16;
 	
-	return {type: "PNG", handler: onDialogSelectPNG};
+	// matte
+	var row = parent.add("group");	
+	var matteLabel = row.add("statictext", undefined, "Matte:");
+	matteLabel.preferredSize = [40, ROW_HEIGHT];
+	parent.matte = row.add("dropdownlist", undefined, ["White", "Black", "Gray", "-", "Background", "Foreground"]);
+	parent.matte.selection = 0;	
+	parent.matte.enabled = false;
+	
+	// transparency
+	parent.transparency = parent.add("checkbox", undefined, "Transparency");
+	parent.transparency.value = true;
+	
+	parent.transparency.onClick = function() {
+		parent.matte.enabled = ! this.value;
+	};
+	
+	// interlaced
+	parent.interlaced = parent.add("checkbox", undefined, "Interlaced");
+	
+	return {type: "PNG-24", handler: onDialogSelectPNG24};
 }
 
-function onDialogSelectPNG(controlRoot)
+function onDialogSelectPNG24(parent)
 {
-	prefs.fileType = "PNG";
+try {
+	prefs.format = "PNG-24";
+	prefs.fileExtension = ".png";
+	
+	var WHITE = new RGBColor(); 
+	WHITE.red = 255; WHITE.green = 255; WHITE.blue = 255;
+	var BLACK = new RGBColor(); 
+	BLACK.red = 0; BLACK.green = 0; BLACK.blue = 0;
+	var GRAY = new RGBColor(); 
+	GRAY.red = 127; GRAY.green = 127; GRAY.blue = 127;
+	
+	const matteColours = [WHITE, BLACK, GRAY, BLACK, backgroundColor.rgb, foregroundColor.rgb];
+	
+	prefs.formatArgs = new ExportOptionsSaveForWeb();
+	with (prefs.formatArgs) {
+		format = SaveDocumentType.PNG;
+		PNG8 = false;
+		interlaced = parent.interlaced.value;
+		transparency = parent.transparency.value;
+		matteColor = matteColours[parent.matte.selection.index];
+	}
+}
+catch (e) {
+	alert("Line " + e.line + ": " + e.message);
+	throw e;
+}
+}
+
+function getDialogParamsPNG8(parent)
+{
+	return {type: "PNG-8", handler: onDialogSelectPNG8};
+}
+
+function onDialogSelectPNG8(parent)
+{
+	prefs.format = "PNG-8";
+	prefs.fileExtension = ".png";
 	prefs.formatArgs = new ExportOptionsSaveForWeb();
 	prefs.formatArgs.format = SaveDocumentType.PNG;
-	prefs.formatArgs.PNG8 = controlRoot.resolution.items[0].selected;
+	prefs.formatArgs.PNG8 = true;
 	prefs.formatArgs.dither = Dither.NONE;
 }
 
