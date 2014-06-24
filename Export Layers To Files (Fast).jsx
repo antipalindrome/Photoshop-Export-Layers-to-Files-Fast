@@ -414,24 +414,65 @@ function onDialogSelectTarga(controlRoot)
 
 function getDialogParamsJPEG(parent)
 {
-	var qualityRow = parent.add("group");
-	qualityRow.add("statictext", undefined, "Quality:");
-	parent.quality = qualityRow.add("dropdownlist");
+	const ROW_HEIGHT = 16;
 	
-    for (var i=12; i>=1; --i) {
-		parent.quality.add('item', "" + i);
-    }
+	// quality
+	var row = parent.add("group");
+	var qualityLabel = row.add("statictext", undefined, "Quality:");
+	qualityLabel.preferredSize = [40, ROW_HEIGHT];
+	parent.quality = row.add("slider", undefined, 12, 0, 12);
+	parent.quality.preferredSize = [140, ROW_HEIGHT];
+	var qualityValue = row.add("statictext", undefined, "12");
+	qualityValue.preferredSize = [30, ROW_HEIGHT];
 	
-	parent.quality.selection = 0;
+	parent.quality.onChanging = function() {
+		this.value = Math.round(this.value);
+		qualityValue.text = this.value;
+	};
+	
+	// matte
+	row = parent.add("group");
+	var blurLabel = row.add("statictext", undefined, "Matte:");
+	blurLabel.preferredSize = [40, ROW_HEIGHT];
+	parent.matte = row.add("dropdownlist", undefined, ["White", "Black", "Gray", "-", "Background", "Foreground"]);
+	parent.matte.selection = 0;
+	
+	// colour profile
+	parent.icc = parent.add("checkbox", undefined, "ICC Profile");
+	
+	// optimised
+	parent.optimised = parent.add("checkbox", undefined, "Optimized");
+	parent.optimised.value = true;
+	
+	// progressive
+	parent.progressive = parent.add("checkbox", undefined, "Progressive");
+	parent.progressive.onClick = function() {
+		parent.optimised.enabled = ! this.value;
+	};
 	
 	return {type: "JPG", handler: onDialogSelectJPEG};
 }
 
-function onDialogSelectJPEG(controlRoot)
+function onDialogSelectJPEG(parent)
 {
 	prefs.fileType = "JPG";
 	prefs.formatArgs = new JPEGSaveOptions();
-	prefs.formatArgs.quality = 12 - controlRoot.quality.selection.index;
+	const matteValue = [MatteType.WHITE, MatteType.BLACK, MatteType.SEMIGRAY, MatteType.NONE, MatteType.BACKGROUND, MatteType.FOREGROUND];
+	with (prefs.formatArgs) {
+		quality = parent.quality.value;
+		matte = matteValue[parent.matte.selection.index];
+		embedColorProfile = parent.icc.value;
+		if (parent.progressive.value) {
+			formatOptions = FormatOptions.PROGRESSIVE;
+			scans = 3;
+		}
+		else if (parent.optimised.value) {
+			formatOptions = FormatOptions.OPTIMIZEDBASELINE;
+		}
+		else {
+			formatOptions = FormatOptions.STANDARDBASELINE;
+		}
+	}
 }
 
 function getDialogParamsPNG(parent)
