@@ -39,6 +39,7 @@ function main()
 	}
 	prefs.formatArgs = null;
 	prefs.visibleOnly = false;
+	prefs.outputPrefix = "";
 	
 	userCancelled = false;
 	
@@ -163,7 +164,8 @@ function exportLayers(visibleOnly, progressBarWindow)
 
 function saveImage(layerName) 
 {
-    var fileName = layerName.replace(/[\\\*\/\?:"\|<>]/g, ''); 
+    var fileName = prefs.outputPrefix + "_" + layerName;
+	fileName = fileName.replace(/[\\\*\/\?:"\|<>]/g, ''); 
     fileName = fileName.replace(/[ ]/g, '_'); 
     if(fileName.length == 0) fileName = "Layer";
     var handle = getUniqueName(prefs.filePath + "/" + fileName);
@@ -369,6 +371,7 @@ function showDialog()
     // buttons
     dlg.funcArea.buttons.btnRun.onClick = function() {
 		// collect arguments for saving and proceed
+		prefs.outputPrefix = dlg.funcArea.content.grpPrefix.editPrefix.text;
 		var selIdx = formatDropDown.selection.index;
 		saveOpt[selIdx].handler(saveOpt[selIdx].controlRoot);
         dlg.close(1); 
@@ -506,7 +509,6 @@ function getDialogParamsPNG24(parent)
 
 function onDialogSelectPNG24(parent)
 {
-try {
 	prefs.format = "PNG-24";
 	prefs.fileExtension = ".png";
 	
@@ -528,14 +530,131 @@ try {
 		matteColor = matteColours[parent.matte.selection.index];
 	}
 }
-catch (e) {
-	alert("Line " + e.line + ": " + e.message);
-	throw e;
-}
-}
 
 function getDialogParamsPNG8(parent)
 {
+	const ROW_HEIGHT = 16;
+	const LABEL_WIDTH = 105;
+	
+	// color reduction
+	var row = parent.add("group");
+	var crLabel = row.add("statictext", undefined, "Color reduction:");
+	crLabel.preferredSize = [LABEL_WIDTH, ROW_HEIGHT];
+	parent.colourReduction = row.add("dropdownlist", undefined, [
+		"Perceptual", 
+		"Selective", 
+		"Adaptive", 
+		"Restrictive (Web)", 
+		"-", 
+		"Custom",
+		"-",
+		"Black & White", 
+		"Grayscale",
+		"Mac OS",
+		"Windows"
+	]);
+	parent.colourReduction.selection = 1;	
+	
+	// number of colors
+	row = parent.add("group");
+	var colorsLabel = row.add("statictext", undefined, "Number of colors:");
+	colorsLabel.preferredSize = [LABEL_WIDTH, ROW_HEIGHT];
+	parent.colors = row.add("edittext", undefined, "256");
+	parent.colors.preferredSize = [70, 18];
+	parent.colorsLast = 256;
+	
+	parent.colors.onChange = function() {
+		var colorNum = parseInt(this.text, 10);
+		if (isNaN(colorNum)) {
+			colorNum = parent.colorsLast;
+		}
+		else if (colorNum < 2) {
+			colorNum = 2;
+		}
+		else if (colorNum > 256) {
+			colorNum = 256;
+		}
+		this.text = colorNum;
+		parent.colorsLast = colorNum;
+	};
+	
+	// dither
+	row = parent.add("group");
+	var ditherLabel = row.add("statictext", undefined, "Dither:");
+	ditherLabel.preferredSize = [LABEL_WIDTH, ROW_HEIGHT];
+	parent.dither = row.add("dropdownlist", undefined, [
+		"None", 
+		"Diffusion",
+		"Pattern",
+		"Noise"
+	]);
+	parent.dither.selection = 0;
+	
+	// dither amount
+	var ditherAmountGroup = row.add("group");
+	parent.ditherAmount = ditherAmountGroup.add("slider", undefined, 100, 0, 100);
+	var ditherAmountValue = ditherAmountGroup.add("statictext", undefined, "100%");
+	ditherAmountGroup.enabled = false;
+	
+	parent.ditherAmount.onChanging = function() {
+		this.value = Math.round(this.value);
+		ditherAmountValue.text = "" + this.value + "%";
+	};
+	
+	parent.dither.onChange = function() {
+		ditherAmountGroup.enabled = (this.selection == 1);
+	};
+	
+	// interlaced
+	parent.interlaced = parent.add("checkbox", undefined, "Interlaced");
+	
+	// transparency
+	var transparencyPanel = parent.add("panel", undefined, "Transparency:");
+	transparencyPanel.orientation = "column";
+	transparencyPanel.alignChildren = "left";
+	parent.transparency = transparencyPanel.add("checkbox", undefined, "Enabled");
+	parent.transparency.value = true;
+	
+	// matte
+	var matteRow = transparencyPanel.add("group");
+	var matteLabel = matteRow.add("statictext", undefined, "Matte:");
+	matteLabel.preferredSize = [LABEL_WIDTH, ROW_HEIGHT];
+	parent.matte = matteRow.add("dropdownlist", undefined, ["White", "Black", "Gray", "-", "Background", "Foreground"]);
+	parent.matte.selection = 0;	
+	matteRow.enabled = false;
+	
+	// transparency dither
+	var tdRow = transparencyPanel.add("group");
+	var transDitherLabel = tdRow.add("statictext", undefined, "Transparency dither:");
+	transDitherLabel.preferredSize = [LABEL_WIDTH, ROW_HEIGHT];
+	parent.transparencyDither = tdRow.add("dropdownlist", undefined, [
+		"None", 
+		"Diffusion",
+		"Pattern",
+		"Noise"
+	]);
+	parent.transparencyDither.selection = 0;
+	
+	// transparency dither amount
+	var transDitherAmountGroup = tdRow.add("group");
+	parent.transparencyDitherAmount = transDitherAmountGroup.add("slider", undefined, 100, 0, 100);
+	var transDitherAmountValue = transDitherAmountGroup.add("statictext", undefined, "100%");
+	transDitherAmountGroup.enabled = false;
+	
+	parent.transparencyDitherAmount.onChanging = function() {
+		this.value = Math.round(this.value);
+		transDitherAmountValue.text = "" + this.value + "%";
+	};
+	
+	parent.transparencyDither.onChange = function() {
+		transDitherAmountGroup.enabled = (this.selection == 1);
+	};
+	
+	parent.transparency.onClick = function() {
+		matteRow.enabled = ! this.value;
+		tdRow.enabled = this.value;
+	};
+	
 	return {type: "PNG-8", handler: onDialogSelectPNG8};
 }
 
@@ -543,10 +662,54 @@ function onDialogSelectPNG8(parent)
 {
 	prefs.format = "PNG-8";
 	prefs.fileExtension = ".png";
+		
+	const colorReductionType = [
+		ColorReductionType.PERCEPTUAL,
+		ColorReductionType.SELECTIVE,
+		ColorReductionType.ADAPTIVE,
+		ColorReductionType.RESTRICTIVE,
+		null,
+		ColorReductionType.CUSTOM,
+		null,
+		ColorReductionType.BLACKWHITE,
+		ColorReductionType.GRAYSCALE,
+		ColorReductionType.MACINTOSH,
+		ColorReductionType.WINDOWS
+	];
+	const ditherType = [
+		Dither.NONE,
+		Dither.DIFFUSION,
+		Dither.PATTERN,
+		Dither.NOISE
+	];
+	var WHITE = new RGBColor(); 
+	WHITE.red = 255; WHITE.green = 255; WHITE.blue = 255;
+	var BLACK = new RGBColor(); 
+	BLACK.red = 0; BLACK.green = 0; BLACK.blue = 0;
+	var GRAY = new RGBColor(); 
+	GRAY.red = 127; GRAY.green = 127; GRAY.blue = 127;
+	const matteColours = [WHITE, BLACK, GRAY, BLACK, backgroundColor.rgb, foregroundColor.rgb];
+	
 	prefs.formatArgs = new ExportOptionsSaveForWeb();
-	prefs.formatArgs.format = SaveDocumentType.PNG;
-	prefs.formatArgs.PNG8 = true;
-	prefs.formatArgs.dither = Dither.NONE;
+	with (prefs.formatArgs) {
+		format = SaveDocumentType.PNG;
+		PNG8 = true;
+		colorReduction = colorReductionType[parent.colourReduction.selection.index];
+		colors = parseInt(parent.colors.text, 10);
+		dither = ditherType[parent.dither.selection.index];
+		if (dither == Dither.DIFFUSION) {
+			ditherAmount = parent.ditherAmount.value;
+		}
+		interlaced = parent.interlaced.value;
+		transparency = parent.transparency.value;
+		matteColor = matteColours[parent.matte.selection.index];
+		if (transparency) {
+			transparencyDither = ditherType[parent.transparencyDither.selection.index];
+			if (transparencyDither == Dither.DIFFUSION) {
+				transparencyAmount = parent.transparencyDitherAmount.value;
+			}
+		}
+	}
 }
 
 //
