@@ -164,7 +164,7 @@ function exportLayers(visibleOnly, progressBarWindow)
 
 function saveImage(layerName) 
 {
-    var fileName = prefs.outputPrefix + "_" + layerName;
+    var fileName = prefs.outputPrefix + layerName;
 	fileName = fileName.replace(/[\\\*\/\?:"\|<>]/g, ''); 
     fileName = fileName.replace(/[ ]/g, '_'); 
     if(fileName.length == 0) fileName = "Layer";
@@ -174,8 +174,22 @@ function saveImage(layerName)
 	}
     
 	if (prefs.formatArgs instanceof ExportOptionsSaveForWeb) {
-		// FIXME: built-in export is buggy; bypass it using ActionManager
-		activeDocument.exportDocument(handle, ExportType.SAVEFORWEB, prefs.formatArgs);
+		// Document.exportDocument() is unreliable -- it ignores some of the export options.
+		// Avoid it if possible.
+		switch (prefs.format) {
+		
+		case "PNG-24":
+			exportPng24AM(handle, prefs.formatArgs);
+			break;
+			
+		case "PNG-8":
+			exportPng8AM(handle, prefs.formatArgs);
+			break;
+			
+		default:
+			activeDocument.exportDocument(handle, ExportType.SAVEFORWEB, prefs.formatArgs);
+			break;
+		}
 	}
 	else {
 		activeDocument.saveAs(handle, prefs.formatArgs, true, Extension.LOWERCASE); 
@@ -372,6 +386,10 @@ function showDialog()
     dlg.funcArea.buttons.btnRun.onClick = function() {
 		// collect arguments for saving and proceed
 		prefs.outputPrefix = dlg.funcArea.content.grpPrefix.editPrefix.text;
+		prefs.outputPrefix = prefs.outputPrefix.replace(/^\s+|\s+$/gm, '');
+		if (prefs.outputPrefix.length > 0) {
+			prefs.outputPrefix += " ";
+		}
 		var selIdx = formatDropDown.selection.index;
 		saveOpt[selIdx].handler(saveOpt[selIdx].controlRoot);
         dlg.close(1); 
@@ -545,8 +563,6 @@ function getDialogParamsPNG8(parent)
 		"Selective", 
 		"Adaptive", 
 		"Restrictive (Web)", 
-		"-", 
-		"Custom",
 		"-",
 		"Black & White", 
 		"Grayscale",
@@ -668,8 +684,6 @@ function onDialogSelectPNG8(parent)
 		ColorReductionType.SELECTIVE,
 		ColorReductionType.ADAPTIVE,
 		ColorReductionType.RESTRICTIVE,
-		null,
-		ColorReductionType.CUSTOM,
 		null,
 		ColorReductionType.BLACKWHITE,
 		ColorReductionType.GRAYSCALE,
@@ -921,6 +935,199 @@ function collectLayersAM(progressBarWindow)
 	}
 		
 	return {layers: layers, visibleLayers: visibleLayers};
+}
+
+function exportPng24AM(fileName, options)
+{
+	var desc = new ActionDescriptor(),
+		desc2 = new ActionDescriptor();
+	desc2.putEnumerated(charIDToTypeID("Op  "), charIDToTypeID("SWOp"), charIDToTypeID("OpSa"));
+	desc2.putEnumerated(charIDToTypeID("Fmt "), charIDToTypeID("IRFm"), charIDToTypeID("PN24"));
+	desc2.putBoolean(charIDToTypeID("Intr"), options.interlaced);
+	desc2.putBoolean(charIDToTypeID("Trns"), options.transparency);
+	desc2.putBoolean(charIDToTypeID("Mtt "), true);
+	desc2.putInteger(charIDToTypeID("MttR"), options.matteColor.red);
+	desc2.putInteger(charIDToTypeID("MttG"), options.matteColor.green);
+	desc2.putInteger(charIDToTypeID("MttB"), options.matteColor.blue);
+	desc2.putBoolean(charIDToTypeID("SHTM"), false);
+	desc2.putBoolean(charIDToTypeID("SImg"), true);
+	desc2.putBoolean(charIDToTypeID("SSSO"), false);
+	desc2.putList(charIDToTypeID("SSLt"), new ActionList());
+	desc2.putBoolean(charIDToTypeID("DIDr"), false);
+	desc2.putPath(charIDToTypeID("In  "), new File(fileName));
+	desc.putObject(charIDToTypeID("Usng"), stringIDToTypeID("SaveForWeb"), desc2);
+	executeAction(charIDToTypeID("Expr"), desc, DialogModes.NO);
+}
+
+function exportPng8AM(fileName, options)
+{
+	var id5 = charIDToTypeID( "Expr" );
+	var desc3 = new ActionDescriptor();
+	var id6 = charIDToTypeID( "Usng" );
+	var desc4 = new ActionDescriptor();
+	var id7 = charIDToTypeID( "Op  " );
+	var id8 = charIDToTypeID( "SWOp" );
+	var id9 = charIDToTypeID( "OpSa" );
+	desc4.putEnumerated( id7, id8, id9 );
+	var id10 = charIDToTypeID( "Fmt " );
+	var id11 = charIDToTypeID( "IRFm" );
+	var id12 = charIDToTypeID( "PNG8" );
+	desc4.putEnumerated( id10, id11, id12 );
+	var id13 = charIDToTypeID( "Intr" ); //Interlaced
+	desc4.putBoolean( id13, options.interlaced );
+	var id14 = charIDToTypeID( "RedA" );
+	var id15 = charIDToTypeID( "IRRd" );
+	//Algorithm
+	var id16;
+	switch (options.colorReduction) {
+	
+	case ColorReductionType.PERCEPTUAL:
+		id16 = charIDToTypeID( "Prcp" );
+		break;
+		
+	case ColorReductionType.SELECTIVE:
+		id16 = charIDToTypeID( "Sltv" );
+		break;
+		
+	case ColorReductionType.ADAPTIVE:
+		id16 = charIDToTypeID( "Adpt" );
+		break;
+		
+	case ColorReductionType.RESTRICTIVE:
+		id16 = charIDToTypeID( "Web " );
+		break;
+
+	// CUSTOM not supported
+	
+	case ColorReductionType.BLACKWHITE:
+	case ColorReductionType.GRAYSCALE:
+	case ColorReductionType.MACINTOSH:
+	case ColorReductionType.WINDOWS:
+		id16 = charIDToTypeID( "FlBs" );
+		break;
+		
+	default:
+		throw new Error("Unknown color reduction algorithm. Cannot export PNG-8!");
+	}
+	desc4.putEnumerated( id14, id15, id16 );
+    var id361 = charIDToTypeID( "FBPl" );
+	switch (options.colorReduction) {
+	
+	case ColorReductionType.BLACKWHITE:
+        desc4.putString( id361, "Black & White" );
+		break;
+	
+	case ColorReductionType.GRAYSCALE:
+        desc4.putString( id361, "Grayscale" );
+		break;
+	
+	case ColorReductionType.MACINTOSH:
+        desc4.putString( id361, "Mac OS" );
+		break;
+	
+	case ColorReductionType.WINDOWS:
+        desc4.putString( id361, "Windows" );
+		break;
+	}
+	var id17 = charIDToTypeID( "RChT" );
+	desc4.putBoolean( id17, false );
+	var id18 = charIDToTypeID( "RChV" );
+	desc4.putBoolean( id18, false );
+	var id19 = charIDToTypeID( "AuRd" );
+	desc4.putBoolean( id19, false );
+	var id20 = charIDToTypeID( "NCol" ); //NO. Of Colors
+	desc4.putInteger( id20, options.colors );
+	var id21 = charIDToTypeID( "Dthr" ); //Dither
+	var id22 = charIDToTypeID( "IRDt" );
+	//Dither type
+	var id23;
+	switch (options.dither) {
+	
+	case Dither.NONE:
+		id23 = charIDToTypeID( "None" );
+		break;
+	
+	case Dither.DIFFUSION:
+		id23 = charIDToTypeID( "Dfsn" );
+		break;
+	
+	case Dither.PATTERN:
+		id23 = charIDToTypeID( "Ptrn" );
+		break;
+	
+	case Dither.NOISE:
+		id23 = charIDToTypeID( "BNoi" );
+		break;
+	
+	default:
+		throw new Error("Unknown dither type. Cannot export PNG-8!");
+	}
+	desc4.putEnumerated( id21, id22, id23 );
+	var id24 = charIDToTypeID( "DthA" );
+	desc4.putInteger( id24, options.ditherAmount );
+	var id25 = charIDToTypeID( "DChS" );
+	desc4.putInteger( id25, 0 );
+	var id26 = charIDToTypeID( "DCUI" );
+	desc4.putInteger( id26, 0 );
+	var id27 = charIDToTypeID( "DChT" );
+	desc4.putBoolean( id27, false );
+	var id28 = charIDToTypeID( "DChV" );
+	desc4.putBoolean( id28, false );
+	var id29 = charIDToTypeID( "WebS" );
+	desc4.putInteger( id29, 0 );
+	var id30 = charIDToTypeID( "TDth" ); //transparency dither
+	var id31 = charIDToTypeID( "IRDt" );
+	var id32;
+	switch (options.transparencyDither) {
+	
+	case Dither.NONE:
+		id32 = charIDToTypeID( "None" );
+		break;
+	
+	case Dither.DIFFUSION:
+		id32 = charIDToTypeID( "Dfsn" );
+		break;
+	
+	case Dither.PATTERN:
+		id32 = charIDToTypeID( "Ptrn" );
+		break;
+	
+	case Dither.NOISE:
+		id32 = charIDToTypeID( "BNoi" );
+		break;
+	
+	default:
+		throw new Error("Unknown transparency dither algorithm. Cannot export PNG-8!");
+	}
+	desc4.putEnumerated( id30, id31, id32 );
+	var id33 = charIDToTypeID( "TDtA" );
+	desc4.putInteger( id33, options.transparencyAmount );
+	var id34 = charIDToTypeID( "Trns" ); //Transparency
+	desc4.putBoolean( id34, options.transparency );
+	var id35 = charIDToTypeID( "Mtt " );
+	desc4.putBoolean( id35, true );		 //matte
+	var id36 = charIDToTypeID( "MttR" ); //matte color
+	desc4.putInteger( id36, options.matteColor.red );
+	var id37 = charIDToTypeID( "MttG" );
+	desc4.putInteger( id37, options.matteColor.green );
+	var id38 = charIDToTypeID( "MttB" );
+	desc4.putInteger( id38, options.matteColor.blue );
+	var id39 = charIDToTypeID( "SHTM" );
+	desc4.putBoolean( id39, false );
+	var id40 = charIDToTypeID( "SImg" );
+	desc4.putBoolean( id40, true );
+	var id41 = charIDToTypeID( "SSSO" );
+	desc4.putBoolean( id41, false );
+	var id42 = charIDToTypeID( "SSLt" );
+	var list1 = new ActionList();
+	desc4.putList( id42, list1 );
+	var id43 = charIDToTypeID( "DIDr" );
+	desc4.putBoolean( id43, false );
+	var id44 = charIDToTypeID( "In  " );
+	desc4.putPath( id44, new File(fileName) );
+	var id45 = stringIDToTypeID( "SaveForWeb" );
+	desc3.putObject( id6, id45, desc4 );
+	executeAction( id5, desc3, DialogModes.NO );
 }
 
 //
