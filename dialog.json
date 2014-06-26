@@ -15,17 +15,23 @@
 			grpDest: Group {
 				orientation: "row",
 				alignChildren: "left",
-				txtDest: EditText {preferredSize: [200, 20], properties: {readonly: true}},
+				txtDest: EditText {preferredSize: [310, 20], properties: {readonly: true}},
 				btnDest: Button {text: "Browse..."}
 			},
 			grpLayers: Group {
 				orientation: "row",
-				radioLayersAll: RadioButton {text: "All layers", value: true},
-				radioLayersVis: RadioButton {text: "Visible only"}
+				radioLayersAll: RadioButton {text: "All layers", preferredSize: [155, 20], value: true},
+				radioLayersVis: RadioButton {text: "Visible only", preferredSize: [155, 20]}
+			},
+			grpPrefix: Group {
+				orientation: "row",
+				alignChildren: "left",
+				txtPrefix: StaticText {text: "Output prefix:", preferredSize: [70, 20]},
+				editPrefix: EditText {preferredSize: [230, 20]}
 			},
 			grpFileType: Group {
 				orientation: "row",
-				txtFileType: StaticText {text: "File type:"},
+				txtFileType: StaticText {text: "File type:", preferredSize: [70, 20]},
 				drdFileType: DropDownList {preferredSize: [70, 20]}
 			},
 			pnlOptions: Panel {
