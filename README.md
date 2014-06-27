@@ -19,6 +19,7 @@ Features:
 * Export either all layers or visible only.
 * Shows current progress and allows to cancel any time.
 * Shows proper layer count in advance.
+* Files are named either using layer names or automatic layer indices.
 
 You can also see [what's coming next](https://github.com/jwa107/Photoshop-Export-Layers-as-Images/wiki/Feature-Roadmap) and browse some of our [performance test results](https://github.com/jwa107/Photoshop-Export-Layers-as-Images/wiki/Performance-Test-Results).
 
