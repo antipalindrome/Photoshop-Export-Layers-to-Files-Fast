@@ -13,11 +13,49 @@
 // REQUIRES: 
 // 	Adobe Photoshop CS2 or higher
 
-// Most current version always available at: https://github.com/skjorn/Photoshop-Export-Layers-as-Images
+// Most current version always available at: https://github.com/jwa107/Photoshop-Export-Layers-as-Images
 
 // enable double-clicking from Finder/Explorer (CS2 and higher)
 #target photoshop
 app.bringToFront();
+
+
+const FileNameType = {
+	AS_LAYERS: 1,
+	INDEX_ASC: 2,
+	INDEX_DESC: 3,
+	
+	forIndex: function(index) {
+		var values = [this.AS_LAYERS, this.INDEX_DESC, this.INDEX_ASC];
+		return values[index];
+	}
+};
+
+const LetterCase = {
+	KEEP: 1,
+	LOWERCASE: 2,
+	UPPERCASE: 3,
+	
+	forIndex: function(index) {
+		var values = [this.KEEP, this.LOWERCASE, this.UPPERCASE];
+		return values[index];
+	},
+	
+	toExtensionType: function(value) {
+		switch (value) {
+		
+		case this.KEEP:
+			return Extension.NONE;
+		
+		case this.LOWERCASE:
+			return Extension.LOWERCASE;
+		
+		case this.UPPERCASE:
+			return Extension.UPPERCASE;
+		}
+	}
+};
+
 
 bootstrap();
 
@@ -40,6 +78,8 @@ function main()
 	prefs.formatArgs = null;
 	prefs.visibleOnly = false;
 	prefs.outputPrefix = "";
+	prefs.naming = FileNameType.AS_LAYERS;
+	prefs.namingLetterCase = LetterCase.KEEP;
 	
 	userCancelled = false;
 	
@@ -125,17 +165,40 @@ function exportLayers(visibleOnly, progressBarWindow)
 			layersToExport[i].visible = false;
 		}
 			
+		var countDigits = 0;
+		if (prefs.naming != FileNameType.AS_LAYERS) {
+			countDigits = ("" + count).length;
+		}
+		
 		// export layers
 		for (var i = 0; i < count; ++i) {
 			var layer = layersToExport[i];
-			layer.visible = true;
-			if (saveImage(layer.name)) {
+			
+			var fileName;
+			switch (prefs.naming) {
+			
+			case FileNameType.AS_LAYERS:
+				fileName = makeFileNameFromLayerName(layer);
+				break;
+			
+			case FileNameType.INDEX_ASC:
+				fileName = makeFileNameFromIndex(count - i, countDigits);
+				break;
+			
+			case FileNameType.INDEX_DESC:
+				fileName = makeFileNameFromIndex(i + 1, countDigits);
+				break;
+			}
+									
+			if (fileName) {
+				layer.visible = true;
+				saveImage(fileName);
 				++retVal.count;
+				layer.visible = false;
 			}
 			else {
 				retVal.error = true;
-			}
-			layer.visible = false;
+			}			
 			
 			if (progressBarWindow) {
 				updateProgressBar(progressBarWindow, "Exporting " + (i + 1) + " of " + count + "...");
@@ -162,52 +225,71 @@ function exportLayers(visibleOnly, progressBarWindow)
 	return retVal;
 }
 
-function saveImage(layerName) 
+function saveImage(fileName) 
 {
-    var fileName = prefs.outputPrefix + layerName;
-	fileName = fileName.replace(/[\\\*\/\?:"\|<>]/g, ''); 
-    fileName = fileName.replace(/[ ]/g, '_'); 
-    if(fileName.length == 0) fileName = "Layer";
-    var handle = getUniqueName(prefs.filePath + "/" + fileName);
-	if (! handle) {
-		return false;
-	}
-    
 	if (prefs.formatArgs instanceof ExportOptionsSaveForWeb) {
 		// Document.exportDocument() is unreliable -- it ignores some of the export options.
 		// Avoid it if possible.
 		switch (prefs.format) {
 		
 		case "PNG-24":
-			exportPng24AM(handle, prefs.formatArgs);
+			exportPng24AM(fileName, prefs.formatArgs);
 			break;
 			
 		case "PNG-8":
-			exportPng8AM(handle, prefs.formatArgs);
+			exportPng8AM(fileName, prefs.formatArgs);
 			break;
 			
 		default:
-			activeDocument.exportDocument(handle, ExportType.SAVEFORWEB, prefs.formatArgs);
+			activeDocument.exportDocument(fileName, ExportType.SAVEFORWEB, prefs.formatArgs);
 			break;
 		}
 	}
 	else {
-		activeDocument.saveAs(handle, prefs.formatArgs, true, Extension.LOWERCASE); 
+		activeDocument.saveAs(fileName, prefs.formatArgs, true, LetterCase.toExtensionType(prefs.namingLetterCase)); 
 	}
 	
 	return true;
 }
 
-function getUniqueName(fileroot) 
+function makeFileNameFromIndex(index, numOfDigits)
+{
+	var fileName = "" + padder(index, numOfDigits);
+	return getUniqueFileName(fileName);
+}
+
+function makeFileNameFromLayerName(layer)
+{
+    var fileName = makeValidFileName(layer.name);
+    if (fileName.length == 0) { 
+		fileName = "Layer";
+	}
+	return getUniqueFileName(fileName);
+}
+
+function getUniqueFileName(fileName) 
 { 
-    // form a full file name
-    // if the file name exists, a numeric suffix will be added to disambiguate
-	
-    var filename = fileroot;
-    for (var i=1; i<100; i++) {
-        var handle = File(filename + prefs.fileExtension.toLowerCase()); 
-        if(handle.exists) {
-            filename = fileroot + "-" + padder(i, 3);
+	var ext = prefs.fileExtension;
+	// makeValidFileName() here basically just converts the space between the prefix and the core file name,
+	// but it's a good idea to keep file naming conventions in one place, i.e. inside makeValidFileName(),
+	// and rely on them exclusively.
+	fileName = makeValidFileName(prefs.outputPrefix + fileName);
+	if (prefs.namingLetterCase == LetterCase.LOWERCASE) {
+		fileName = fileName.toLowerCase();
+		ext = ext.toLowerCase();
+	}
+	else if (prefs.namingLetterCase == LetterCase.UPPERCASE) {
+		fileName = fileName.toUpperCase();
+		ext = ext.toUpperCase();
+	}
+	fileName = prefs.filePath + "/" + fileName;
+    
+    // Check if the file already exists. In such case a numeric suffix will be added to disambiguate.
+    var uniqueName = fileName;
+    for (var i = 1; i <= 100; ++i) {
+        var handle = File(uniqueName + ext);
+        if (handle.exists) {
+			uniqueName = fileName + "-" + padder(i, 3);
         } 
 		else {
             return handle; 
@@ -368,7 +450,7 @@ function showDialog()
 		saveOpt.push(opts);
 		
         formatDropDown.add("item", saveOpt[i].type);
-    }
+    }		
 	
     // show proper file type options
     formatDropDown.onChange = function() {
@@ -381,15 +463,28 @@ function showDialog()
     }; 
 	
     formatDropDown.selection = 0;
-	  	   
+	 
+	// file name prefix
+	dlg.funcArea.content.grpPrefix.editPrefix.onChange = function() {
+		this.text = makeValidFileName(this.text);
+	};
+	
+	// file naming options
+	dlg.funcArea.content.grpNaming.drdNaming.selection = 0;
+	dlg.funcArea.content.grpLetterCase.drdLetterCase.selection = 0;
+	 
     // buttons
     dlg.funcArea.buttons.btnRun.onClick = function() {
 		// collect arguments for saving and proceed
+		
 		prefs.outputPrefix = dlg.funcArea.content.grpPrefix.editPrefix.text;
-		prefs.outputPrefix = prefs.outputPrefix.replace(/^\s+|\s+$/gm, '');
 		if (prefs.outputPrefix.length > 0) {
 			prefs.outputPrefix += " ";
 		}
+		
+		prefs.naming = FileNameType.forIndex(dlg.funcArea.content.grpNaming.drdNaming.selection.index);
+		prefs.namingLetterCase = LetterCase.forIndex(dlg.funcArea.content.grpLetterCase.drdLetterCase.selection.index);
+		
 		var selIdx = formatDropDown.selection.index;
 		saveOpt[selIdx].handler(saveOpt[selIdx].controlRoot);
         dlg.close(1); 
@@ -631,6 +726,11 @@ function getDialogParamsPNG8(parent)
 	parent.transparency = transparencyPanel.add("checkbox", undefined, "Enabled");
 	parent.transparency.value = true;
 	
+	parent.transparency.onClick = function() {
+		matteRow.enabled = ! this.value;
+		tdRow.enabled = this.value;
+	};
+	
 	// matte
 	var matteRow = transparencyPanel.add("group");
 	var matteLabel = matteRow.add("statictext", undefined, "Matte:");
@@ -651,6 +751,10 @@ function getDialogParamsPNG8(parent)
 	]);
 	parent.transparencyDither.selection = 0;
 	
+	parent.transparencyDither.onChange = function() {
+		transDitherAmountGroup.enabled = (this.selection == 1);
+	};
+	
 	// transparency dither amount
 	var transDitherAmountGroup = tdRow.add("group");
 	parent.transparencyDitherAmount = transDitherAmountGroup.add("slider", undefined, 100, 0, 100);
@@ -660,15 +764,6 @@ function getDialogParamsPNG8(parent)
 	parent.transparencyDitherAmount.onChanging = function() {
 		this.value = Math.round(this.value);
 		transDitherAmountValue.text = "" + this.value + "%";
-	};
-	
-	parent.transparencyDither.onChange = function() {
-		transDitherAmountGroup.enabled = (this.selection == 1);
-	};
-	
-	parent.transparency.onClick = function() {
-		matteRow.enabled = ! this.value;
-		tdRow.enabled = this.value;
 	};
 	
 	return {type: "PNG-8", handler: onDialogSelectPNG8};
@@ -1139,6 +1234,14 @@ function padder(input, padLength)
     // pad the input with zeroes up to indicated length
     var result = (new Array(padLength + 1 - input.toString().length)).join('0') + input;
     return result;
+}
+
+function makeValidFileName(fileName)
+{
+	var validName = fileName.replace(/^\s+|\s+$/gm, '');	// trim spaces
+	validName = validName.replace(/[\\\*\/\?:"\|<>]/g, ''); // remove characters not allowed in a file name
+    validName = validName.replace(/[ ]/g, '_'); 			// replace spaces with underscores, since some programs still may have troubles with them
+	return validName;
 }
 
 function formatString(text) 

@@ -23,6 +23,16 @@
 				radioLayersAll: RadioButton {text: "All layers", preferredSize: [155, 20], value: true},
 				radioLayersVis: RadioButton {text: "Visible only", preferredSize: [155, 20]}
 			},
+			grpNaming: Group {
+				orientation: "row",
+				txtNaming: StaticText {text: "Name files:", preferredSize: [70, 20]},
+				drdNaming: DropDownList {preferredSize: [140, 20], properties: {items: ["As layers", "By index from top", "By index from bottom"]}}
+			},
+			grpLetterCase: Group {
+				orientation: "row",
+				txtLetterCase: StaticText {text: "Letter case:", preferredSize: [70, 20]},
+				drdLetterCase: DropDownList {preferredSize: [140, 20], properties: {items: ["Keep", "Lowercase", "Uppercase"]}}
+			},
 			grpPrefix: Group {
 				orientation: "row",
 				alignChildren: "left",
