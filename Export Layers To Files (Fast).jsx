@@ -444,7 +444,7 @@ function getDialogParamsJPEG(parent)
 	var qualityLabel = row.add("statictext", undefined, "Quality:");
 	qualityLabel.preferredSize = [40, ROW_HEIGHT];
 	parent.quality = row.add("slider", undefined, 12, 0, 12);
-	parent.quality.preferredSize = [140, ROW_HEIGHT];
+	parent.quality.preferredSize = [140, 20];
 	var qualityValue = row.add("statictext", undefined, "12");
 	qualityValue.preferredSize = [30, ROW_HEIGHT];
 	
@@ -634,7 +634,7 @@ function getDialogParamsPNG8(parent)
 	// matte
 	var matteRow = transparencyPanel.add("group");
 	var matteLabel = matteRow.add("statictext", undefined, "Matte:");
-	matteLabel.preferredSize = [LABEL_WIDTH, ROW_HEIGHT];
+	matteLabel.preferredSize = [LABEL_WIDTH + 8, ROW_HEIGHT];
 	parent.matte = matteRow.add("dropdownlist", undefined, ["White", "Black", "Gray", "-", "Background", "Foreground"]);
 	parent.matte.selection = 0;	
 	matteRow.enabled = false;
@@ -642,7 +642,7 @@ function getDialogParamsPNG8(parent)
 	// transparency dither
 	var tdRow = transparencyPanel.add("group");
 	var transDitherLabel = tdRow.add("statictext", undefined, "Transparency dither:");
-	transDitherLabel.preferredSize = [LABEL_WIDTH, ROW_HEIGHT];
+	transDitherLabel.preferredSize = [LABEL_WIDTH + 8, ROW_HEIGHT];
 	parent.transparencyDither = tdRow.add("dropdownlist", undefined, [
 		"None", 
 		"Diffusion",
