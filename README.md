@@ -15,6 +15,7 @@ Features:
   * PNG (8 and 24 bit)
   * Targa 
   * JPEG
+  * BMP
 * Handles nesting in grouped layers.
 * Export either all layers or visible only.
 * Shows current progress and allows to cancel any time.
@@ -42,6 +43,12 @@ Mac: /Applications/Adobe Photoshop VERSION/Presets/Scripts/
 
 Version History:
 -------------------------------
+
+<b>10 July 2014</b> by [Skjorn](https://github.com/skjorn)
+
+* Added BMP support.
+* Enabled using layer indices for file names.
+* Optional file name prefix.
 
 <b>23 June 2014</b> by [Skjorn](https://github.com/skjorn)
 
