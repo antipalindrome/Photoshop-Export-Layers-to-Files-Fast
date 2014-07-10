@@ -838,7 +838,7 @@ function getDialogParamsBMP(parent)
 	parent.depth.selection = 0;
 	
 	// alpha
-	parent.alpha = parent.add("checkbox", undefined, "Separate alpha channel");
+	parent.alpha = parent.add("checkbox", undefined, "With alpha channel");
 	parent.alpha.value = true;
 		
 	// RLE
