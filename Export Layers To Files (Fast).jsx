@@ -9,6 +9,7 @@
 //  * PNG
 //  * JPEG
 //  * Targa
+//  * BMP
 
 // REQUIRES: 
 // 	Adobe Photoshop CS2 or higher
@@ -440,7 +441,7 @@ function showDialog()
     // file type - call cloned getDialogParams*() for new file formats here
 	// (add a single line, the rest is taken care of)
     var saveOpt = [];
-	var paramFuncs = [getDialogParamsPNG24, getDialogParamsPNG8, getDialogParamsJPEG, getDialogParamsTarga];
+	var paramFuncs = [getDialogParamsPNG24, getDialogParamsPNG8, getDialogParamsJPEG, getDialogParamsTarga, getDialogParamsBMP];
     for (var i = 0, len = paramFuncs.length; i < len; ++i) {
 		var optionsRoot = optionsPanel.add("group");
 		optionsRoot.orientation = "column";
@@ -820,6 +821,56 @@ function onDialogSelectPNG8(parent)
 		}
 	}
 }
+
+function getDialogParamsBMP(parent)
+{
+	// bit depth
+	var depth = parent.add("group");
+	depth.add("statictext", undefined, "Depth:");
+	var depthLabels = [
+		"32 bit", 
+		"24 bit", 
+		"RGB 565 (16 bit)", 
+		"ARGB 1555 (16 bit)", 
+		"ARGB 4444 (16 bit)"
+	];
+	parent.depth = depth.add("dropdownlist", undefined, depthLabels);
+	parent.depth.selection = 0;
+	
+	// alpha
+	parent.alpha = parent.add("checkbox", undefined, "Separate alpha channel");
+	parent.alpha.value = true;
+		
+	// RLE
+	parent.rle = parent.add("checkbox", undefined, "RLE compression");
+	parent.rle.value = true;
+	
+	// flip row order
+	parent.flipRowOrder = parent.add("checkbox", undefined, "Flip row order");
+	parent.flipRowOrder.value = false;
+	
+	return {type: "BMP", handler: onDialogSelectBMP};
+}
+
+function onDialogSelectBMP(parent)
+{
+	prefs.format = "BMP";
+	prefs.fileExtension = ".bmp";
+	prefs.formatArgs = new BMPSaveOptions();
+	prefs.formatArgs.osType = OperatingSystem.WINDOWS;
+	prefs.formatArgs.alphaChannels = parent.alpha.value;
+	prefs.formatArgs.rleCompression = parent.rle.value;
+	prefs.formatArgs.flipRowOrder = parent.flipRowOrder.value;
+	var resolution_enum = [
+		BMPDepthType.THIRTYTWO, 
+		BMPDepthType.TWENTYFOUR, 
+		BMPDepthType.BMP_R5G6B5,
+		BMPDepthType.BMP_A1R5G5B5,
+		BMPDepthType.BMP_A4R4G4B4
+	];
+	prefs.formatArgs.depth = resolution_enum[parent.depth.selection.index];
+}
+
 
 //
 // Bootstrapper (version support, getting additional environment settings, error handling...)
