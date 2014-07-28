@@ -9,6 +9,8 @@ Make sure to download all files:
 
 <b>[Download as zip](https://github.com/jwa107/Photoshop-Export-Layers-as-Images/archive/master.zip)</b>
 
+Disclaimer: We are not associated with Adobe in any way. For any issues relating to Adobe products or Adobe scripts please contact them directly. We have never had an issue, but please use this script at your own risk. We are not responsible for any lost data or damaged PSDs.
+
 Features:
 -------------------------------
 * Supported export formats:
