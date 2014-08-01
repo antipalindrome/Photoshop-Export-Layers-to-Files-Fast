@@ -39,6 +39,7 @@
 				txtPrefix: StaticText {text: "Output prefix:", preferredSize: [70, 20]},
 				editPrefix: EditText {preferredSize: [230, 20]}
 			},
+			cbBgLayer: Checkbox {text: "Lowest layer is background"},
 			grpFileType: Group {
 				orientation: "row",
 				txtFileType: StaticText {text: "File type:", preferredSize: [70, 20]},

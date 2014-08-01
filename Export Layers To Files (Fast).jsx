@@ -81,6 +81,7 @@ function main()
 	prefs.outputPrefix = "";
 	prefs.naming = FileNameType.AS_LAYERS;
 	prefs.namingLetterCase = LetterCase.KEEP;
+	prefs.bgLayer = false;
 	
 	userCancelled = false;
 	
@@ -154,7 +155,7 @@ function exportLayers(visibleOnly, progressBarWindow)
 		var capturedState = doc.layerComps.add("ExportLayersToFilesTmp", "Temporary state for Export Layers To Files script", false, false, true);
 		
 		var layersToExport = visibleOnly ? visibleLayers : layers;
-		const count = layersToExport.length;
+		const count = prefs.bgLayer ? layersToExport.length - 1 : layersToExport.length;
 		
 		if (progressBarWindow) {
 			showProgressBar(progressBarWindow, "Exporting 1 of " + count + "...", count);
@@ -164,6 +165,9 @@ function exportLayers(visibleOnly, progressBarWindow)
 		// When visibility is switched, the parent group becomes visible and a previously invisible child may become visible by accident.
 		for (var i = 0; i < count; ++i) {
 			layersToExport[i].visible = false;
+		}
+		if (prefs.bgLayer) {
+			layersToExport[count].visible = true;
 		}
 			
 		var countDigits = 0;
@@ -430,10 +434,13 @@ function showDialog()
 	// layer subset selection
 	dlg.funcArea.content.grpLayers.radioLayersAll.onClick = function() {
 		prefs.visibleOnly = false;
+		dlg.funcArea.content.cbBgLayer.enabled = (layers.length > 1); 
 	}
 	dlg.funcArea.content.grpLayers.radioLayersVis.onClick = function() {
 		prefs.visibleOnly = true;
+		dlg.funcArea.content.cbBgLayer.enabled = (visibleLayers.length > 1); 
 	}
+	dlg.funcArea.content.grpLayers.radioLayersVis.enabled = (visibleLayers.length > 0);
 	
 	var formatDropDown = dlg.funcArea.content.grpFileType.drdFileType;
 	var optionsPanel = dlg.funcArea.content.pnlOptions;
@@ -473,7 +480,10 @@ function showDialog()
 	// file naming options
 	dlg.funcArea.content.grpNaming.drdNaming.selection = 0;
 	dlg.funcArea.content.grpLetterCase.drdLetterCase.selection = 0;
-	 
+	
+	// background layer setting
+    dlg.funcArea.content.cbBgLayer.enabled = (layers.length > 1); 
+	
     // buttons
     dlg.funcArea.buttons.btnRun.onClick = function() {
 		// collect arguments for saving and proceed
@@ -485,6 +495,8 @@ function showDialog()
 		
 		prefs.naming = FileNameType.forIndex(dlg.funcArea.content.grpNaming.drdNaming.selection.index);
 		prefs.namingLetterCase = LetterCase.forIndex(dlg.funcArea.content.grpLetterCase.drdLetterCase.selection.index);
+		var cbBgLayer = dlg.funcArea.content.cbBgLayer;
+		prefs.bgLayer = (cbBgLayer.value && cbBgLayer.enabled);
 		
 		var selIdx = formatDropDown.selection.index;
 		saveOpt[selIdx].handler(saveOpt[selIdx].controlRoot);
@@ -493,7 +505,7 @@ function showDialog()
     dlg.funcArea.buttons.btnCancel.onClick = function() {
         dlg.close(0); 
     }; 
-	
+
 	// warning message
 	dlg.warning.message.text = formatString(dlg.warning.message.text, layers.length, visibleLayers.length);
 
