@@ -27,6 +27,7 @@ Features:
 * Shows current progress and allows to cancel any time.
 * Shows proper layer count in advance.
 * Files are named either using layer names or automatic layer indices.
+* Lowest layer can be treated as common background.
 
 You can also see [what's coming next](https://github.com/hsw107/Photoshop-Export-Layers-as-Images/wiki/Feature-Roadmap) and browse some of our [performance test results](https://github.com/hsw107/Photoshop-Export-Layers-as-Images/wiki/Performance-Test-Results).
 
@@ -49,6 +50,10 @@ Mac: /Applications/Adobe Photoshop VERSION/Presets/Scripts/
 
 Version History:
 -------------------------------
+
+<b>1 August 2014</b> by [Skjorn](https://github.com/skjorn)
+
+* Lowest layer can be treated as common background.
 
 <b>10 July 2014</b> by [Skjorn](https://github.com/skjorn)
 
