@@ -71,8 +71,7 @@ function main()
     prefs.format = "";
 	prefs.fileExtension = "";
 	try {
-		//prefs.filePath = app.activeDocument.path;		
-		prefs.filePath = env.srcDocument.path;
+		prefs.filePath = activeDocument.path;		
 	}
 	catch (e) {
 		prefs.filePath = Folder.myDocuments;
@@ -82,6 +81,7 @@ function main()
 	prefs.outputPrefix = "";
 	prefs.naming = FileNameType.AS_LAYERS;
 	prefs.namingLetterCase = LetterCase.KEEP;
+	prefs.replaceSpaces = true;
 	prefs.bgLayer = false;
 	
 	userCancelled = false;
@@ -91,22 +91,38 @@ function main()
 	if (! progressBarWindow) {
 		return "cancel";
 	}
-		
-	// collect layers	
+
+	// count layers
 	var profiler = new Profiler(env.profiling);
-	var collected = collectLayers(progressBarWindow);
+	var layerCountResult = countLayers(progressBarWindow);
 	if (userCancelled) {
 		return "cancel";
 	}
-	layers = collected.layers;
-	visibleLayers = collected.visibleLayers;
-	var collectionDuration = profiler.getDuration(true, true);		
+	layerCount = layerCountResult.layerCount;
+	visibleLayerCount = layerCountResult.visibleLayerCount;
+	var countDuration = profiler.getDuration(true, true);		
 	if (env.profiling) {
-		alert("Layers collected in " + profiler.format(collectionDuration), "Debug info");
+		alert("Layers counted in " + profiler.format(countDuration), "Debug info");
 	}
 	
     // show dialogue
 	if (showDialog()) {
+		env.documentCopy = activeDocument.duplicate();
+		
+		// collect layers	
+		profiler.resetLastTime();
+		var collected = collectLayers(progressBarWindow);
+		if (userCancelled) {
+			alert("Export cancelled! No files saved.", "Finished", false);
+			return "cancel";
+		}
+		layers = collected.layers;
+		visibleLayers = collected.visibleLayers;
+		var collectionDuration = profiler.getDuration(true, true);		
+		if (env.profiling) {
+			alert("Layers collected in " + profiler.format(collectionDuration), "Debug info");
+		}
+	
 		// export
 		profiler.resetLastTime();
 	
@@ -125,6 +141,9 @@ function main()
 			message += "\n\nSome layers failed to export! (Are there many layers with the same name?)"
 		}
 		alert(message, "Finished", count.error);
+		
+		activeDocument.close(SaveOptions.DONOTSAVECHANGES);
+		env.documentCopy = null;
 	}
 	else {
 		return "cancel";
@@ -151,10 +170,6 @@ function exportLayers(visibleOnly, progressBarWindow)
 		}
 	}
 	else {	
-		// capture current layer state
-		//var lastHistoryState = doc.activeHistoryState;
-		//var capturedState = doc.layerComps.add("ExportLayersToFilesTmp", "Temporary state for Export Layers To Files script", false, false, true);
-		
 		var layersToExport = visibleOnly ? visibleLayers : layers;
 		const count = prefs.bgLayer ? layersToExport.length - 1 : layersToExport.length;
 		
@@ -215,14 +230,6 @@ function exportLayers(visibleOnly, progressBarWindow)
 			}
 		}
 				
-		// restore layer state
-		/*capturedState.apply();
-		capturedState.remove();
-		if (env.version <= 9) {
-			doc.activeHistoryState = lastHistoryState;
-			app.purge(PurgeTarget.HISTORYCACHES);
-		}*/
-
 		if (progressBarWindow) {
 			progressBarWindow.hide();
 		}
@@ -266,7 +273,7 @@ function makeFileNameFromIndex(index, numOfDigits)
 
 function makeFileNameFromLayerName(layer)
 {
-    var fileName = makeValidFileName(layer.name);
+    var fileName = makeValidFileName(layer.name, prefs.replaceSpaces);
     if (fileName.length == 0) { 
 		fileName = "Layer";
 	}
@@ -279,7 +286,7 @@ function getUniqueFileName(fileName)
 	// makeValidFileName() here basically just converts the space between the prefix and the core file name,
 	// but it's a good idea to keep file naming conventions in one place, i.e. inside makeValidFileName(),
 	// and rely on them exclusively.
-	fileName = makeValidFileName(prefs.outputPrefix + fileName);
+	fileName = makeValidFileName(prefs.outputPrefix + fileName, prefs.replaceSpaces);
 	if (prefs.namingLetterCase == LetterCase.LOWERCASE) {
 		fileName = fileName.toLowerCase();
 		ext = ext.toLowerCase();
@@ -329,6 +336,12 @@ function collectLayers(progressBarWindow)
 {
 	// proxy to lower level ActionManager code
 	return collectLayersAM(progressBarWindow);
+}
+
+function countLayers(progressBarWindow)
+{
+	// proxy to lower level ActionManager code
+	return countLayersAM(progressBarWindow);
 }
 
 //
@@ -435,13 +448,13 @@ function showDialog()
 	// layer subset selection
 	dlg.funcArea.content.grpLayers.radioLayersAll.onClick = function() {
 		prefs.visibleOnly = false;
-		dlg.funcArea.content.cbBgLayer.enabled = (layers.length > 1); 
+		dlg.funcArea.content.cbBgLayer.enabled = (layerCount > 1); 
 	}
 	dlg.funcArea.content.grpLayers.radioLayersVis.onClick = function() {
 		prefs.visibleOnly = true;
-		dlg.funcArea.content.cbBgLayer.enabled = (visibleLayers.length > 1); 
+		dlg.funcArea.content.cbBgLayer.enabled = (visibleLayerCount > 1); 
 	}
-	dlg.funcArea.content.grpLayers.radioLayersVis.enabled = (visibleLayers.length > 0);
+	dlg.funcArea.content.grpLayers.radioLayersVis.enabled = (visibleLayerCount > 0);
 	
 	var formatDropDown = dlg.funcArea.content.grpFileType.drdFileType;
 	var optionsPanel = dlg.funcArea.content.pnlOptions;
@@ -475,15 +488,19 @@ function showDialog()
 	 
 	// file name prefix
 	dlg.funcArea.content.grpPrefix.editPrefix.onChange = function() {
-		this.text = makeValidFileName(this.text);
+		this.text = makeValidFileName(this.text, prefs.replaceSpaces);
 	};
 	
 	// file naming options
 	dlg.funcArea.content.grpNaming.drdNaming.selection = 0;
 	dlg.funcArea.content.grpLetterCase.drdLetterCase.selection = 0;
 	
+	dlg.funcArea.content.grpNaming.cbNaming.onClick = function() {
+		prefs.replaceSpaces = ! this.value;
+	};
+	
 	// background layer setting
-    dlg.funcArea.content.cbBgLayer.enabled = (layers.length > 1); 
+    dlg.funcArea.content.cbBgLayer.enabled = (layerCount > 1); 
 	
     // buttons
     dlg.funcArea.buttons.btnRun.onClick = function() {
@@ -508,7 +525,7 @@ function showDialog()
     }; 
 
 	// warning message
-	dlg.warning.message.text = formatString(dlg.warning.message.text, layers.length, visibleLayers.length);
+	dlg.warning.message.text = formatString(dlg.warning.message.text, layerCount, visibleLayerCount);
 
 	dlg.center(); 
     return dlg.show();
@@ -942,9 +959,6 @@ function bootstrap()
 		
 		env.scriptFileDirectory = (new File(env.scriptFileName)).parent;
 		
-		env.srcDocument = activeDocument;
-		activeDocument.duplicate();
-		
 		// run the script itself
         if (env.cs3OrHigher) {
 			// suspend history for CS3 or higher
@@ -952,14 +966,18 @@ function bootstrap()
         } 
 		else {
             main();
-        }
+        }		
 		
-		activeDocument.close(SaveOptions.DONOTSAVECHANGES);
+		if (env.documentCopy) {
+			env.documentCopy.close(SaveOptions.DONOTSAVECHANGES);
+		}
     } 
 	catch(e) {
         // report errors unless the user cancelled
         if (e.number != 8007) showError(e);
-		activeDocument.close(SaveOptions.DONOTSAVECHANGES);
+		if (env.documentCopy) {
+			env.documentCopy.close(SaveOptions.DONOTSAVECHANGES);
+		}
 		return "cancel";
     }
 }
@@ -1017,9 +1035,10 @@ function collectLayersAM(progressBarWindow)
 			showProgressBar(progressBarWindow, "Collecting layers... Might take up to several seconds.", (layerCount + FEW_LAYERS) / FEW_LAYERS);
 		}
 	
-		ref = new ActionReference();
+		// Query current selection.
+		/*ref = new ActionReference();
 		ref.putEnumerated(idLyr, idOrdn, charIDToTypeID("Trgt"));
-		var selectionDesc = executeActionGet(ref);
+		var selectionDesc = executeActionGet(ref);*/
 		
 		try {
 			// Collect normal layers.
@@ -1043,7 +1062,7 @@ function collectLayersAM(progressBarWindow)
 					layers.push(activeLayer);
 					if (layerVisible && visibleInGroup[visibleInGroup.length - 1]) {
 						visibleLayers.push(activeLayer);
-					}				
+					}		
 				}
 				else if (layerSection == "layerSectionStart") {
 					visibleInGroup.push(layerVisible && visibleInGroup[visibleInGroup.length - 1]);
@@ -1086,13 +1105,13 @@ function collectLayersAM(progressBarWindow)
 		}
 
 		// restore selection (unfortunately CS2 doesn't support multiselection, so only the topmost layer is re-selected)
-		desc.clear();
+		/*desc.clear();
 		ref = new ActionReference();
 		const totalLayerCount = selectionDesc.getInteger(charIDToTypeID("Cnt "));
 		ref.putIndex(idLyr, selectionDesc.getInteger(charIDToTypeID("ItmI")) - (totalLayerCount - layerCount));
 		desc.putReference(idNull, ref);  
 		desc.putBoolean(idMkVs, false);  
-		executeAction(idSlct, desc, DialogModes.NO);
+		executeAction(idSlct, desc, DialogModes.NO);*/
 		
 		if (progressBarWindow) {
 			progressBarWindow.hide();
@@ -1100,6 +1119,114 @@ function collectLayersAM(progressBarWindow)
 	}
 		
 	return {layers: layers, visibleLayers: visibleLayers};
+}
+
+function countLayersAM(progressBarWindow)
+{
+	var layerCount = 0;
+	var preciseLayerCount = 0;
+	var visLayerCount = 0;
+
+	var ref = null;
+	var desc = null;
+	
+	const idOrdn = charIDToTypeID("Ordn");
+	
+	// Get layer count reported by the active Document object - it never includes the background.
+	ref = new ActionReference();
+	ref.putEnumerated(charIDToTypeID("Dcmn"), charIDToTypeID("Ordn"), charIDToTypeID("Trgt"));
+	desc = executeActionGet(ref);
+	layerCount = desc.getInteger(charIDToTypeID("NmbL"));
+
+	if (layerCount == 0) {
+		// This is a flattened image that contains only the background (which is always visible).
+		preciseLayerCount = 1;
+		visLayerCount = 1;
+	}
+	else {
+		// There are more layers that may or may not contain a background. The background is always at 0;
+		// other layers are indexed from 1.
+		
+		const idLyr = charIDToTypeID("Lyr ");
+		const idLayerSection = stringIDToTypeID("layerSection");
+		const idVsbl = charIDToTypeID("Vsbl");
+		const idNull = charIDToTypeID("null");
+		const idSlct = charIDToTypeID("slct");
+		const idMkVs = charIDToTypeID("MkVs");
+		
+		const FEW_LAYERS = 10;
+		
+		if (layerCount <= FEW_LAYERS) {
+			// don't show the progress bar UI for only a few layers
+			progressBarWindow = null;
+		}
+		
+		if (progressBarWindow) {
+			// The layer count is actually + 1 if there's a background present, but it should be no biggie.
+			showProgressBar(progressBarWindow, "Counting layers... Might take up to several seconds.", (layerCount + FEW_LAYERS) / FEW_LAYERS);
+		}
+	
+		try {
+			// Collect normal layers.
+			var visibleInGroup = [true];
+			var layerVisible;
+			var layerSection;
+			for (var i = layerCount; i >= 1; --i) {
+				// check if it's an art layer (not a group) that can be selected
+				ref = new ActionReference();
+				ref.putIndex(idLyr, i);
+				desc = executeActionGet(ref);
+				layerVisible = desc.getBoolean(idVsbl);
+				layerSection = typeIDToStringID(desc.getEnumerationValue(idLayerSection));
+				if (layerSection == "layerSectionContent") {
+					preciseLayerCount++;
+					if (layerVisible && visibleInGroup[visibleInGroup.length - 1]) {
+						visLayerCount++;
+					}		
+				}
+				else if (layerSection == "layerSectionStart") {
+					visibleInGroup.push(layerVisible && visibleInGroup[visibleInGroup.length - 1]);
+				}
+				else if (layerSection == "layerSectionEnd") {
+					visibleInGroup.pop();
+				}
+				
+				if (progressBarWindow && ((i % FEW_LAYERS == 0) || (i == layerCount))) {
+					updateProgressBar(progressBarWindow);
+					repaintProgressBar(progressBarWindow);
+					if (userCancelled) {
+						throw new Error("cancel");
+					}
+				}
+			}
+			
+			// Collect the background.
+			try {
+				var bg = activeDocument.backgroundLayer;
+				preciseLayerCount++;
+				if (bg.visible) {
+					visLayerCount++;
+				}
+				
+				if (progressBarWindow) {
+					updateProgressBar(progressBarWindow);
+					repaintProgressBar(progressBarWindow);
+				}
+			}
+			catch (e) {
+				// no background, move on
+			}		
+		}
+		catch (e) {
+			if (e.message != "cancel") throw e;
+		}
+
+		if (progressBarWindow) {
+			progressBarWindow.hide();
+		}
+	}
+		
+	return {layerCount: preciseLayerCount, visibleLayerCount: visLayerCount};
 }
 
 function exportPng24AM(fileName, options)
@@ -1306,11 +1433,13 @@ function padder(input, padLength)
     return result;
 }
 
-function makeValidFileName(fileName)
+function makeValidFileName(fileName, replaceSpaces)
 {
 	var validName = fileName.replace(/^\s+|\s+$/gm, '');	// trim spaces
 	validName = validName.replace(/[\\\*\/\?:"\|<>]/g, ''); // remove characters not allowed in a file name
-    validName = validName.replace(/[ ]/g, '_'); 			// replace spaces with underscores, since some programs still may have troubles with them
+	if (replaceSpaces) {
+		validName = validName.replace(/[ ]/g, '_');			// replace spaces with underscores, since some programs still may have troubles with them
+	}
 	return validName;
 }
 
