@@ -71,7 +71,8 @@ function main()
     prefs.format = "";
 	prefs.fileExtension = "";
 	try {
-		prefs.filePath = app.activeDocument.path;
+		//prefs.filePath = app.activeDocument.path;		
+		prefs.filePath = env.srcDocument.path;
 	}
 	catch (e) {
 		prefs.filePath = Folder.myDocuments;
@@ -90,7 +91,7 @@ function main()
 	if (! progressBarWindow) {
 		return "cancel";
 	}
-	
+		
 	// collect layers	
 	var profiler = new Profiler(env.profiling);
 	var collected = collectLayers(progressBarWindow);
@@ -151,8 +152,8 @@ function exportLayers(visibleOnly, progressBarWindow)
 	}
 	else {	
 		// capture current layer state
-		var lastHistoryState = doc.activeHistoryState;
-		var capturedState = doc.layerComps.add("ExportLayersToFilesTmp", "Temporary state for Export Layers To Files script", false, false, true);
+		//var lastHistoryState = doc.activeHistoryState;
+		//var capturedState = doc.layerComps.add("ExportLayersToFilesTmp", "Temporary state for Export Layers To Files script", false, false, true);
 		
 		var layersToExport = visibleOnly ? visibleLayers : layers;
 		const count = prefs.bgLayer ? layersToExport.length - 1 : layersToExport.length;
@@ -215,12 +216,12 @@ function exportLayers(visibleOnly, progressBarWindow)
 		}
 				
 		// restore layer state
-		capturedState.apply();
+		/*capturedState.apply();
 		capturedState.remove();
 		if (env.version <= 9) {
 			doc.activeHistoryState = lastHistoryState;
 			app.purge(PurgeTarget.HISTORYCACHES);
-		}
+		}*/
 
 		if (progressBarWindow) {
 			progressBarWindow.hide();
@@ -941,6 +942,9 @@ function bootstrap()
 		
 		env.scriptFileDirectory = (new File(env.scriptFileName)).parent;
 		
+		env.srcDocument = activeDocument;
+		activeDocument.duplicate();
+		
 		// run the script itself
         if (env.cs3OrHigher) {
 			// suspend history for CS3 or higher
@@ -949,10 +953,13 @@ function bootstrap()
 		else {
             main();
         }
+		
+		activeDocument.close(SaveOptions.DONOTSAVECHANGES);
     } 
 	catch(e) {
         // report errors unless the user cancelled
         if (e.number != 8007) showError(e);
+		activeDocument.close(SaveOptions.DONOTSAVECHANGES);
 		return "cancel";
     }
 }
