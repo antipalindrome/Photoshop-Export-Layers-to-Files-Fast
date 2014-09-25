@@ -57,6 +57,17 @@ const LetterCase = {
 	}
 };
 
+const TrimPrefType = {
+	DONT_TRIM: 1,
+	INDIVIDUAL: 2,
+	COMBINED: 3,
+	
+	forIndex: function(index) {
+		var values = [this.DONT_TRIM, this.INDIVIDUAL, this.COMBINED];
+		return values[index];
+	}
+};
+
 
 bootstrap();
 
@@ -83,6 +94,7 @@ function main()
 	prefs.namingLetterCase = LetterCase.KEEP;
 	prefs.replaceSpaces = true;
 	prefs.bgLayer = false;
+	prefs.trim = TrimPrefType.DONT_TRIM;
 	
 	userCancelled = false;
 	
@@ -118,6 +130,7 @@ function main()
 		}
 		layers = collected.layers;
 		visibleLayers = collected.visibleLayers;
+		groups = collected.groups;
 		var collectionDuration = profiler.getDuration(true, true);		
 		if (env.profiling) {
 			alert("Layers collected in " + profiler.format(collectionDuration), "Debug info");
@@ -160,18 +173,49 @@ function exportLayers(visibleOnly, progressBarWindow)
 	
 	var layerCount = layers.length;
 	
-	if ((layerCount == 1) && layers[0].isBackgroundLayer) {
+	if ((layerCount == 1) && layers[0].layer.isBackgroundLayer) {
 		// Flattened images don't support LayerComps or visibility toggling, so export it directly.
-		if (saveImage(layers[0].name)) {
+		if (saveImage(layers[0].layer.name)) {
 			++retVal.count;
 		}
 		else {
 			retVal.error = true;
 		}
 	}
-	else {	
+	else {
 		var layersToExport = visibleOnly ? visibleLayers : layers;
 		const count = prefs.bgLayer ? layersToExport.length - 1 : layersToExport.length;
+		
+		// Single trim of all layers combined.
+		if (prefs.trim == TrimPrefType.COMBINED) {
+			const UPDATE_NUM = 20;
+			if (progressBarWindow) {
+				var stepCount = visibleOnly ? 1 : count / UPDATE_NUM + 1;
+				showProgressBar(progressBarWindow, "Trimming...", stepCount);
+			}
+			
+			if (! visibleOnly) {
+				// For combined trim across all layers, make all layers visible.
+				for (var i = 0; i < count; ++i) {
+					makeVisible(layersToExport[i]);
+					
+					if (progressBarWindow && (i % UPDATE_NUM == 0)) {
+						updateProgressBar(progressBarWindow);
+						repaintProgressBar(progressBarWindow);
+						if (userCancelled) {
+							progressBarWindow.hide();
+							return retVal;
+						}
+					}
+				}
+			}
+			
+			if (prefs.bgLayer) {
+				layersToExport[count].layer.visible = false;
+			}
+			
+			doc.trim(TrimType.TRANSPARENT);
+		}
 		
 		if (progressBarWindow) {
 			showProgressBar(progressBarWindow, "Exporting 1 of " + count + "...", count);
@@ -180,10 +224,10 @@ function exportLayers(visibleOnly, progressBarWindow)
 		// Turn off all layers when exporting all layers - even seemingly invisible ones.
 		// When visibility is switched, the parent group becomes visible and a previously invisible child may become visible by accident.
 		for (var i = 0; i < count; ++i) {
-			layersToExport[i].visible = false;
+			layersToExport[i].layer.visible = false;
 		}
 		if (prefs.bgLayer) {
-			layersToExport[count].visible = true;
+			makeVisible(layersToExport[count]);
 		}
 			
 		var countDigits = 0;
@@ -193,7 +237,7 @@ function exportLayers(visibleOnly, progressBarWindow)
 		
 		// export layers
 		for (var i = 0; i < count; ++i) {
-			var layer = layersToExport[i];
+			var layer = layersToExport[i].layer;
 			
 			var fileName;
 			switch (prefs.naming) {
@@ -212,9 +256,19 @@ function exportLayers(visibleOnly, progressBarWindow)
 			}
 									
 			if (fileName) {
-				layer.visible = true;
+				makeVisible(layersToExport[i]);
+				
+				if (prefs.trim == TrimPrefType.INDIVIDUAL) {
+					doc.crop(layer.bounds);
+				}
+				
 				saveImage(fileName);
 				++retVal.count;
+				
+				if (prefs.trim == TrimPrefType.INDIVIDUAL) {
+					undo(doc);
+				}
+				
 				layer.visible = false;
 			}
 			else {
@@ -342,6 +396,24 @@ function countLayers(progressBarWindow)
 {
 	// proxy to lower level ActionManager code
 	return countLayersAM(progressBarWindow);
+}
+
+function undo(doc)
+{
+	doc.activeHistoryState = doc.historyStates[doc.historyStates.length-2];
+}
+
+function makeVisible(layer)
+{
+	layer.layer.visible = true;
+	
+	var current = layer.parent;
+	while (current) {
+		if (! current.layer.visible) {
+			current.layer.visible = true;
+		}
+		current = current.parent;
+	}
 }
 
 //
@@ -499,6 +571,9 @@ function showDialog()
 		prefs.replaceSpaces = ! this.value;
 	};
 	
+	// trimming
+	dlg.funcArea.content.grpTrim.drdTrim.selection = 0;
+	
 	// background layer setting
     dlg.funcArea.content.cbBgLayer.enabled = (layerCount > 1); 
 	
@@ -513,6 +588,7 @@ function showDialog()
 		
 		prefs.naming = FileNameType.forIndex(dlg.funcArea.content.grpNaming.drdNaming.selection.index);
 		prefs.namingLetterCase = LetterCase.forIndex(dlg.funcArea.content.grpLetterCase.drdLetterCase.selection.index);
+		prefs.trim = TrimPrefType.forIndex(dlg.funcArea.content.grpTrim.drdTrim.selection.index);
 		var cbBgLayer = dlg.funcArea.content.cbBgLayer;
 		prefs.bgLayer = (cbBgLayer.value && cbBgLayer.enabled);
 		
@@ -992,7 +1068,8 @@ function bootstrap()
 function collectLayersAM(progressBarWindow)
 {
 	var layers = [],
-		visibleLayers = [];
+		visibleLayers = [],
+		groups = [];
 	var layerCount = 0;
 
 	var ref = null;
@@ -1009,8 +1086,9 @@ function collectLayersAM(progressBarWindow)
 	if (layerCount == 0) {
 		// This is a flattened image that contains only the background (which is always visible).
 		var bg = activeDocument.backgroundLayer;
-		layers.push(bg);
-		visibleLayers.push(bg);
+		var layer = {layer: bg, parent: null};
+		layers.push(layer);
+		visibleLayers.push(layer);
 	}
 	else {
 		// There are more layers that may or may not contain a background. The background is always at 0;
@@ -1044,6 +1122,7 @@ function collectLayersAM(progressBarWindow)
 			// Collect normal layers.
 			var visibleInGroup = [true];
 			var layerVisible;
+			var currentGroup = null;
 			for (var i = layerCount; i >= 1; --i) {
 				// check if it's an art layer (not a group) that can be selected
 				ref = new ActionReference();
@@ -1051,7 +1130,8 @@ function collectLayersAM(progressBarWindow)
 				desc = executeActionGet(ref);
 				layerVisible = desc.getBoolean(idVsbl);
 				layerSection = typeIDToStringID(desc.getEnumerationValue(idLayerSection));
-				if (layerSection == "layerSectionContent") {
+				if ((layerSection == "layerSectionContent")
+					|| (layerSection == "layerSectionStart")) {
 					// select the layer and then retrieve it via Document.activeLayer
 					desc.clear();
 					desc.putReference(idNull, ref);  
@@ -1059,15 +1139,31 @@ function collectLayersAM(progressBarWindow)
 					executeAction(idSlct, desc, DialogModes.NO);
 					
 					var activeLayer = activeDocument.activeLayer;
-					layers.push(activeLayer);
-					if (layerVisible && visibleInGroup[visibleInGroup.length - 1]) {
-						visibleLayers.push(activeLayer);
-					}		
-				}
-				else if (layerSection == "layerSectionStart") {
-					visibleInGroup.push(layerVisible && visibleInGroup[visibleInGroup.length - 1]);
+					
+					if (layerSection == "layerSectionContent") {
+						var layer = {layer: activeLayer, parent: currentGroup};
+						layers.push(layer);
+						if (layerVisible && visibleInGroup[visibleInGroup.length - 1]) {
+							visibleLayers.push(layer);
+						}
+						if (currentGroup) {
+							currentGroup.children.push(layer);
+						}
+					}
+					else {
+						var group = {layer: activeLayer, parent: currentGroup, children: []};
+						if (group.parent == null) {
+							groups.push(group);
+						}
+						else {
+							group.parent.children.push(group);
+						}
+						currentGroup = group;
+						visibleInGroup.push(layerVisible && visibleInGroup[visibleInGroup.length - 1]);
+					}
 				}
 				else if (layerSection == "layerSectionEnd") {
+					currentGroup = currentGroup.parent;
 					visibleInGroup.pop();
 				}
 				
@@ -1086,9 +1182,10 @@ function collectLayersAM(progressBarWindow)
 			try {
 				desc = executeActionGet(ref);
 				var bg = activeDocument.backgroundLayer;
-				layers.push(bg);
+				var layer = {layer: bg, parent: null};
+				layers.push(layer);
 				if (bg.visible) {
-					visibleLayers.push(bg);
+					visibleLayers.push(layer);
 				}
 				
 				if (progressBarWindow) {
@@ -1118,7 +1215,7 @@ function collectLayersAM(progressBarWindow)
 		}
 	}
 		
-	return {layers: layers, visibleLayers: visibleLayers};
+	return {layers: layers, visibleLayers: visibleLayers, groups: groups};
 }
 
 function countLayersAM(progressBarWindow)
