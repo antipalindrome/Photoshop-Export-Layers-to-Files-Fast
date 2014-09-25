@@ -40,6 +40,11 @@
 				txtPrefix: StaticText {text: "Output prefix:", preferredSize: [70, 20]},
 				editPrefix: EditText {preferredSize: [230, 20]}
 			},
+			grpTrim: Group {
+				orientation: "row",
+				txtTrim: StaticText {text: "Trim:", preferredSize: [70, 20]},
+				drdTrim: DropDownList {preferredSize: [140, 20], properties: {items: ["No", "Each layer", "Combined"]}}
+			},
 			cbBgLayer: Checkbox {text: "Lowest layer is background"},
 			grpFileType: Group {
 				orientation: "row",
