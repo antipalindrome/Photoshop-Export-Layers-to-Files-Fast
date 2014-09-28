@@ -416,6 +416,29 @@ function makeVisible(layer)
 	}
 }
 
+function isAdjustmentLayer(layer)
+{
+	switch (layer.kind) {
+	
+	case LayerKind.BRIGHTNESSCONTRAST:
+	case LayerKind.CHANNELMIXER:
+	case LayerKind.COLORBALANCE:
+	case LayerKind.CURVES:
+	case LayerKind.GRADIENTMAP:
+	case LayerKind.HUESATURATION:
+	case LayerKind.INVERSION:
+	case LayerKind.LEVELS:
+	case LayerKind.POSTERIZE:
+	case LayerKind.SELECTIVECOLOR:
+	case LayerKind.THRESHOLD:
+		return true;
+		
+	default:
+		return false;
+	}
+	
+}
+
 //
 // User interface
 //
@@ -1141,13 +1164,15 @@ function collectLayersAM(progressBarWindow)
 					var activeLayer = activeDocument.activeLayer;
 					
 					if (layerSection == "layerSectionContent") {
-						var layer = {layer: activeLayer, parent: currentGroup};
-						layers.push(layer);
-						if (layerVisible && visibleInGroup[visibleInGroup.length - 1]) {
-							visibleLayers.push(layer);
-						}
-						if (currentGroup) {
-							currentGroup.children.push(layer);
+						if (! isAdjustmentLayer(activeLayer)) {
+							var layer = {layer: activeLayer, parent: currentGroup};
+							layers.push(layer);
+							if (layerVisible && visibleInGroup[visibleInGroup.length - 1]) {
+								visibleLayers.push(layer);
+							}
+							if (currentGroup) {
+								currentGroup.children.push(layer);
+							}
 						}
 					}
 					else {
