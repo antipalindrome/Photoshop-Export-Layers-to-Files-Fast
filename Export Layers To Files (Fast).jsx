@@ -95,6 +95,7 @@ function main()
 	prefs.replaceSpaces = true;
 	prefs.bgLayer = false;
 	prefs.trim = TrimPrefType.DONT_TRIM;
+        prefs.exportTopLevelGroups = false;
 
 	userCancelled = false;
 
@@ -138,8 +139,14 @@ function main()
 
 		// export
 		profiler.resetLastTime();
+                var count = 0;
 
-		var count = exportLayers(prefs.visibleOnly, progressBarWindow);
+                if (prefs.exportTopLevelGroups) {
+                        count = exportLayerSets(prefs.visibleOnly, progressBarWindow);
+                } else {
+		        count = exportLayers(prefs.visibleOnly, progressBarWindow);
+                }
+
 		var exportDuration = profiler.getDuration(true, true);
 
 		var message = "";
@@ -270,6 +277,145 @@ function exportLayers(visibleOnly, progressBarWindow)
 				}
 
 				layer.visible = false;
+			}
+			else {
+				retVal.error = true;
+			}
+
+			if (progressBarWindow) {
+				updateProgressBar(progressBarWindow, "Exporting " + (i + 1) + " of " + count + "...");
+				repaintProgressBar(progressBarWindow);
+				if (userCancelled) {
+					break;
+				}
+			}
+		}
+
+		if (progressBarWindow) {
+			progressBarWindow.hide();
+		}
+	}
+
+	return retVal;
+}
+
+function exportLayerSets(visibleOnly, progressBarWindow)
+{
+	var retVal = {
+		count: 0,
+		error: false
+	};
+	var doc = activeDocument;
+        var layerSets = app.activeDocument.layerSets;
+	var layerCount = layers.length;
+
+	if ((layerCount == 1) && layers[0].layer.isBackgroundLayer) {
+		// Flattened images don't support LayerComps or visibility toggling, so export it directly.
+		if (saveImage(layers[0].layer.name)) {
+			++retVal.count;
+		}
+		else {
+			retVal.error = true;
+		}
+	}
+	else {
+		var layerSetsToExport = [];
+                if (visibleOnly) {
+                        for(var i = 0; i < layerSets.length; i++) {
+                                if (layerSets[i].visible) {
+                                        layerSetsToExport.push(layerSets[i]);
+                                }
+                        }
+                } else {
+                        layerSetsToExport = layerSets;
+                }
+
+		const count = layerSetsToExport.length;
+
+		// Single trim of all layers combined.
+		if (prefs.trim == TrimPrefType.COMBINED) {
+			const UPDATE_NUM = 20;
+			if (progressBarWindow) {
+				var stepCount = visibleOnly ? 1 : count / UPDATE_NUM + 1;
+				showProgressBar(progressBarWindow, "Trimming...", stepCount);
+			}
+
+			if (! visibleOnly) {
+				// For combined trim across all layers, make all layers visible.
+				for (var i = 0; i < count; ++i) {
+					layerSetsToExport[i].visible = true;
+
+					if (progressBarWindow && (i % UPDATE_NUM == 0)) {
+						updateProgressBar(progressBarWindow);
+						repaintProgressBar(progressBarWindow);
+						if (userCancelled) {
+							progressBarWindow.hide();
+							return retVal;
+						}
+					}
+				}
+			}
+
+			// if (prefs.bgLayer) {
+			// 	layerSetsToExport[count].layer.visible = false;
+			// }
+
+			doc.trim(TrimType.TRANSPARENT);
+		}
+
+		if (progressBarWindow) {
+			showProgressBar(progressBarWindow, "Exporting 1 of " + count + "...", count);
+		}
+
+		// Turn off all layers when exporting all layers - even seemingly invisible ones.
+		// When visibility is switched, the parent group becomes visible and a previously invisible child may become visible by accident.
+		for (var i = 0; i < count; ++i) {
+			layerSetsToExport[i].visible = false;
+		}
+		// if (prefs.bgLayer) {
+		// 	makeVisible(layerSetsToExport[count]);
+		// }
+
+		var countDigits = 0;
+		if (prefs.naming != FileNameType.AS_LAYERS) {
+			countDigits = ("" + count).length;
+		}
+
+		// export layers
+		for (var i = 0; i < count; ++i) {
+			var layerSet = layerSetsToExport[i];
+
+			var fileName;
+			switch (prefs.naming) {
+
+			case FileNameType.AS_LAYERS:
+				fileName = makeFileNameFromLayerName(layerSet);
+				break;
+
+			case FileNameType.INDEX_ASC:
+				fileName = makeFileNameFromIndex(count - i, countDigits);
+				break;
+
+			case FileNameType.INDEX_DESC:
+				fileName = makeFileNameFromIndex(i + 1, countDigits);
+				break;
+			}
+
+			if (fileName) {
+				layerSetsToExport[i].visible = true;
+
+				if (prefs.trim == TrimPrefType.INDIVIDUAL) {
+					doc.crop(layerSet.bounds);
+				}
+
+				saveImage(fileName);
+				++retVal.count;
+
+				if (prefs.trim == TrimPrefType.INDIVIDUAL) {
+					undo(doc);
+				}
+
+				layerSet.visible = false;
 			}
 			else {
 				retVal.error = true;
@@ -550,6 +696,14 @@ function showDialog()
 		dlg.funcArea.content.cbBgLayer.enabled = (visibleLayerCount > 1);
 	}
 	dlg.funcArea.content.grpLayers.radioLayersVis.enabled = (visibleLayerCount > 0);
+
+        // layerset selection
+	dlg.funcArea.content.grpLayerSets.radioLayerSets.onClick = function() {
+		prefs.exportTopLevelGroups = true;
+	}
+	dlg.funcArea.content.grpLayerSets.radioIndivLayers.onClick = function() {
+		prefs.exportTopLevelGroups = false;
+	}
 
 	var formatDropDown = dlg.funcArea.content.grpFileType.drdFileType;
 	var optionsPanel = dlg.funcArea.content.pnlOptions;

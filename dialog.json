@@ -23,6 +23,11 @@
 				radioLayersAll: RadioButton {text: "All layers", preferredSize: [155, 20], value: true},
 				radioLayersVis: RadioButton {text: "Visible only", preferredSize: [155, 20]}
 			},
+			grpLayerSets: Group {
+				orientation: "row",
+			        radioIndivLayers: RadioButton {text: "Export individual layers", preferredSize: [205, 20], value: true},
+				radioLayerSets: RadioButton {text: "Export Top-level groups (folders)", preferredSize: [225, 20]}
+			},
 			grpNaming: Group {
 				orientation: "row",
 				txtNaming: StaticText {text: "Name files:", preferredSize: [70, 20]},
