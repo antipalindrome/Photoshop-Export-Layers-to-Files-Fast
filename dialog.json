@@ -52,7 +52,7 @@
 				drdFileType: DropDownList {preferredSize: [70, 20]}
 			},
 			pnlOptions: Panel {
-				text: "Options:", 
+				text: "Options:",
 				orientation: "stack",
 				alignment: "fill",
 				preferredSize: [200, 100]
