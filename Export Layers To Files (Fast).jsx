@@ -1161,7 +1161,7 @@ function collectLayersAM(progressBarWindow)
 				ref.putIndex(idLyr, i);
 				desc = app.executeActionGet(ref);
 				layerVisible = desc.getBoolean(idVsbl);
-				layerSection = typeIDToStringID(desc.getEnumerationValue(idLayerSection));
+				layerSection = app.typeIDToStringID(desc.getEnumerationValue(idLayerSection));
 				if ((layerSection == "layerSectionContent")
 				    || (layerSection == "layerSectionStart")) {
 					// select the layer and then retrieve it via Document.activeLayer
@@ -1308,7 +1308,7 @@ function countLayersAM(progressBarWindow)
 				ref.putIndex(idLyr, i);
 				desc = app.executeActionGet(ref);
 				layerVisible = desc.getBoolean(idVsbl);
-				layerSection = typeIDToStringID(desc.getEnumerationValue(idLayerSection));
+				layerSection = app.typeIDToStringID(desc.getEnumerationValue(idLayerSection));
 				if (layerSection == "layerSectionContent") {
 					preciseLayerCount++;
 					if (layerVisible && visibleInGroup[visibleInGroup.length - 1]) {
