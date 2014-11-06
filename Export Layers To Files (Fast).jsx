@@ -68,7 +68,14 @@ const TrimPrefType = {
 	}
 };
 
-
+var env = new Object();
+var prefs = new Object();
+var userCancelled = false;
+var layers;
+var visibleLayers;
+var groups;
+var layerCount = 0;
+var visibleLayerCount = 0;
 bootstrap();
 
 //
