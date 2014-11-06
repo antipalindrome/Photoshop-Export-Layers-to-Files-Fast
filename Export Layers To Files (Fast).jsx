@@ -1107,13 +1107,13 @@ function collectLayersAM(progressBarWindow)
 	var ref = null;
 	var desc = null;
 
-	const idOrdn = charIDToTypeID("Ordn");
+	const idOrdn = app.charIDToTypeID("Ordn");
 
 	// Get layer count reported by the active Document object - it never includes the background.
 	ref = new ActionReference();
-	ref.putEnumerated(charIDToTypeID("Dcmn"), charIDToTypeID("Ordn"), charIDToTypeID("Trgt"));
+	ref.putEnumerated(app.charIDToTypeID("Dcmn"), app.charIDToTypeID("Ordn"), app.charIDToTypeID("Trgt"));
 	desc = executeActionGet(ref);
-	layerCount = desc.getInteger(charIDToTypeID("NmbL"));
+	layerCount = desc.getInteger(app.charIDToTypeID("NmbL"));
 
 	if (layerCount == 0) {
 		// This is a flattened image that contains only the background (which is always visible).
@@ -1126,12 +1126,12 @@ function collectLayersAM(progressBarWindow)
 		// There are more layers that may or may not contain a background. The background is always at 0;
 		// other layers are indexed from 1.
 
-		const idLyr = charIDToTypeID("Lyr ");
+		const idLyr = app.charIDToTypeID("Lyr ");
 		const idLayerSection = stringIDToTypeID("layerSection");
-		const idVsbl = charIDToTypeID("Vsbl");
-		const idNull = charIDToTypeID("null");
-		const idSlct = charIDToTypeID("slct");
-		const idMkVs = charIDToTypeID("MkVs");
+		const idVsbl = app.charIDToTypeID("Vsbl");
+		const idNull = app.charIDToTypeID("null");
+		const idSlct = app.charIDToTypeID("slct");
+		const idMkVs = app.charIDToTypeID("MkVs");
 
 		const FEW_LAYERS = 10;
 
@@ -1147,7 +1147,7 @@ function collectLayersAM(progressBarWindow)
 
 		// Query current selection.
 		/*ref = new ActionReference();
-		 ref.putEnumerated(idLyr, idOrdn, charIDToTypeID("Trgt"));
+		 ref.putEnumerated(idLyr, idOrdn, app.charIDToTypeID("Trgt"));
 		 var selectionDesc = executeActionGet(ref);*/
 
 		try {
@@ -1238,8 +1238,8 @@ function collectLayersAM(progressBarWindow)
 		// restore selection (unfortunately CS2 doesn't support multiselection, so only the topmost layer is re-selected)
 		/*desc.clear();
 		 ref = new ActionReference();
-		 const totalLayerCount = selectionDesc.getInteger(charIDToTypeID("Cnt "));
-		 ref.putIndex(idLyr, selectionDesc.getInteger(charIDToTypeID("ItmI")) - (totalLayerCount - layerCount));
+		 const totalLayerCount = selectionDesc.getInteger(app.charIDToTypeID("Cnt "));
+		 ref.putIndex(idLyr, selectionDesc.getInteger(app.charIDToTypeID("ItmI")) - (totalLayerCount - layerCount));
 		 desc.putReference(idNull, ref);
 		 desc.putBoolean(idMkVs, false);
 		 executeAction(idSlct, desc, DialogModes.NO);*/
@@ -1261,13 +1261,13 @@ function countLayersAM(progressBarWindow)
 	var ref = null;
 	var desc = null;
 
-	const idOrdn = charIDToTypeID("Ordn");
+	const idOrdn = app.charIDToTypeID("Ordn");
 
 	// Get layer count reported by the active Document object - it never includes the background.
 	ref = new ActionReference();
-	ref.putEnumerated(charIDToTypeID("Dcmn"), charIDToTypeID("Ordn"), charIDToTypeID("Trgt"));
+	ref.putEnumerated(app.charIDToTypeID("Dcmn"), app.charIDToTypeID("Ordn"), app.charIDToTypeID("Trgt"));
 	desc = executeActionGet(ref);
-	layerCount = desc.getInteger(charIDToTypeID("NmbL"));
+	layerCount = desc.getInteger(app.charIDToTypeID("NmbL"));
 
 	if (layerCount == 0) {
 		// This is a flattened image that contains only the background (which is always visible).
@@ -1278,12 +1278,12 @@ function countLayersAM(progressBarWindow)
 		// There are more layers that may or may not contain a background. The background is always at 0;
 		// other layers are indexed from 1.
 
-		const idLyr = charIDToTypeID("Lyr ");
+		const idLyr = app.charIDToTypeID("Lyr ");
 		const idLayerSection = stringIDToTypeID("layerSection");
-		const idVsbl = charIDToTypeID("Vsbl");
-		const idNull = charIDToTypeID("null");
-		const idSlct = charIDToTypeID("slct");
-		const idMkVs = charIDToTypeID("MkVs");
+		const idVsbl = app.charIDToTypeID("Vsbl");
+		const idNull = app.charIDToTypeID("null");
+                const idSlct = app.charIDToTypeID("slct");
+		const idMkVs = app.charIDToTypeID("MkVs");
 
 		const FEW_LAYERS = 10;
 
@@ -1364,60 +1364,60 @@ function exportPng24AM(fileName, options)
 {
 	var desc = new ActionDescriptor(),
 	    desc2 = new ActionDescriptor();
-	desc2.putEnumerated(charIDToTypeID("Op  "), charIDToTypeID("SWOp"), charIDToTypeID("OpSa"));
-	desc2.putEnumerated(charIDToTypeID("Fmt "), charIDToTypeID("IRFm"), charIDToTypeID("PN24"));
-	desc2.putBoolean(charIDToTypeID("Intr"), options.interlaced);
-	desc2.putBoolean(charIDToTypeID("Trns"), options.transparency);
-	desc2.putBoolean(charIDToTypeID("Mtt "), true);
-	desc2.putInteger(charIDToTypeID("MttR"), options.matteColor.red);
-	desc2.putInteger(charIDToTypeID("MttG"), options.matteColor.green);
-	desc2.putInteger(charIDToTypeID("MttB"), options.matteColor.blue);
-	desc2.putBoolean(charIDToTypeID("SHTM"), false);
-	desc2.putBoolean(charIDToTypeID("SImg"), true);
-	desc2.putBoolean(charIDToTypeID("SSSO"), false);
-	desc2.putList(charIDToTypeID("SSLt"), new ActionList());
-	desc2.putBoolean(charIDToTypeID("DIDr"), false);
-	desc2.putPath(charIDToTypeID("In  "), new File(fileName));
-	desc.putObject(charIDToTypeID("Usng"), stringIDToTypeID("SaveForWeb"), desc2);
-	executeAction(charIDToTypeID("Expr"), desc, DialogModes.NO);
+	desc2.putEnumerated(app.charIDToTypeID("Op  "), app.charIDToTypeID("SWOp"), app.charIDToTypeID("OpSa"));
+	desc2.putEnumerated(app.charIDToTypeID("Fmt "), app.charIDToTypeID("IRFm"), app.charIDToTypeID("PN24"));
+	desc2.putBoolean(app.charIDToTypeID("Intr"), options.interlaced);
+	desc2.putBoolean(app.charIDToTypeID("Trns"), options.transparency);
+	desc2.putBoolean(app.charIDToTypeID("Mtt "), true);
+	desc2.putInteger(app.charIDToTypeID("MttR"), options.matteColor.red);
+	desc2.putInteger(app.charIDToTypeID("MttG"), options.matteColor.green);
+	desc2.putInteger(app.charIDToTypeID("MttB"), options.matteColor.blue);
+	desc2.putBoolean(app.charIDToTypeID("SHTM"), false);
+	desc2.putBoolean(app.charIDToTypeID("SImg"), true);
+	desc2.putBoolean(app.charIDToTypeID("SSSO"), false);
+	desc2.putList(app.charIDToTypeID("SSLt"), new ActionList());
+	desc2.putBoolean(app.charIDToTypeID("DIDr"), false);
+	desc2.putPath(app.charIDToTypeID("In  "), new File(fileName));
+	desc.putObject(app.charIDToTypeID("Usng"), stringIDToTypeID("SaveForWeb"), desc2);
+	executeAction(app.charIDToTypeID("Expr"), desc, DialogModes.NO);
 }
 
 function exportPng8AM(fileName, options)
 {
-	var id5 = charIDToTypeID( "Expr" );
+	var id5 = app.charIDToTypeID( "Expr" );
 	var desc3 = new ActionDescriptor();
-	var id6 = charIDToTypeID( "Usng" );
+	var id6 = app.charIDToTypeID( "Usng" );
 	var desc4 = new ActionDescriptor();
-	var id7 = charIDToTypeID( "Op  " );
-	var id8 = charIDToTypeID( "SWOp" );
-	var id9 = charIDToTypeID( "OpSa" );
+	var id7 = app.charIDToTypeID( "Op  " );
+	var id8 = app.charIDToTypeID( "SWOp" );
+	var id9 = app.charIDToTypeID( "OpSa" );
 	desc4.putEnumerated( id7, id8, id9 );
-	var id10 = charIDToTypeID( "Fmt " );
-	var id11 = charIDToTypeID( "IRFm" );
-	var id12 = charIDToTypeID( "PNG8" );
+	var id10 = app.charIDToTypeID( "Fmt " );
+	var id11 = app.charIDToTypeID( "IRFm" );
+	var id12 = app.charIDToTypeID( "PNG8" );
 	desc4.putEnumerated( id10, id11, id12 );
-	var id13 = charIDToTypeID( "Intr" ); //Interlaced
+	var id13 = app.charIDToTypeID( "Intr" ); //Interlaced
 	desc4.putBoolean( id13, options.interlaced );
-	var id14 = charIDToTypeID( "RedA" );
-	var id15 = charIDToTypeID( "IRRd" );
+	var id14 = app.charIDToTypeID( "RedA" );
+	var id15 = app.charIDToTypeID( "IRRd" );
 	//Algorithm
 	var id16;
 	switch (options.colorReduction) {
 
 	case ColorReductionType.PERCEPTUAL:
-		id16 = charIDToTypeID( "Prcp" );
+		id16 = app.charIDToTypeID( "Prcp" );
 		break;
 
 	case ColorReductionType.SELECTIVE:
-		id16 = charIDToTypeID( "Sltv" );
+		id16 = app.charIDToTypeID( "Sltv" );
 		break;
 
 	case ColorReductionType.ADAPTIVE:
-		id16 = charIDToTypeID( "Adpt" );
+		id16 = app.charIDToTypeID( "Adpt" );
 		break;
 
 	case ColorReductionType.RESTRICTIVE:
-		id16 = charIDToTypeID( "Web " );
+		id16 = app.charIDToTypeID( "Web " );
 		break;
 
 	        // CUSTOM not supported
@@ -1426,14 +1426,14 @@ function exportPng8AM(fileName, options)
 	case ColorReductionType.GRAYSCALE:
 	case ColorReductionType.MACINTOSH:
 	case ColorReductionType.WINDOWS:
-		id16 = charIDToTypeID( "FlBs" );
+		id16 = app.charIDToTypeID( "FlBs" );
 		break;
 
 	default:
 		throw new Error("Unknown color reduction algorithm. Cannot export PNG-8!");
 	}
 	desc4.putEnumerated( id14, id15, id16 );
-        var id361 = charIDToTypeID( "FBPl" );
+        var id361 = app.charIDToTypeID( "FBPl" );
 	switch (options.colorReduction) {
 
 	case ColorReductionType.BLACKWHITE:
@@ -1452,101 +1452,101 @@ function exportPng8AM(fileName, options)
                 desc4.putString( id361, "Windows" );
 		break;
 	}
-	var id17 = charIDToTypeID( "RChT" );
+	var id17 = app.charIDToTypeID( "RChT" );
 	desc4.putBoolean( id17, false );
-	var id18 = charIDToTypeID( "RChV" );
+	var id18 = app.charIDToTypeID( "RChV" );
 	desc4.putBoolean( id18, false );
-	var id19 = charIDToTypeID( "AuRd" );
+	var id19 = app.charIDToTypeID( "AuRd" );
 	desc4.putBoolean( id19, false );
-	var id20 = charIDToTypeID( "NCol" ); //NO. Of Colors
+	var id20 = app.charIDToTypeID( "NCol" ); //NO. Of Colors
 	desc4.putInteger( id20, options.colors );
-	var id21 = charIDToTypeID( "Dthr" ); //Dither
-	var id22 = charIDToTypeID( "IRDt" );
+	var id21 = app.charIDToTypeID( "Dthr" ); //Dither
+	var id22 = app.charIDToTypeID( "IRDt" );
 	//Dither type
 	var id23;
 	switch (options.dither) {
 
 	case Dither.NONE:
-		id23 = charIDToTypeID( "None" );
+		id23 = app.charIDToTypeID( "None" );
 		break;
 
 	case Dither.DIFFUSION:
-		id23 = charIDToTypeID( "Dfsn" );
+		id23 = app.charIDToTypeID( "Dfsn" );
 		break;
 
 	case Dither.PATTERN:
-		id23 = charIDToTypeID( "Ptrn" );
+		id23 = app.charIDToTypeID( "Ptrn" );
 		break;
 
 	case Dither.NOISE:
-		id23 = charIDToTypeID( "BNoi" );
+		id23 = app.charIDToTypeID( "BNoi" );
 		break;
 
 	default:
 		throw new Error("Unknown dither type. Cannot export PNG-8!");
 	}
 	desc4.putEnumerated( id21, id22, id23 );
-	var id24 = charIDToTypeID( "DthA" );
+	var id24 = app.charIDToTypeID( "DthA" );
 	desc4.putInteger( id24, options.ditherAmount );
-	var id25 = charIDToTypeID( "DChS" );
+	var id25 = app.charIDToTypeID( "DChS" );
 	desc4.putInteger( id25, 0 );
-	var id26 = charIDToTypeID( "DCUI" );
+	var id26 = app.charIDToTypeID( "DCUI" );
 	desc4.putInteger( id26, 0 );
-	var id27 = charIDToTypeID( "DChT" );
+	var id27 = app.charIDToTypeID( "DChT" );
 	desc4.putBoolean( id27, false );
-	var id28 = charIDToTypeID( "DChV" );
+	var id28 = app.charIDToTypeID( "DChV" );
 	desc4.putBoolean( id28, false );
-	var id29 = charIDToTypeID( "WebS" );
+	var id29 = app.charIDToTypeID( "WebS" );
 	desc4.putInteger( id29, 0 );
-	var id30 = charIDToTypeID( "TDth" ); //transparency dither
-	var id31 = charIDToTypeID( "IRDt" );
+	var id30 = app.charIDToTypeID( "TDth" ); //transparency dither
+	var id31 = app.charIDToTypeID( "IRDt" );
 	var id32;
 	switch (options.transparencyDither) {
 
 	case Dither.NONE:
-		id32 = charIDToTypeID( "None" );
+		id32 = app.charIDToTypeID( "None" );
 		break;
 
 	case Dither.DIFFUSION:
-		id32 = charIDToTypeID( "Dfsn" );
+		id32 = app.charIDToTypeID( "Dfsn" );
 		break;
 
 	case Dither.PATTERN:
-		id32 = charIDToTypeID( "Ptrn" );
+		id32 = app.charIDToTypeID( "Ptrn" );
 		break;
 
 	case Dither.NOISE:
-		id32 = charIDToTypeID( "BNoi" );
+		id32 = app.charIDToTypeID( "BNoi" );
 		break;
 
 	default:
 		throw new Error("Unknown transparency dither algorithm. Cannot export PNG-8!");
 	}
 	desc4.putEnumerated( id30, id31, id32 );
-	var id33 = charIDToTypeID( "TDtA" );
+	var id33 = app.charIDToTypeID( "TDtA" );
 	desc4.putInteger( id33, options.transparencyAmount );
-	var id34 = charIDToTypeID( "Trns" ); //Transparency
+	var id34 = app.charIDToTypeID( "Trns" ); //Transparency
 	desc4.putBoolean( id34, options.transparency );
-	var id35 = charIDToTypeID( "Mtt " );
+	var id35 = app.charIDToTypeID( "Mtt " );
 	desc4.putBoolean( id35, true );		 //matte
-	var id36 = charIDToTypeID( "MttR" ); //matte color
+	var id36 = app.charIDToTypeID( "MttR" ); //matte color
 	desc4.putInteger( id36, options.matteColor.red );
-	var id37 = charIDToTypeID( "MttG" );
+	var id37 = app.charIDToTypeID( "MttG" );
 	desc4.putInteger( id37, options.matteColor.green );
-	var id38 = charIDToTypeID( "MttB" );
+	var id38 = app.charIDToTypeID( "MttB" );
 	desc4.putInteger( id38, options.matteColor.blue );
-	var id39 = charIDToTypeID( "SHTM" );
+	var id39 = app.charIDToTypeID( "SHTM" );
 	desc4.putBoolean( id39, false );
-	var id40 = charIDToTypeID( "SImg" );
+	var id40 = app.charIDToTypeID( "SImg" );
 	desc4.putBoolean( id40, true );
-	var id41 = charIDToTypeID( "SSSO" );
+	var id41 = app.charIDToTypeID( "SSSO" );
 	desc4.putBoolean( id41, false );
-	var id42 = charIDToTypeID( "SSLt" );
+	var id42 = app.charIDToTypeID( "SSLt" );
 	var list1 = new ActionList();
 	desc4.putList( id42, list1 );
-	var id43 = charIDToTypeID( "DIDr" );
+	var id43 = app.charIDToTypeID( "DIDr" );
 	desc4.putBoolean( id43, false );
-	var id44 = charIDToTypeID( "In  " );
+	var id44 = app.charIDToTypeID( "In  " );
 	desc4.putPath( id44, new File(fileName) );
 	var id45 = stringIDToTypeID( "SaveForWeb" );
 	desc3.putObject( id6, id45, desc4 );
