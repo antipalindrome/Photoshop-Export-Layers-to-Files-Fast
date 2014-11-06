@@ -1,4 +1,4 @@
-// NAME: 
+// NAME:
 // 	Export Layers To Files
 
 // DESCRIPTION:
@@ -77,9 +77,9 @@ bootstrap();
 
 function main()
 {
-    // user preferences
-    prefs = new Object();
-    prefs.format = "";
+        // user preferences
+        prefs = new Object();
+        prefs.format = "";
 	prefs.fileExtension = "";
 	try {
 		prefs.filePath = activeDocument.path;
@@ -117,7 +117,7 @@ function main()
 		alert("Layers counted in " + profiler.format(countDuration), "Debug info");
 	}
 
-    // show dialogue
+        // show dialogue
 	if (showDialog()) {
 		env.documentCopy = activeDocument.duplicate();
 
@@ -327,8 +327,8 @@ function makeFileNameFromIndex(index, numOfDigits)
 
 function makeFileNameFromLayerName(layer)
 {
-    var fileName = makeValidFileName(layer.name, prefs.replaceSpaces);
-    if (fileName.length == 0) {
+        var fileName = makeValidFileName(layer.name, prefs.replaceSpaces);
+        if (fileName.length == 0) {
 		fileName = "Layer";
 	}
 	return getUniqueFileName(fileName);
@@ -351,17 +351,17 @@ function getUniqueFileName(fileName)
 	}
 	fileName = prefs.filePath + "/" + fileName;
 
-    // Check if the file already exists. In such case a numeric suffix will be added to disambiguate.
-    var uniqueName = fileName;
-    for (var i = 1; i <= 100; ++i) {
-        var handle = File(uniqueName + ext);
-        if (handle.exists) {
+        // Check if the file already exists. In such case a numeric suffix will be added to disambiguate.
+        var uniqueName = fileName;
+        for (var i = 1; i <= 100; ++i) {
+                var handle = File(uniqueName + ext);
+                if (handle.exists) {
 			uniqueName = fileName + "-" + padder(i, 3);
-        }
+                }
 		else {
-            return handle;
+                        return handle;
+                }
         }
-    }
 
 	return false;
 }
@@ -452,7 +452,7 @@ function createProgressBar()
 		return false;
 	}
 
-   // create window
+        // create window
 	var win;
 	try {
 		win = new Window(rsrcString);
@@ -508,7 +508,7 @@ function repaintProgressBar(win, force /* = false*/)
 		var d = new ActionDescriptor();
 		d.putEnumerated(app.stringIDToTypeID('state'), app.stringIDToTypeID('state'), app.stringIDToTypeID('redrawComplete'));
 		executeAction(app.stringIDToTypeID('wait'), d, DialogModes.NO);
-  }
+        }
 }
 
 function showDialog()
@@ -520,7 +520,7 @@ function showDialog()
 		return false;
 	}
 
-   // build dialogue
+        // build dialogue
 	var dlg;
 	try {
 		dlg = new Window(rsrcString);
@@ -554,11 +554,11 @@ function showDialog()
 	var formatDropDown = dlg.funcArea.content.grpFileType.drdFileType;
 	var optionsPanel = dlg.funcArea.content.pnlOptions;
 
-    // file type - call cloned getDialogParams*() for new file formats here
+        // file type - call cloned getDialogParams*() for new file formats here
 	// (add a single line, the rest is taken care of)
-    var saveOpt = [];
+        var saveOpt = [];
 	var paramFuncs = [getDialogParamsPNG24, getDialogParamsPNG8, getDialogParamsJPEG, getDialogParamsTarga, getDialogParamsBMP];
-    for (var i = 0, len = paramFuncs.length; i < len; ++i) {
+        for (var i = 0, len = paramFuncs.length; i < len; ++i) {
 		var optionsRoot = optionsPanel.add("group");
 		optionsRoot.orientation = "column";
 		optionsRoot.alignChildren = "left";
@@ -566,20 +566,20 @@ function showDialog()
 		opts.controlRoot = optionsRoot;
 		saveOpt.push(opts);
 
-        formatDropDown.add("item", saveOpt[i].type);
-    }
+                formatDropDown.add("item", saveOpt[i].type);
+        }
 
-    // show proper file type options
-    formatDropDown.onChange = function() {
+        // show proper file type options
+        formatDropDown.onChange = function() {
 		// Note: There's a bug in CS5 and CC where ListItem.selected doesn't report correct value in onChange().
 		// A workaround is to rely on DropDownList.selection instead.
 		for (var i = saveOpt.length - 1; i >= 0; --i) {
 			saveOpt[i].controlRoot.hide();
 		}
 		saveOpt[this.selection.index].controlRoot.show();
-    };
+        };
 
-    formatDropDown.selection = 0;
+        formatDropDown.selection = 0;
 
 	// file name prefix
 	dlg.funcArea.content.grpPrefix.editPrefix.onChange = function() {
@@ -598,10 +598,10 @@ function showDialog()
 	dlg.funcArea.content.grpTrim.drdTrim.selection = 0;
 
 	// background layer setting
-    dlg.funcArea.content.cbBgLayer.enabled = (layerCount > 1);
+        dlg.funcArea.content.cbBgLayer.enabled = (layerCount > 1);
 
-    // buttons
-    dlg.funcArea.buttons.btnRun.onClick = function() {
+        // buttons
+        dlg.funcArea.buttons.btnRun.onClick = function() {
 		// collect arguments for saving and proceed
 
 		prefs.outputPrefix = dlg.funcArea.content.grpPrefix.editPrefix.text;
@@ -617,17 +617,17 @@ function showDialog()
 
 		var selIdx = formatDropDown.selection.index;
 		saveOpt[selIdx].handler(saveOpt[selIdx].controlRoot);
-        dlg.close(1);
-    };
-    dlg.funcArea.buttons.btnCancel.onClick = function() {
-        dlg.close(0);
-    };
+                dlg.close(1);
+        };
+        dlg.funcArea.buttons.btnCancel.onClick = function() {
+                dlg.close(0);
+        };
 
 	// warning message
 	dlg.warning.message.text = formatString(dlg.warning.message.text, layerCount, visibleLayerCount);
 
 	dlg.center();
-    return dlg.show();
+        return dlg.show();
 }
 
 // Clone these two functions to add a new export file format - GUI
@@ -1007,9 +1007,9 @@ function onDialogSelectBMP(parent)
 
 function bootstrap()
 {
-    function showError(err) {
-        alert(err + ': on line ' + err.line, 'Script Error', true);
-    }
+        function showError(err) {
+                alert(err + ': on line ' + err.line, 'Script Error', true);
+        }
 
 	// initialisation of class methods
 	defineProfilerMethods();
@@ -1026,7 +1026,7 @@ function bootstrap()
 		return "cancel";
 	}
 
-    try {
+        try {
 		// setup the environment
 
 		env = new Object();
@@ -1059,26 +1059,26 @@ function bootstrap()
 		env.scriptFileDirectory = (new File(env.scriptFileName)).parent;
 
 		// run the script itself
-        if (env.cs3OrHigher) {
+                if (env.cs3OrHigher) {
 			// suspend history for CS3 or higher
-            activeDocument.suspendHistory('Export Layers To Files', 'main()');
-        }
+                        activeDocument.suspendHistory('Export Layers To Files', 'main()');
+                }
 		else {
-            main();
-        }
+                        main();
+                }
 
-		if (env.documentCopy) {
-			env.documentCopy.close(SaveOptions.DONOTSAVECHANGES);
-		}
-    }
+	        if (env.documentCopy) {
+	                env.documentCopy.close(SaveOptions.DONOTSAVECHANGES);
+	        }
+        }
 	catch(e) {
-        // report errors unless the user cancelled
-        if (e.number != 8007) showError(e);
+                // report errors unless the user cancelled
+                if (e.number != 8007) showError(e);
 		if (env.documentCopy) {
 			env.documentCopy.close(SaveOptions.DONOTSAVECHANGES);
 		}
 		return "cancel";
-    }
+        }
 }
 
 //
@@ -1091,8 +1091,8 @@ function bootstrap()
 function collectLayersAM(progressBarWindow)
 {
 	var layers = [],
-		visibleLayers = [],
-		groups = [];
+	    visibleLayers = [],
+	    groups = [];
 	var layerCount = 0;
 
 	var ref = null;
@@ -1138,8 +1138,8 @@ function collectLayersAM(progressBarWindow)
 
 		// Query current selection.
 		/*ref = new ActionReference();
-		ref.putEnumerated(idLyr, idOrdn, charIDToTypeID("Trgt"));
-		var selectionDesc = executeActionGet(ref);*/
+		 ref.putEnumerated(idLyr, idOrdn, charIDToTypeID("Trgt"));
+		 var selectionDesc = executeActionGet(ref);*/
 
 		try {
 			// Collect normal layers.
@@ -1154,7 +1154,7 @@ function collectLayersAM(progressBarWindow)
 				layerVisible = desc.getBoolean(idVsbl);
 				layerSection = typeIDToStringID(desc.getEnumerationValue(idLayerSection));
 				if ((layerSection == "layerSectionContent")
-					|| (layerSection == "layerSectionStart")) {
+				    || (layerSection == "layerSectionStart")) {
 					// select the layer and then retrieve it via Document.activeLayer
 					desc.clear();
 					desc.putReference(idNull, ref);
@@ -1228,12 +1228,12 @@ function collectLayersAM(progressBarWindow)
 
 		// restore selection (unfortunately CS2 doesn't support multiselection, so only the topmost layer is re-selected)
 		/*desc.clear();
-		ref = new ActionReference();
-		const totalLayerCount = selectionDesc.getInteger(charIDToTypeID("Cnt "));
-		ref.putIndex(idLyr, selectionDesc.getInteger(charIDToTypeID("ItmI")) - (totalLayerCount - layerCount));
-		desc.putReference(idNull, ref);
-		desc.putBoolean(idMkVs, false);
-		executeAction(idSlct, desc, DialogModes.NO);*/
+		 ref = new ActionReference();
+		 const totalLayerCount = selectionDesc.getInteger(charIDToTypeID("Cnt "));
+		 ref.putIndex(idLyr, selectionDesc.getInteger(charIDToTypeID("ItmI")) - (totalLayerCount - layerCount));
+		 desc.putReference(idNull, ref);
+		 desc.putBoolean(idMkVs, false);
+		 executeAction(idSlct, desc, DialogModes.NO);*/
 
 		if (progressBarWindow) {
 			progressBarWindow.hide();
@@ -1354,7 +1354,7 @@ function countLayersAM(progressBarWindow)
 function exportPng24AM(fileName, options)
 {
 	var desc = new ActionDescriptor(),
-		desc2 = new ActionDescriptor();
+	    desc2 = new ActionDescriptor();
 	desc2.putEnumerated(charIDToTypeID("Op  "), charIDToTypeID("SWOp"), charIDToTypeID("OpSa"));
 	desc2.putEnumerated(charIDToTypeID("Fmt "), charIDToTypeID("IRFm"), charIDToTypeID("PN24"));
 	desc2.putBoolean(charIDToTypeID("Intr"), options.interlaced);
@@ -1411,7 +1411,7 @@ function exportPng8AM(fileName, options)
 		id16 = charIDToTypeID( "Web " );
 		break;
 
-	// CUSTOM not supported
+	        // CUSTOM not supported
 
 	case ColorReductionType.BLACKWHITE:
 	case ColorReductionType.GRAYSCALE:
@@ -1424,23 +1424,23 @@ function exportPng8AM(fileName, options)
 		throw new Error("Unknown color reduction algorithm. Cannot export PNG-8!");
 	}
 	desc4.putEnumerated( id14, id15, id16 );
-    var id361 = charIDToTypeID( "FBPl" );
+        var id361 = charIDToTypeID( "FBPl" );
 	switch (options.colorReduction) {
 
 	case ColorReductionType.BLACKWHITE:
-        desc4.putString( id361, "Black & White" );
+                desc4.putString( id361, "Black & White" );
 		break;
 
 	case ColorReductionType.GRAYSCALE:
-        desc4.putString( id361, "Grayscale" );
+                desc4.putString( id361, "Grayscale" );
 		break;
 
 	case ColorReductionType.MACINTOSH:
-        desc4.putString( id361, "Mac OS" );
+                desc4.putString( id361, "Mac OS" );
 		break;
 
 	case ColorReductionType.WINDOWS:
-        desc4.putString( id361, "Windows" );
+                desc4.putString( id361, "Windows" );
 		break;
 	}
 	var id17 = charIDToTypeID( "RChT" );
@@ -1550,9 +1550,9 @@ function exportPng8AM(fileName, options)
 
 function padder(input, padLength)
 {
-    // pad the input with zeroes up to indicated length
-    var result = (new Array(padLength + 1 - input.toString().length)).join('0') + input;
-    return result;
+        // pad the input with zeroes up to indicated length
+        var result = (new Array(padLength + 1 - input.toString().length)).join('0') + input;
+        return result;
 }
 
 function makeValidFileName(fileName, replaceSpaces)
@@ -1569,8 +1569,8 @@ function formatString(text)
 {
 	var args = Array.prototype.slice.call(arguments, 1);
 	return text.replace(/\{(\d+)\}/g, function(match, number) {
-			return (typeof args[number] != 'undefined') ? args[number] : match;
-		});
+		return (typeof args[number] != 'undefined') ? args[number] : match;
+	});
 }
 
 function loadResource(file)
