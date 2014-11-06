@@ -1042,7 +1042,7 @@ function bootstrap()
 
 		env.profiling = false;
 
-		env.version = parseInt(version, 10);
+		env.version = parseInt(app.version, 10);
 
 		if (env.version < 9) {
 			alert("Photoshop versions before CS2 are not supported!", "Error", true);
