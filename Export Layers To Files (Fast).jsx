@@ -721,20 +721,19 @@ function onDialogSelectJPEG(parent)
 	prefs.fileExtension = ".jpg";
 	prefs.formatArgs = new JPEGSaveOptions();
 	const matteValue = [MatteType.WHITE, MatteType.BLACK, MatteType.SEMIGRAY, MatteType.NONE, MatteType.BACKGROUND, MatteType.FOREGROUND];
-	with (prefs.formatArgs) {
-		quality = parent.quality.value;
-		matte = matteValue[parent.matte.selection.index];
-		embedColorProfile = parent.icc.value;
-		if (parent.progressive.value) {
-			formatOptions = FormatOptions.PROGRESSIVE;
-			scans = 3;
-		}
-		else if (parent.optimised.value) {
-			formatOptions = FormatOptions.OPTIMIZEDBASELINE;
-		}
-		else {
-			formatOptions = FormatOptions.STANDARDBASELINE;
-		}
+
+	prefs.formatArgs.quality = parent.quality.value;
+	prefs.formatArgs.matte = matteValue[parent.matte.selection.index];
+	prefs.formatArgs.embedColorProfile = parent.icc.value;
+	if (parent.progressive.value) {
+		prefs.formatArgs.formatOptions = FormatOptions.PROGRESSIVE;
+		prefs.formatArgs.scans = 3;
+	}
+	else if (parent.optimised.value) {
+		prefs.formatArgs.formatOptions = FormatOptions.OPTIMIZEDBASELINE;
+	}
+	else {
+		prefs.formatArgs.formatOptions = FormatOptions.STANDARDBASELINE;
 	}
 }
 
@@ -779,13 +778,11 @@ function onDialogSelectPNG24(parent)
 	const matteColours = [WHITE, BLACK, GRAY, BLACK, app.backgroundColor.rgb, app.foregroundColor.rgb];
 
 	prefs.formatArgs = new ExportOptionsSaveForWeb();
-	with (prefs.formatArgs) {
-		format = SaveDocumentType.PNG;
-		PNG8 = false;
-		interlaced = parent.interlaced.value;
-		transparency = parent.transparency.value;
-		matteColor = matteColours[parent.matte.selection.index];
-	}
+	prefs.formatArgs.format = SaveDocumentType.PNG;
+	prefs.formatArgs.PNG8 = false;
+	prefs.formatArgs.interlaced = parent.interlaced.value;
+	prefs.formatArgs.transparency = parent.transparency.value;
+	prefs.formatArgs.matteColor = matteColours[parent.matte.selection.index];
 }
 
 function getDialogParamsPNG8(parent)
@@ -944,23 +941,21 @@ function onDialogSelectPNG8(parent)
 	const matteColours = [WHITE, BLACK, GRAY, BLACK, app.backgroundColor.rgb, app.foregroundColor.rgb];
 
 	prefs.formatArgs = new ExportOptionsSaveForWeb();
-	with (prefs.formatArgs) {
-		format = SaveDocumentType.PNG;
-		PNG8 = true;
-		colorReduction = colorReductionType[parent.colourReduction.selection.index];
-		colors = parseInt(parent.colors.text, 10);
-		dither = ditherType[parent.dither.selection.index];
-		if (dither == Dither.DIFFUSION) {
-			ditherAmount = parent.ditherAmount.value;
-		}
-		interlaced = parent.interlaced.value;
-		transparency = parent.transparency.value;
-		matteColor = matteColours[parent.matte.selection.index];
-		if (transparency) {
-			transparencyDither = ditherType[parent.transparencyDither.selection.index];
-			if (transparencyDither == Dither.DIFFUSION) {
-				transparencyAmount = parent.transparencyDitherAmount.value;
-			}
+	prefs.formatArgs.format = SaveDocumentType.PNG;
+	prefs.formatArgs.PNG8 = true;
+	prefs.formatArgs.colorReduction = colorReductionType[parent.colourReduction.selection.index];
+	prefs.formatArgs.colors = parseInt(parent.colors.text, 10);
+	prefs.formatArgs.dither = ditherType[parent.dither.selection.index];
+	if (prefs.formatArgs.dither == Dither.DIFFUSION) {
+		prefs.formatArgs.ditherAmount = parent.ditherAmount.value;
+	}
+	prefs.formatArgs.interlaced = parent.interlaced.value;
+	prefs.formatArgs.transparency = parent.transparency.value;
+	prefs.formatArgs.matteColor = matteColours[parent.matte.selection.index];
+	if (prefs.formatArgs.transparency) {
+		prefs.formatArgs.transparencyDither = ditherType[parent.transparencyDither.selection.index];
+		if (prefs.formatArgs.transparencyDither == Dither.DIFFUSION) {
+			prefs.formatArgs.transparencyAmount = parent.transparencyDitherAmount.value;
 		}
 	}
 }
