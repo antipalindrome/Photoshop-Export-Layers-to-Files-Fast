@@ -96,7 +96,7 @@ function main()
         prefs.format = "";
 	prefs.fileExtension = "";
 	try {
-		prefs.filePath = activeDocument.path;
+		prefs.filePath = app.activeDocument.path;
 	}
 	catch (e) {
 		prefs.filePath = Folder.myDocuments;
@@ -133,7 +133,7 @@ function main()
 
         // show dialogue
 	if (showDialog()) {
-		env.documentCopy = activeDocument.duplicate();
+		env.documentCopy = app.activeDocument.duplicate();
 
 		// collect layers
 		profiler.resetLastTime();
@@ -169,7 +169,7 @@ function main()
 		}
 		alert(message, "Finished", count.error);
 
-		activeDocument.close(SaveOptions.DONOTSAVECHANGES);
+		app.activeDocument.close(SaveOptions.DONOTSAVECHANGES);
 		env.documentCopy = null;
 	}
 	else {
@@ -183,7 +183,7 @@ function exportLayers(visibleOnly, progressBarWindow)
 		count: 0,
 		error: false
 	};
-	var doc = activeDocument;
+	var doc = app.activeDocument;
 
 	var layerCount = layers.length;
 
@@ -322,12 +322,12 @@ function saveImage(fileName)
 			break;
 
 		default:
-			activeDocument.exportDocument(fileName, ExportType.SAVEFORWEB, prefs.formatArgs);
+			app.activeDocument.exportDocument(fileName, ExportType.SAVEFORWEB, prefs.formatArgs);
 			break;
 		}
 	}
 	else {
-		activeDocument.saveAs(fileName, prefs.formatArgs, true, LetterCase.toExtensionType(prefs.namingLetterCase));
+		app.activeDocument.saveAs(fileName, prefs.formatArgs, true, LetterCase.toExtensionType(prefs.namingLetterCase));
 	}
 
 	return true;
@@ -521,7 +521,7 @@ function repaintProgressBar(win, force /* = false*/)
 		// CS3 and below
 		var d = new ActionDescriptor();
 		d.putEnumerated(app.stringIDToTypeID('state'), app.stringIDToTypeID('state'), app.stringIDToTypeID('redrawComplete'));
-		executeAction(app.stringIDToTypeID('wait'), d, DialogModes.NO);
+		app.executeAction(app.stringIDToTypeID('wait'), d, DialogModes.NO);
         }
 }
 
@@ -776,7 +776,7 @@ function onDialogSelectPNG24(parent)
 	var GRAY = new RGBColor();
 	GRAY.red = 127; GRAY.green = 127; GRAY.blue = 127;
 
-	const matteColours = [WHITE, BLACK, GRAY, BLACK, backgroundColor.rgb, foregroundColor.rgb];
+	const matteColours = [WHITE, BLACK, GRAY, BLACK, app.backgroundColor.rgb, app.foregroundColor.rgb];
 
 	prefs.formatArgs = new ExportOptionsSaveForWeb();
 	with (prefs.formatArgs) {
@@ -941,7 +941,7 @@ function onDialogSelectPNG8(parent)
 	BLACK.red = 0; BLACK.green = 0; BLACK.blue = 0;
 	var GRAY = new RGBColor();
 	GRAY.red = 127; GRAY.green = 127; GRAY.blue = 127;
-	const matteColours = [WHITE, BLACK, GRAY, BLACK, backgroundColor.rgb, foregroundColor.rgb];
+	const matteColours = [WHITE, BLACK, GRAY, BLACK, app.backgroundColor.rgb, app.foregroundColor.rgb];
 
 	prefs.formatArgs = new ExportOptionsSaveForWeb();
 	with (prefs.formatArgs) {
@@ -1030,7 +1030,7 @@ function bootstrap()
 
 	// check if there's a document open
 	try {
-		var doc = activeDocument;		// this actually triggers the exception
+		var doc = app.activeDocument;		// this actually triggers the exception
 		if (! doc) {					// this is just for sure if it ever behaves differently in other versions
 			throw new Error();
 		}
@@ -1075,7 +1075,7 @@ function bootstrap()
 		// run the script itself
                 if (env.cs3OrHigher) {
 			// suspend history for CS3 or higher
-                        activeDocument.suspendHistory('Export Layers To Files', 'main()');
+                        app.activeDocument.suspendHistory('Export Layers To Files', 'main()');
                 }
 		else {
                         main();
@@ -1122,7 +1122,7 @@ function collectLayersAM(progressBarWindow)
 
 	if (layerCount == 0) {
 		// This is a flattened image that contains only the background (which is always visible).
-		var bg = activeDocument.backgroundLayer;
+		var bg = app.activeDocument.backgroundLayer;
 		var layer = {layer: bg, parent: null};
 		layers.push(layer);
 		visibleLayers.push(layer);
@@ -1175,7 +1175,7 @@ function collectLayersAM(progressBarWindow)
 					desc.putBoolean(idMkVs, false);
 					executeAction(idSlct, desc, DialogModes.NO);
 
-					var activeLayer = activeDocument.activeLayer;
+					var activeLayer = app.activeDocument.activeLayer;
 
 					if (layerSection == "layerSectionContent") {
 						if (! isAdjustmentLayer(activeLayer)) {
@@ -1220,7 +1220,7 @@ function collectLayersAM(progressBarWindow)
 			ref.putIndex(idLyr, 0);
 			try {
 				desc = executeActionGet(ref);
-				var bg = activeDocument.backgroundLayer;
+				var bg = app.activeDocument.backgroundLayer;
 				var layer = {layer: bg, parent: null};
 				layers.push(layer);
 				if (bg.visible) {
@@ -1338,7 +1338,7 @@ function countLayersAM(progressBarWindow)
 
 			// Collect the background.
 			try {
-				var bg = activeDocument.backgroundLayer;
+				var bg = app.activeDocument.backgroundLayer;
 				preciseLayerCount++;
 				if (bg.visible) {
 					visLayerCount++;
