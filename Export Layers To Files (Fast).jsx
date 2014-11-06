@@ -1168,7 +1168,7 @@ function collectLayersAM(progressBarWindow)
 					desc.clear();
 					desc.putReference(idNull, ref);
 					desc.putBoolean(idMkVs, false);
-					executeAction(idSlct, desc, DialogModes.NO);
+					app.executeAction(idSlct, desc, DialogModes.NO);
 
 					var activeLayer = app.activeDocument.activeLayer;
 
@@ -1242,7 +1242,7 @@ function collectLayersAM(progressBarWindow)
 		 ref.putIndex(idLyr, selectionDesc.getInteger(app.charIDToTypeID("ItmI")) - (totalLayerCount - layerCount));
 		 desc.putReference(idNull, ref);
 		 desc.putBoolean(idMkVs, false);
-		 executeAction(idSlct, desc, DialogModes.NO);*/
+		 app.executeAction(idSlct, desc, DialogModes.NO);*/
 
 		if (progressBarWindow) {
 			progressBarWindow.hide();
@@ -1379,7 +1379,7 @@ function exportPng24AM(fileName, options)
 	desc2.putBoolean(app.charIDToTypeID("DIDr"), false);
 	desc2.putPath(app.charIDToTypeID("In  "), new File(fileName));
 	desc.putObject(app.charIDToTypeID("Usng"), app.stringIDToTypeID("SaveForWeb"), desc2);
-	executeAction(app.charIDToTypeID("Expr"), desc, DialogModes.NO);
+	app.executeAction(app.charIDToTypeID("Expr"), desc, DialogModes.NO);
 }
 
 function exportPng8AM(fileName, options)
@@ -1550,7 +1550,7 @@ function exportPng8AM(fileName, options)
 	desc4.putPath( id44, new File(fileName) );
 	var id45 = app.stringIDToTypeID( "SaveForWeb" );
 	desc3.putObject( id6, id45, desc4 );
-	executeAction( id5, desc3, DialogModes.NO );
+	app.executeAction( id5, desc3, DialogModes.NO );
 }
 
 //
