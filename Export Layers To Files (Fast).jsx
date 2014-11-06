@@ -1112,7 +1112,7 @@ function collectLayersAM(progressBarWindow)
 	// Get layer count reported by the active Document object - it never includes the background.
 	ref = new ActionReference();
 	ref.putEnumerated(app.charIDToTypeID("Dcmn"), app.charIDToTypeID("Ordn"), app.charIDToTypeID("Trgt"));
-	desc = executeActionGet(ref);
+	desc = app.executeActionGet(ref);
 	layerCount = desc.getInteger(app.charIDToTypeID("NmbL"));
 
 	if (layerCount == 0) {
@@ -1148,7 +1148,7 @@ function collectLayersAM(progressBarWindow)
 		// Query current selection.
 		/*ref = new ActionReference();
 		 ref.putEnumerated(idLyr, idOrdn, app.charIDToTypeID("Trgt"));
-		 var selectionDesc = executeActionGet(ref);*/
+		 var selectionDesc = app.executeActionGet(ref);*/
 
 		try {
 			// Collect normal layers.
@@ -1159,7 +1159,7 @@ function collectLayersAM(progressBarWindow)
 				// check if it's an art layer (not a group) that can be selected
 				ref = new ActionReference();
 				ref.putIndex(idLyr, i);
-				desc = executeActionGet(ref);
+				desc = app.executeActionGet(ref);
 				layerVisible = desc.getBoolean(idVsbl);
 				layerSection = typeIDToStringID(desc.getEnumerationValue(idLayerSection));
 				if ((layerSection == "layerSectionContent")
@@ -1214,7 +1214,7 @@ function collectLayersAM(progressBarWindow)
 			ref = new ActionReference();
 			ref.putIndex(idLyr, 0);
 			try {
-				desc = executeActionGet(ref);
+				desc = app.executeActionGet(ref);
 				var bg = app.activeDocument.backgroundLayer;
 				var layer = {layer: bg, parent: null};
 				layers.push(layer);
@@ -1266,7 +1266,7 @@ function countLayersAM(progressBarWindow)
 	// Get layer count reported by the active Document object - it never includes the background.
 	ref = new ActionReference();
 	ref.putEnumerated(app.charIDToTypeID("Dcmn"), app.charIDToTypeID("Ordn"), app.charIDToTypeID("Trgt"));
-	desc = executeActionGet(ref);
+	desc = app.executeActionGet(ref);
 	layerCount = desc.getInteger(app.charIDToTypeID("NmbL"));
 
 	if (layerCount == 0) {
@@ -1306,7 +1306,7 @@ function countLayersAM(progressBarWindow)
 				// check if it's an art layer (not a group) that can be selected
 				ref = new ActionReference();
 				ref.putIndex(idLyr, i);
-				desc = executeActionGet(ref);
+				desc = app.executeActionGet(ref);
 				layerVisible = desc.getBoolean(idVsbl);
 				layerSection = typeIDToStringID(desc.getEnumerationValue(idLayerSection));
 				if (layerSection == "layerSectionContent") {
