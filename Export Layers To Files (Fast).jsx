@@ -47,12 +47,19 @@ const LetterCase = {
 
 		case this.KEEP:
 			return Extension.NONE;
+                        break;
 
 		case this.LOWERCASE:
 			return Extension.LOWERCASE;
+                        break;
 
 		case this.UPPERCASE:
 			return Extension.UPPERCASE;
+                        break;
+
+                default:
+                        return Extension.NONE;
+                        break;
 		}
 	}
 };
