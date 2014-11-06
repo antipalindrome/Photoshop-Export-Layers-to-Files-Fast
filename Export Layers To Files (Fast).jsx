@@ -4,7 +4,7 @@
 // DESCRIPTION:
 //  Improved version of the built-in "Export Layers To Files" script:
 //  * Supports PNG and possibly other formats in the future.
-//  * Does not create document duplicates, so it's much faster.
+//  * Does not create multiple document duplicates, so it's much faster.
 //	Saves each layer in the active document to a file in a preferred format named after the layer. Supported formats:
 //  * PNG
 //  * JPEG
@@ -20,6 +20,9 @@
 #target photoshop
 app.bringToFront();
 
+//
+// Type definitions
+//
 
 const FileNameType = {
 	AS_LAYERS: 1,
@@ -47,19 +50,15 @@ const LetterCase = {
 
 		case this.KEEP:
 			return Extension.NONE;
-                        break;
 
 		case this.LOWERCASE:
 			return Extension.LOWERCASE;
-                        break;
 
 		case this.UPPERCASE:
 			return Extension.UPPERCASE;
-                        break;
 
-                default:
-                        return Extension.NONE;
-                        break;
+		default:
+			return Extension.NONE;
 		}
 	}
 };
@@ -75,7 +74,13 @@ const TrimPrefType = {
 	}
 };
 
+//
+// Global variables
+//
+
 var env = new Object();
+env.profiling = false;
+
 var prefs = new Object();
 var userCancelled = false;
 var layers;
@@ -83,6 +88,12 @@ var visibleLayers;
 var groups;
 var layerCount = 0;
 var visibleLayerCount = 0;
+
+
+//
+// Entry point
+//
+
 bootstrap();
 
 //
@@ -91,9 +102,9 @@ bootstrap();
 
 function main()
 {
-        // user preferences
-        prefs = new Object();
-        prefs.format = "";
+	// user preferences
+	prefs = new Object();
+	prefs.format = "";
 	prefs.fileExtension = "";
 	try {
 		prefs.filePath = app.activeDocument.path;
@@ -131,7 +142,7 @@ function main()
 		alert("Layers counted in " + profiler.format(countDuration), "Debug info");
 	}
 
-        // show dialogue
+	// show dialogue
 	if (showDialog()) {
 		env.documentCopy = app.activeDocument.duplicate();
 
@@ -341,8 +352,8 @@ function makeFileNameFromIndex(index, numOfDigits)
 
 function makeFileNameFromLayerName(layer)
 {
-        var fileName = makeValidFileName(layer.name, prefs.replaceSpaces);
-        if (fileName.length == 0) {
+	var fileName = makeValidFileName(layer.name, prefs.replaceSpaces);
+	if (fileName.length == 0) {
 		fileName = "Layer";
 	}
 	return getUniqueFileName(fileName);
@@ -365,17 +376,17 @@ function getUniqueFileName(fileName)
 	}
 	fileName = prefs.filePath + "/" + fileName;
 
-        // Check if the file already exists. In such case a numeric suffix will be added to disambiguate.
-        var uniqueName = fileName;
-        for (var i = 1; i <= 100; ++i) {
-                var handle = File(uniqueName + ext);
-                if (handle.exists) {
+	// Check if the file already exists. In such case a numeric suffix will be added to disambiguate.
+	var uniqueName = fileName;
+	for (var i = 1; i <= 100; ++i) {
+		var handle = File(uniqueName + ext);
+		if (handle.exists) {
 			uniqueName = fileName + "-" + padder(i, 3);
-                }
+		}
 		else {
-                        return handle;
-                }
-        }
+			return handle;
+		}
+	}
 
 	return false;
 }
@@ -459,14 +470,14 @@ function isAdjustmentLayer(layer)
 
 function createProgressBar()
 {
- 	// read progress bar resource
+	// read progress bar resource
 	var rsrcFile = new File(env.scriptFileDirectory + "/progress_bar.json");
 	var rsrcString = loadResource(rsrcFile);
 	if (! rsrcString) {
 		return false;
 	}
 
-        // create window
+	// create window
 	var win;
 	try {
 		win = new Window(rsrcString);
@@ -522,19 +533,19 @@ function repaintProgressBar(win, force /* = false*/)
 		var d = new ActionDescriptor();
 		d.putEnumerated(app.stringIDToTypeID('state'), app.stringIDToTypeID('state'), app.stringIDToTypeID('redrawComplete'));
 		app.executeAction(app.stringIDToTypeID('wait'), d, DialogModes.NO);
-        }
+	}
 }
 
 function showDialog()
 {
- 	// read dialog resource
+	// read dialog resource
 	var rsrcFile = new File(env.scriptFileDirectory + "/dialog.json");
 	var rsrcString = loadResource(rsrcFile);
 	if (! rsrcString) {
 		return false;
 	}
 
-        // build dialogue
+	// build dialogue
 	var dlg;
 	try {
 		dlg = new Window(rsrcString);
@@ -568,11 +579,11 @@ function showDialog()
 	var formatDropDown = dlg.funcArea.content.grpFileType.drdFileType;
 	var optionsPanel = dlg.funcArea.content.pnlOptions;
 
-        // file type - call cloned getDialogParams*() for new file formats here
+	// file type - call cloned getDialogParams*() for new file formats here
 	// (add a single line, the rest is taken care of)
-        var saveOpt = [];
+	var saveOpt = [];
 	var paramFuncs = [getDialogParamsPNG24, getDialogParamsPNG8, getDialogParamsJPEG, getDialogParamsTarga, getDialogParamsBMP];
-        for (var i = 0, len = paramFuncs.length; i < len; ++i) {
+	for (var i = 0, len = paramFuncs.length; i < len; ++i) {
 		var optionsRoot = optionsPanel.add("group");
 		optionsRoot.orientation = "column";
 		optionsRoot.alignChildren = "left";
@@ -580,20 +591,20 @@ function showDialog()
 		opts.controlRoot = optionsRoot;
 		saveOpt.push(opts);
 
-                formatDropDown.add("item", saveOpt[i].type);
-        }
+		formatDropDown.add("item", saveOpt[i].type);
+	}
 
-        // show proper file type options
-        formatDropDown.onChange = function() {
+	// show proper file type options
+	formatDropDown.onChange = function() {
 		// Note: There's a bug in CS5 and CC where ListItem.selected doesn't report correct value in onChange().
 		// A workaround is to rely on DropDownList.selection instead.
 		for (var i = saveOpt.length - 1; i >= 0; --i) {
 			saveOpt[i].controlRoot.hide();
 		}
 		saveOpt[this.selection.index].controlRoot.show();
-        };
+	};
 
-        formatDropDown.selection = 0;
+	formatDropDown.selection = 0;
 
 	// file name prefix
 	dlg.funcArea.content.grpPrefix.editPrefix.onChange = function() {
@@ -612,10 +623,10 @@ function showDialog()
 	dlg.funcArea.content.grpTrim.drdTrim.selection = 0;
 
 	// background layer setting
-        dlg.funcArea.content.cbBgLayer.enabled = (layerCount > 1);
+	dlg.funcArea.content.cbBgLayer.enabled = (layerCount > 1);
 
-        // buttons
-        dlg.funcArea.buttons.btnRun.onClick = function() {
+	// buttons
+	dlg.funcArea.buttons.btnRun.onClick = function() {
 		// collect arguments for saving and proceed
 
 		prefs.outputPrefix = dlg.funcArea.content.grpPrefix.editPrefix.text;
@@ -631,17 +642,17 @@ function showDialog()
 
 		var selIdx = formatDropDown.selection.index;
 		saveOpt[selIdx].handler(saveOpt[selIdx].controlRoot);
-                dlg.close(1);
-        };
-        dlg.funcArea.buttons.btnCancel.onClick = function() {
-                dlg.close(0);
-        };
+		dlg.close(1);
+	};
+	dlg.funcArea.buttons.btnCancel.onClick = function() {
+		dlg.close(0);
+	};
 
 	// warning message
 	dlg.warning.message.text = formatString(dlg.warning.message.text, layerCount, visibleLayerCount);
 
 	dlg.center();
-        return dlg.show();
+	return dlg.show();
 }
 
 // Clone these two functions to add a new export file format - GUI
@@ -721,19 +732,20 @@ function onDialogSelectJPEG(parent)
 	prefs.fileExtension = ".jpg";
 	prefs.formatArgs = new JPEGSaveOptions();
 	const matteValue = [MatteType.WHITE, MatteType.BLACK, MatteType.SEMIGRAY, MatteType.NONE, MatteType.BACKGROUND, MatteType.FOREGROUND];
-
-	prefs.formatArgs.quality = parent.quality.value;
-	prefs.formatArgs.matte = matteValue[parent.matte.selection.index];
-	prefs.formatArgs.embedColorProfile = parent.icc.value;
-	if (parent.progressive.value) {
-		prefs.formatArgs.formatOptions = FormatOptions.PROGRESSIVE;
-		prefs.formatArgs.scans = 3;
-	}
-	else if (parent.optimised.value) {
-		prefs.formatArgs.formatOptions = FormatOptions.OPTIMIZEDBASELINE;
-	}
-	else {
-		prefs.formatArgs.formatOptions = FormatOptions.STANDARDBASELINE;
+	with (prefs.formatArgs) {
+		quality = parent.quality.value;
+		matte = matteValue[parent.matte.selection.index];
+		embedColorProfile = parent.icc.value;
+		if (parent.progressive.value) {
+			formatOptions = FormatOptions.PROGRESSIVE;
+			scans = 3;
+		}
+		else if (parent.optimised.value) {
+			formatOptions = FormatOptions.OPTIMIZEDBASELINE;
+		}
+		else {
+			formatOptions = FormatOptions.STANDARDBASELINE;
+		}
 	}
 }
 
@@ -778,11 +790,13 @@ function onDialogSelectPNG24(parent)
 	const matteColours = [WHITE, BLACK, GRAY, BLACK, app.backgroundColor.rgb, app.foregroundColor.rgb];
 
 	prefs.formatArgs = new ExportOptionsSaveForWeb();
-	prefs.formatArgs.format = SaveDocumentType.PNG;
-	prefs.formatArgs.PNG8 = false;
-	prefs.formatArgs.interlaced = parent.interlaced.value;
-	prefs.formatArgs.transparency = parent.transparency.value;
-	prefs.formatArgs.matteColor = matteColours[parent.matte.selection.index];
+	with (prefs.formatArgs) {
+		format = SaveDocumentType.PNG;
+		PNG8 = false;
+		interlaced = parent.interlaced.value;
+		transparency = parent.transparency.value;
+		matteColor = matteColours[parent.matte.selection.index];
+	}
 }
 
 function getDialogParamsPNG8(parent)
@@ -941,21 +955,23 @@ function onDialogSelectPNG8(parent)
 	const matteColours = [WHITE, BLACK, GRAY, BLACK, app.backgroundColor.rgb, app.foregroundColor.rgb];
 
 	prefs.formatArgs = new ExportOptionsSaveForWeb();
-	prefs.formatArgs.format = SaveDocumentType.PNG;
-	prefs.formatArgs.PNG8 = true;
-	prefs.formatArgs.colorReduction = colorReductionType[parent.colourReduction.selection.index];
-	prefs.formatArgs.colors = parseInt(parent.colors.text, 10);
-	prefs.formatArgs.dither = ditherType[parent.dither.selection.index];
-	if (prefs.formatArgs.dither == Dither.DIFFUSION) {
-		prefs.formatArgs.ditherAmount = parent.ditherAmount.value;
-	}
-	prefs.formatArgs.interlaced = parent.interlaced.value;
-	prefs.formatArgs.transparency = parent.transparency.value;
-	prefs.formatArgs.matteColor = matteColours[parent.matte.selection.index];
-	if (prefs.formatArgs.transparency) {
-		prefs.formatArgs.transparencyDither = ditherType[parent.transparencyDither.selection.index];
-		if (prefs.formatArgs.transparencyDither == Dither.DIFFUSION) {
-			prefs.formatArgs.transparencyAmount = parent.transparencyDitherAmount.value;
+	with (prefs.formatArgs) {
+		format = SaveDocumentType.PNG;
+		PNG8 = true;
+		colorReduction = colorReductionType[parent.colourReduction.selection.index];
+		colors = parseInt(parent.colors.text, 10);
+		dither = ditherType[parent.dither.selection.index];
+		if (dither == Dither.DIFFUSION) {
+			ditherAmount = parent.ditherAmount.value;
+		}
+		interlaced = parent.interlaced.value;
+		transparency = parent.transparency.value;
+		matteColor = matteColours[parent.matte.selection.index];
+		if (transparency) {
+			transparencyDither = ditherType[parent.transparencyDither.selection.index];
+			if (transparencyDither == Dither.DIFFUSION) {
+				transparencyAmount = parent.transparencyDitherAmount.value;
+			}
 		}
 	}
 }
@@ -1016,9 +1032,9 @@ function onDialogSelectBMP(parent)
 
 function bootstrap()
 {
-        function showError(err) {
-                alert(err + ': on line ' + err.line, 'Script Error', true);
-        }
+	function showError(err) {
+		alert(err + ': on line ' + err.line, 'Script Error', true);
+	}
 
 	// initialisation of class methods
 	defineProfilerMethods();
@@ -1035,12 +1051,10 @@ function bootstrap()
 		return "cancel";
 	}
 
-        try {
+	try {
 		// setup the environment
 
 		env = new Object();
-
-		env.profiling = false;
 
 		env.version = parseInt(app.version, 10);
 
@@ -1068,26 +1082,26 @@ function bootstrap()
 		env.scriptFileDirectory = (new File(env.scriptFileName)).parent;
 
 		// run the script itself
-                if (env.cs3OrHigher) {
+		if (env.cs3OrHigher) {
 			// suspend history for CS3 or higher
-                        app.activeDocument.suspendHistory('Export Layers To Files', 'main()');
-                }
+			app.activeDocument.suspendHistory('Export Layers To Files', 'main()');
+		}
 		else {
-                        main();
-                }
+			main();
+		}
 
 	        if (env.documentCopy) {
 	                env.documentCopy.close(SaveOptions.DONOTSAVECHANGES);
 	        }
-        }
+	}
 	catch(e) {
-                // report errors unless the user cancelled
-                if (e.number != 8007) showError(e);
+		// report errors unless the user cancelled
+		if (e.number != 8007) showError(e);
 		if (env.documentCopy) {
 			env.documentCopy.close(SaveOptions.DONOTSAVECHANGES);
 		}
 		return "cancel";
-        }
+	}
 }
 
 //
@@ -1155,7 +1169,7 @@ function collectLayersAM(progressBarWindow)
 			var visibleInGroup = [true];
 			var layerVisible;
 			var currentGroup = null;
-                        var layerSection;
+			var layerSection;
 			for (var i = layerCount; i >= 1; --i) {
 				// check if it's an art layer (not a group) that can be selected
 				ref = new ActionReference();
@@ -1283,7 +1297,7 @@ function countLayersAM(progressBarWindow)
 		const idLayerSection = app.stringIDToTypeID("layerSection");
 		const idVsbl = app.charIDToTypeID("Vsbl");
 		const idNull = app.charIDToTypeID("null");
-                const idSlct = app.charIDToTypeID("slct");
+		const idSlct = app.charIDToTypeID("slct");
 		const idMkVs = app.charIDToTypeID("MkVs");
 
 		const FEW_LAYERS = 10;
@@ -1434,23 +1448,23 @@ function exportPng8AM(fileName, options)
 		throw new Error("Unknown color reduction algorithm. Cannot export PNG-8!");
 	}
 	desc4.putEnumerated( id14, id15, id16 );
-        var id361 = app.charIDToTypeID( "FBPl" );
+	var id361 = app.charIDToTypeID( "FBPl" );
 	switch (options.colorReduction) {
 
 	case ColorReductionType.BLACKWHITE:
-                desc4.putString( id361, "Black & White" );
+		desc4.putString( id361, "Black & White" );
 		break;
 
 	case ColorReductionType.GRAYSCALE:
-                desc4.putString( id361, "Grayscale" );
+		desc4.putString( id361, "Grayscale" );
 		break;
 
 	case ColorReductionType.MACINTOSH:
-                desc4.putString( id361, "Mac OS" );
+		desc4.putString( id361, "Mac OS" );
 		break;
 
 	case ColorReductionType.WINDOWS:
-                desc4.putString( id361, "Windows" );
+		desc4.putString( id361, "Windows" );
 		break;
 	}
 	var id17 = app.charIDToTypeID( "RChT" );
@@ -1560,9 +1574,9 @@ function exportPng8AM(fileName, options)
 
 function padder(input, padLength)
 {
-        // pad the input with zeroes up to indicated length
-        var result = (new Array(padLength + 1 - input.toString().length)).join('0') + input;
-        return result;
+	// pad the input with zeroes up to indicated length
+	var result = (new Array(padLength + 1 - input.toString().length)).join('0') + input;
+	return result;
 }
 
 function makeValidFileName(fileName, replaceSpaces)
