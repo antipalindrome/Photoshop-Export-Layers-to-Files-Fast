@@ -1127,7 +1127,7 @@ function collectLayersAM(progressBarWindow)
 		// other layers are indexed from 1.
 
 		const idLyr = app.charIDToTypeID("Lyr ");
-		const idLayerSection = stringIDToTypeID("layerSection");
+		const idLayerSection = app.stringIDToTypeID("layerSection");
 		const idVsbl = app.charIDToTypeID("Vsbl");
 		const idNull = app.charIDToTypeID("null");
 		const idSlct = app.charIDToTypeID("slct");
@@ -1279,7 +1279,7 @@ function countLayersAM(progressBarWindow)
 		// other layers are indexed from 1.
 
 		const idLyr = app.charIDToTypeID("Lyr ");
-		const idLayerSection = stringIDToTypeID("layerSection");
+		const idLayerSection = app.stringIDToTypeID("layerSection");
 		const idVsbl = app.charIDToTypeID("Vsbl");
 		const idNull = app.charIDToTypeID("null");
                 const idSlct = app.charIDToTypeID("slct");
@@ -1378,7 +1378,7 @@ function exportPng24AM(fileName, options)
 	desc2.putList(app.charIDToTypeID("SSLt"), new ActionList());
 	desc2.putBoolean(app.charIDToTypeID("DIDr"), false);
 	desc2.putPath(app.charIDToTypeID("In  "), new File(fileName));
-	desc.putObject(app.charIDToTypeID("Usng"), stringIDToTypeID("SaveForWeb"), desc2);
+	desc.putObject(app.charIDToTypeID("Usng"), app.stringIDToTypeID("SaveForWeb"), desc2);
 	executeAction(app.charIDToTypeID("Expr"), desc, DialogModes.NO);
 }
 
@@ -1548,7 +1548,7 @@ function exportPng8AM(fileName, options)
 	desc4.putBoolean( id43, false );
 	var id44 = app.charIDToTypeID( "In  " );
 	desc4.putPath( id44, new File(fileName) );
-	var id45 = stringIDToTypeID( "SaveForWeb" );
+	var id45 = app.stringIDToTypeID( "SaveForWeb" );
 	desc3.putObject( id6, id45, desc4 );
 	executeAction( id5, desc3, DialogModes.NO );
 }
