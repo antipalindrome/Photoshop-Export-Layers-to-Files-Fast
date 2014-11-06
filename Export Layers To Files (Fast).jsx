@@ -1155,6 +1155,7 @@ function collectLayersAM(progressBarWindow)
 			var visibleInGroup = [true];
 			var layerVisible;
 			var currentGroup = null;
+                        var layerSection;
 			for (var i = layerCount; i >= 1; --i) {
 				// check if it's an art layer (not a group) that can be selected
 				ref = new ActionReference();
