@@ -151,7 +151,7 @@ function main()
 			message += "\n\nExport function took " + profiler.format(collectionDuration) + " + " + profiler.format(exportDuration) + " to perform.";
 		}
 		if (count.error) {
-			message += "\n\nSome layers failed to export! (Are there many layers with the same name?)"
+			message += "\n\nSome layers failed to export! (Are there many layers with the same name?)";
 		}
 		alert(message, "Finished", count.error);
 
@@ -538,17 +538,17 @@ function showDialog()
 			prefs.filePath = newFilePath;
 			dlg.funcArea.content.grpDest.txtDest.text = newFilePath.fsName;
 		}
-	}
+	};
 
 	// layer subset selection
 	dlg.funcArea.content.grpLayers.radioLayersAll.onClick = function() {
 		prefs.visibleOnly = false;
 		dlg.funcArea.content.cbBgLayer.enabled = (layerCount > 1);
-	}
+	};
 	dlg.funcArea.content.grpLayers.radioLayersVis.onClick = function() {
 		prefs.visibleOnly = true;
 		dlg.funcArea.content.cbBgLayer.enabled = (visibleLayerCount > 1);
-	}
+	};
 	dlg.funcArea.content.grpLayers.radioLayersVis.enabled = (visibleLayerCount > 0);
 
 	var formatDropDown = dlg.funcArea.content.grpFileType.drdFileType;
@@ -1623,7 +1623,7 @@ function defineProfilerMethods()
 	Profiler.prototype.resetLastTime = function()
 	{
 		this.lastTime = new Date();
-	}
+	};
 
 	Profiler.prototype.format = function(duration)
 	{
@@ -1632,5 +1632,5 @@ function defineProfilerMethods()
 		output += padder(duration.getUTCSeconds(), 2) + ".";
 		output += padder(duration.getUTCMilliseconds(), 3);
 		return output;
-	}
+	};
 }
