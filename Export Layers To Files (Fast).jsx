@@ -28,9 +28,10 @@ const FileNameType = {
 	AS_LAYERS: 1,
 	INDEX_ASC: 2,
 	INDEX_DESC: 3,
+	AS_LAYERS_NO_EXT: 4,
 
 	forIndex: function(index) {
-		var values = [this.AS_LAYERS, this.INDEX_DESC, this.INDEX_ASC];
+		var values = [this.AS_LAYERS_NO_EXT, this.AS_LAYERS, this.INDEX_DESC, this.INDEX_ASC];
 		return values[index];
 	}
 };
@@ -115,7 +116,7 @@ function main()
 	prefs.formatArgs = null;
 	prefs.visibleOnly = false;
 	prefs.outputPrefix = "";
-	prefs.naming = FileNameType.AS_LAYERS;
+	prefs.naming = FileNameType.AS_LAYERS_NO_EXT;
 	prefs.namingLetterCase = LetterCase.KEEP;
 	prefs.replaceSpaces = true;
 	prefs.bgLayer = false;
@@ -267,8 +268,12 @@ function exportLayers(visibleOnly, progressBarWindow)
 			var fileName;
 			switch (prefs.naming) {
 
+			case FileNameType.AS_LAYERS_NO_EXT:
+				fileName = makeFileNameFromLayerName(layer, true);
+				break;
+
 			case FileNameType.AS_LAYERS:
-				fileName = makeFileNameFromLayerName(layer);
+				fileName = makeFileNameFromLayerName(layer, false);
 				break;
 
 			case FileNameType.INDEX_ASC:
@@ -350,9 +355,15 @@ function makeFileNameFromIndex(index, numOfDigits)
 	return getUniqueFileName(fileName);
 }
 
-function makeFileNameFromLayerName(layer)
+function makeFileNameFromLayerName(layer, stripExt)
 {
 	var fileName = makeValidFileName(layer.name, prefs.replaceSpaces);
+	if (stripExt) {
+		var dotIdx = fileName.indexOf('.');
+		if (dotIdx >= 0) {
+			fileName = fileName.substring(0, dotIdx);
+		}
+	}	
 	if (fileName.length == 0) {
 		fileName = "Layer";
 	}
