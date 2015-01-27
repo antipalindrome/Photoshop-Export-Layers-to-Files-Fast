@@ -13,14 +13,14 @@ Make sure to download all files:
 
 <b>[Download as zip](https://github.com/hsw107/Photoshop-Export-Layers-as-Images/archive/master.zip)</b>
 
-Disclaimer: We are not associated with Adobe in any way. For any issues relating to Adobe products or Adobe scripts please contact them directly. We have never had an issue, but please use this script at your own risk. We are not responsible for any lost data or damaged PSDs.
+Disclaimer: We are not associated with Adobe in any way. For any issues relating to Adobe products or Adobe scripts please contact them directly. We have never had an issue, but please use this script at your own risk. We are not responsible for any lost data or damaged PSDs so always make a back-up.
 
 Features:
 -------------------------------
 * Supported export formats:
   * PNG (8 and 24 bit)
-  * Targa 
   * JPEG
+  * Targa 
   * BMP
 * Handles nesting in grouped layers.
 * Export either all layers or visible only.
@@ -51,12 +51,19 @@ Mac: /Applications/Adobe Photoshop VERSION/Presets/Scripts/
 
 Version History:
 -------------------------------
+<b>27 January 2015</b> by [Hanna Walter](https://github.com/hsw107)
+
+*  Added ability to resize dialog window (useful for lower resolutions)
+
+<b>21 November 2014</b> by [Skjorn](https://github.com/skjorn)
+
+*  Added option to strip extensions from layer names and made default.
 
 <b>26 September 2014</b> by [Skjorn](https://github.com/skjorn)
 
 * Added layer trimming.
 
-<b>1 August 2014</b> by [Skjorn](https://github.com/skjorn)
+<b>01 August 2014</b> by [Skjorn](https://github.com/skjorn)
 
 * Lowest layer can be treated as common background.
 
@@ -72,7 +79,7 @@ Version History:
 * Slow layer retrieval sped up and moved at the beginning.
 * Dialog shows the correct layer count.
 
-<b>8 June 2014</b> by [Skjorn](https://github.com/skjorn)
+<b>08 June 2014</b> by [Skjorn](https://github.com/skjorn)
 
 * Script renamed to match the built-in version.
 * The dialog extended.
@@ -86,7 +93,7 @@ Version History:
 
 * Added support for Targa (TGA).
 
-<b>2 December 2013</b> by [Justin Wang](http://www.github.com/Tangleworm)
+<b>02 December 2013</b> by [Justin Wang](http://www.github.com/Tangleworm)
 
 * Added support for both PNG-24 and PNG-8
 
