@@ -1,5 +1,8 @@
-﻿dialog {
+dialog {
 	text: "Export Layers To Files",
+	properties: {
+		resizeable: true
+	},
 	orientation: "column",
 	alignChildren: "fill",
 	lblDest: StaticText {
@@ -20,35 +23,36 @@
 			},
 			grpLayers: Group {
 				orientation: "row",
-				radioLayersAll: RadioButton {text: "All layers", preferredSize: [155, 20], value: true},
-				radioLayersVis: RadioButton {text: "Visible only", preferredSize: [155, 20]}
+				txtLayers: StaticText {text: "Export:", preferredSize: [80, 20]},
+				radioLayersAll: RadioButton {text: "All layers", preferredSize: [80, 20], value: true},
+				radioLayersVis: RadioButton {text: "Visible only", preferredSize: [80, 20]}
 			},
 			grpNaming: Group {
 				orientation: "row",
-				txtNaming: StaticText {text: "Name files:", preferredSize: [70, 20]},
+				txtNaming: StaticText {text: "Name files:", preferredSize: [80, 20]},
 				drdNaming: DropDownList {preferredSize: [140, 20], properties: {items: ["As layers, strip extension", "As layers", "By index from top", "By index from bottom"]}},
 				cbNaming: Checkbox {text: "Allow spaces"}
 			},
 			grpLetterCase: Group {
 				orientation: "row",
-				txtLetterCase: StaticText {text: "Letter case:", preferredSize: [70, 20]},
+				txtLetterCase: StaticText {text: "Letter case:", preferredSize: [80, 20]},
 				drdLetterCase: DropDownList {preferredSize: [140, 20], properties: {items: ["Keep", "Lowercase", "Uppercase"]}}
 			},
 			grpPrefix: Group {
 				orientation: "row",
 				alignChildren: "left",
-				txtPrefix: StaticText {text: "Output prefix:", preferredSize: [70, 20]},
+				txtPrefix: StaticText {text: "Output prefix:", preferredSize: [80, 20]},
 				editPrefix: EditText {preferredSize: [230, 20]}
 			},
 			grpTrim: Group {
 				orientation: "row",
-				txtTrim: StaticText {text: "Trim:", preferredSize: [70, 20]},
+				txtTrim: StaticText {text: "Trim:", preferredSize: [80, 20]},
 				drdTrim: DropDownList {preferredSize: [140, 20], properties: {items: ["No", "Each layer", "Combined"]}}
 			},
 			cbBgLayer: Checkbox {text: "Lowest layer is background"},
 			grpFileType: Group {
 				orientation: "row",
-				txtFileType: StaticText {text: "File type:", preferredSize: [70, 20]},
+				txtFileType: StaticText {text: "File type:", preferredSize: [80, 20]},
 				drdFileType: DropDownList {preferredSize: [70, 20]}
 			},
 			pnlOptions: Panel {
