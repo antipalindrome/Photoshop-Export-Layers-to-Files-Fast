@@ -1,9 +1,9 @@
 Photoshop-Export-Layers-to-Files-Fast
 =================================
 
-<b>This script allows you to export layers in your Photoshop document as individual images</b> at a speed much faster than the built-in script from Adobe. So far it does not feature all the formats that the built-in version does, but more can be added easily upon request. Feel free to contribute to it and make it even more powerful!
+<b>This script allows you to export layers in your Photoshop document as individual files</b> at a speed much faster than the built-in script from Adobe. So far it does not feature all the formats that the built-in version does, but more can be added easily upon request. Feel free to contribute to it and make it even more powerful!
 
-[We accept donations.](https://github.com/hsw107/Photoshop-Export-Layers-as-Images/wiki)
+[We accept donations.](https://github.com/hsw107/Photoshop-Export-Layers-to-Files-Fast/wiki)
 
 Please, consider donating a modest sum if you enjoy using our script regularly and would like to see more features implemented sooner.
 
@@ -11,7 +11,7 @@ This script was originally built as a response to a [question](http://graphicdes
 
 Make sure to download all files:
 
-<b>[Download as zip](https://github.com/hsw107/Photoshop-Export-Layers-as-Images/archive/master.zip)</b>
+<b>[Download as zip](https://github.com/hsw107/Photoshop-Export-Layers-to-Files-Fast/archive/master.zip)</b>
 
 Disclaimer: We are not associated with Adobe in any way. For any issues relating to Adobe products or Adobe scripts please contact them directly. We have never had an issue, but please use this script at your own risk. We are not responsible for any lost data or damaged PSDs so always make a back-up.
 
@@ -30,7 +30,7 @@ Features:
 * Lowest layer can be treated as common background.
 * Exported images can have layer size or canvas size (trimming option).
 
-You can also see [what's coming next](https://github.com/hsw107/Photoshop-Export-Layers-as-Images/wiki/Feature-Roadmap) and browse some of our [performance test results](https://github.com/hsw107/Photoshop-Export-Layers-as-Images/wiki/Performance-Test-Results).
+You can also see [what's coming next](https://github.com/hsw107/Photoshop-Export-Layers-to-Files-Fast/wiki/Feature-Roadmap) and browse some of our [performance test results](https://github.com/hsw107/Photoshop-Export-Layers-to-Files-Fast/wiki/Performance-Test-Results).
 
 Requirements: 
 -------------------------------
@@ -120,4 +120,4 @@ Version History:
 
 Contact:
 -------------------------------
-Please use communication channels on GitHub to write feedback/bugs/suggestions: https://github.com/hsw107/Photoshop-Export-Layers-as-Images/issues
+Please use communication channels on GitHub to write feedback/bugs/suggestions: https://github.com/hsw107/Photoshop-Export-Layers-to-Files-Fast/issues
