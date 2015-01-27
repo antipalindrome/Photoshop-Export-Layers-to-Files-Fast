@@ -501,12 +501,15 @@ function createProgressBar()
 	win.barRow.cancelBtn.onClick = function() {
 		userCancelled = true;
 	};
-
+	
+	win.onResizing = win.onResize = function () {
+		this.layout.resize();
+	}
+	
 	win.onClose = function() {
 		userCancelled = true;
 		return false;
 	};
-
 	return win;
 }
 
