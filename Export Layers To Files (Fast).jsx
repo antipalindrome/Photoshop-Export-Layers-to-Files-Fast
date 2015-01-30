@@ -1163,10 +1163,11 @@ function collectLayersAM(progressBarWindow)
 
 		const FEW_LAYERS = 10;
 
-		if (layerCount <= FEW_LAYERS) {
+		// newer PS's freeze or crash on Mac OS X Yosemite
+		//if (layerCount <= FEW_LAYERS) {
 			// don't show the progress bar UI for only a few layers
-			progressBarWindow = null;
-		}
+			//progressBarWindow = null;
+		//}
 
 		if (progressBarWindow) {
 			// The layer count is actually + 1 if there's a background present, but it should be no biggie.
@@ -1316,10 +1317,11 @@ function countLayersAM(progressBarWindow)
 
 		const FEW_LAYERS = 10;
 
-		if (layerCount <= FEW_LAYERS) {
+		// newer PS's freeze or crash on Mac OS X Yosemite
+		//if (layerCount <= FEW_LAYERS) {
 			// don't show the progress bar UI for only a few layers
-			progressBarWindow = null;
-		}
+			//progressBarWindow = null;
+		//}
 
 		if (progressBarWindow) {
 			// The layer count is actually + 1 if there's a background present, but it should be no biggie.
