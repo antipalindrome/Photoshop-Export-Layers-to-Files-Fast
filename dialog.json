@@ -49,7 +49,7 @@ dialog {
 				txtTrim: StaticText {text: "Trim:", preferredSize: [80, 20]},
 				drdTrim: DropDownList {preferredSize: [140, 20], properties: {items: ["No", "Each layer", "Combined"]}}
 			},
-			cbBgLayer: Checkbox {text: "Lowest layer is background"},
+			cbBgLayer: Checkbox {text: "Export background with every layer"},
 			grpFileType: Group {
 				orientation: "row",
 				txtFileType: StaticText {text: "File type:", preferredSize: [80, 20]},
