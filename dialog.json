@@ -42,7 +42,8 @@ dialog {
 				orientation: "row",
 				alignChildren: "left",
 				txtPrefix: StaticText {text: "Output prefix:", preferredSize: [80, 20]},
-				editPrefix: EditText {preferredSize: [230, 20]}
+				editPrefix: EditText {preferredSize: [230, 20]},
+                cbBounds: Checkbox {text: "Include bounds"}
 			},
 			grpTrim: Group {
 				orientation: "row",
