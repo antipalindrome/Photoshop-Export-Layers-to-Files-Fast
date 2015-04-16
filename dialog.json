@@ -1,8 +1,5 @@
 dialog {
 	text: "Export Layers To Files",
-	properties: {
-		resizeable: true
-	},
 	orientation: "column",
 	alignChildren: "fill",
 	lblDest: StaticText {
@@ -66,6 +63,7 @@ dialog {
 			orientation: "column",
 			btnRun: Button {text: "Run"},
 			btnCancel: Button {text: "Cancel"}
+			btnSettings: Button {text: "Save Settings"}
 		}
 	},
 	warning: Panel {
