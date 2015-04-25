@@ -51,9 +51,9 @@ Mac: /Applications/Adobe Photoshop VERSION/Presets/Scripts/
 
 Version History:
 -------------------------------
-<b>27 January 2015</b> by [Hanna Walter](https://github.com/hsw107)
+<b>25 April 2015</b> by [Hanna Walter](https://github.com/hsw107) and [Skjorn](https://github.com/skjorn)
 
-*  Added ability to resize dialog window (useful for lower resolutions)
+* Last user settings remembered for versions CS 3 and higher.
 
 <b>21 November 2014</b> by [Skjorn](https://github.com/skjorn)
 
