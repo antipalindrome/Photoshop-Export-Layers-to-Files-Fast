@@ -62,7 +62,7 @@ dialog {
 		buttons: Group {
 			orientation: "column",
 			btnRun: Button {text: "Run"},
-			btnCancel: Button {text: "Cancel"}
+			btnCancel: Button {text: "Cancel"},
 			btnSettings: Button {text: "Save Settings"}
 		}
 	},
