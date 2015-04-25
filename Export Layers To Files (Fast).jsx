@@ -30,9 +30,19 @@ const FileNameType = {
 	INDEX_DESC: 3,
 	AS_LAYERS_NO_EXT: 4,
 
-	forIndex: function(index) {
-		var values = [this.AS_LAYERS_NO_EXT, this.AS_LAYERS, this.INDEX_DESC, this.INDEX_ASC];
-		return values[index];
+	values: function()
+	{
+		return [this.AS_LAYERS_NO_EXT, this.AS_LAYERS, this.INDEX_DESC, this.INDEX_ASC];
+	},
+	
+	forIndex: function(index) 
+	{
+		return this.values()[index];
+	},
+	
+	getIndex: function(value) 
+	{
+		return indexOf(this.values(), value);
 	}
 };
 
@@ -41,11 +51,21 @@ const LetterCase = {
 	LOWERCASE: 2,
 	UPPERCASE: 3,
 
-	forIndex: function(index) {
-		var values = [this.KEEP, this.LOWERCASE, this.UPPERCASE];
-		return values[index];
+	values: function()
+	{
+		return [this.KEEP, this.LOWERCASE, this.UPPERCASE];
 	},
-
+	
+	forIndex: function(index) 
+	{
+		return this.values()[index];
+	},
+	
+	getIndex: function(value) 
+	{
+		return indexOf(this.values(), value);
+	},
+	
 	toExtensionType: function(value) {
 		switch (value) {
 
@@ -69,58 +89,74 @@ const TrimPrefType = {
 	INDIVIDUAL: 2,
 	COMBINED: 3,
 
-	forIndex: function(index) {
-		var values = [this.DONT_TRIM, this.INDIVIDUAL, this.COMBINED];
-		return values[index];
+	values: function()
+	{
+		return [this.DONT_TRIM, this.INDIVIDUAL, this.COMBINED];
+	},
+	
+	forIndex: function(index) 
+	{
+		return this.values()[index];
+	},
+	
+	getIndex: function(value) 
+	{
+		return indexOf(this.values(), value);
 	}
 };
 
-//Settings//
+// Settings
+
+const USER_SETTINGS_ID = "exportLayersToFilesCustomDefaultSettings";  	
 const DEFAULT_SETTINGS = {
-	exportAll: app.stringIDToTypeID( "exportAll" ),
-	nameFiles: app.stringIDToTypeID( "nameFiles" ),
-	allowSpaces: app.stringIDToTypeID( "allowSpaces" ),
-	letterCase:	app.stringIDToTypeID( "letterCase" ),
-	outputPrefix: app.stringIDToTypeID( "outputPrefix" ),
-	trim: app.stringIDToTypeID( "trim" ),
-	exportBackground: app.stringIDToTypeID( "exportBackground" ),
-	fileType: app.stringIDToTypeID( "fileType" ),
+	// common
+	destination: app.stringIDToTypeID("destFolder"),
+	exportAll: app.stringIDToTypeID("exportAll"),
+	nameFiles: app.stringIDToTypeID("nameFiles"),
+	allowSpaces: app.stringIDToTypeID("allowSpaces"),
+	letterCase:	app.stringIDToTypeID("letterCase"),
+	outputPrefix: app.stringIDToTypeID("outputPrefix"),
+	trim: app.stringIDToTypeID("trim"),
+	exportBackground: app.stringIDToTypeID("exportBackground"),
+	fileType: app.stringIDToTypeID("fileType"),
+	
+	// per format
 	png24 : {
-		matte: app.stringIDToTypeID( "png24Matte" ),
-		transparency: app.stringIDToTypeID( "png24Transparency" ),
-		interlaced: app.stringIDToTypeID( "png24Interlaced" ),
+		matte: app.stringIDToTypeID("png24Matte"),
+		transparency: app.stringIDToTypeID("png24Transparency"),
+		interlaced: app.stringIDToTypeID("png24Interlaced"),
 	},
 	png8: {
-		colorReduction: app.stringIDToTypeID( "png8ColorReduction" ),
-		numberOfColors: app.stringIDToTypeID( "png8NumberOfColors" ),
-		dither: app.stringIDToTypeID( "png8Dither" ),
-		ditherAmount: app.stringIDToTypeID( "png8DitherAmount" ),
-		interlaced: app.stringIDToTypeID( "png8Interlaced" ),
-		transparency: app.stringIDToTypeID( "png8Transparency" ),
-		matte: app.stringIDToTypeID( "png8Matte" ),
-		transparencyDither: app.stringIDToTypeID( "png8TransparencyDither" ),
-		transparencyDitherAmount: app.stringIDToTypeID( "png8TransparencyDitherAmount" )
+		colorReduction: app.stringIDToTypeID("png8ColorReduction"),
+		numberOfColors: app.stringIDToTypeID("png8NumberOfColors"),
+		dither: app.stringIDToTypeID("png8Dither"),
+		ditherAmount: app.stringIDToTypeID("png8DitherAmount"),
+		interlaced: app.stringIDToTypeID("png8Interlaced"),
+		transparency: app.stringIDToTypeID("png8Transparency"),
+		matte: app.stringIDToTypeID("png8Matte"),
+		transparencyDither: app.stringIDToTypeID("png8TransparencyDither"),
+		transparencyDitherAmount: app.stringIDToTypeID("png8TransparencyDitherAmount")
 	},
 	jpg: {
-		quality: app.stringIDToTypeID( "jpgQuality" ),
-		matte: app.stringIDToTypeID( "jpgMatte" ),
-		icc: app.stringIDToTypeID( "jpgIcc" ),
-		optimized: app.stringIDToTypeID( "jpgOptimized" ),
-		progressive: app.stringIDToTypeID( "jpgProgressive" )
+		quality: app.stringIDToTypeID("jpgQuality"),
+		matte: app.stringIDToTypeID("jpgMatte"),
+		icc: app.stringIDToTypeID("jpgIcc"),
+		optimized: app.stringIDToTypeID("jpgOptimized"),
+		progressive: app.stringIDToTypeID("jpgProgressive")
 	},
 	tga: {
-		depth: app.stringIDToTypeID( "tgaDepth" ),
-		alpha: app.stringIDToTypeID( "tgaAlpha" ),
-		rle: app.stringIDToTypeID( "tgaRle" )
+		depth: app.stringIDToTypeID("tgaDepth"),
+		alpha: app.stringIDToTypeID("tgaAlpha"),
+		rle: app.stringIDToTypeID("tgaRle")
 	},
 	bmp: {
-		alpha: app.stringIDToTypeID( "bmpAlpha" ),
-		rle: app.stringIDToTypeID( "bmpRle" ),
-		flipRow: app.stringIDToTypeID( "bmpFlipRow" ),
-         depth: app.stringIDToTypeID( "bmpDepth" ),
+        depth: app.stringIDToTypeID("bmpDepth"),
+		alpha: app.stringIDToTypeID("bmpAlpha"),
+		rle: app.stringIDToTypeID("bmpRle"),
+		flipRow: app.stringIDToTypeID("bmpFlipRow")
 	}
 };
-const USER_SETTINGS_ID = "exportLayersToFilesCustomDefaultSettings";  	
+
 //
 // Global variables
 //
@@ -737,65 +773,105 @@ function applyDefaults(dlg, saveOpt)
 		return;
 	}
 	
-    dlg.funcArea.content.grpLayers.radioLayersAll.value = settings.exportAll;
-    dlg.funcArea.content.grpLayers.radioLayersVis.value = !settings.exportAll;
-	dlg.funcArea.content.grpNaming.drdNaming.selection = settings.nameFiles;
-    dlg.funcArea.content.grpNaming.cbNaming.value = settings.allowSpaces;
-	dlg.funcArea.content.grpLetterCase.drdLetterCase.selection = settings.letterCase;
-    dlg.funcArea.content.grpPrefix.editPrefix.text = settings.outputPrefix
-	dlg.funcArea.content.grpTrim.drdTrim.selection = settings.trim;
-    dlg.funcArea.content.cbBgLayer.value = settings.exportBackground;
-    dlg.funcArea.content.grpFileType.drdFileType.selection = settings.fileType;
-    var PNG24 = 0, PNG8 = 1, JPG = 2, TGA = 3, BMP = 4;
-    if (settings.fileType == PNG24) { //PNG24
-        saveOpt[PNG24].controlRoot.transparency.value =  settings.png24.transparency;
-		if (settings.png24.transparency == false) {
-			saveOpt[PNG24].controlRoot.matte.enabled = true;
-			saveOpt[PNG24].controlRoot.matte.selection = settings.png24.matte;
+	// FIXME: test effect on dynamic enabling/disabling of controls
+	with (dlg.funcArea.content) {
+		// Common settings
+		
+		var destFolder = new Folder(settings.destination);
+		if (destFolder.exists) {
+			grpDest.txtDest.text = destFolder.fsName;
+			prefs.filePath = destFolder;
 		}
-        saveOpt[PNG24].controlRoot.interlaced.value = settings.png24.interlaced;
-    } 
-	else if (settings.fileType == PNG8) { //PNG8
-        saveOpt[PNG8].controlRoot.colourReduction.selection =  settings.png8.colorReduction;
-        saveOpt[PNG8].controlRoot.colorsLast = settings.png8.numberOfColors;
-        saveOpt[PNG8].controlRoot.dither.selection = settings.png8.dither;
-        if (settings.png8.dither == 1) {
-            saveOpt[PNG8].controlRoot.ditherAmount.enabled = true;
-            saveOpt[PNG8].controlRoot.ditherAmount.value = settings.png8.ditherAmount;
-        }
-        saveOpt[PNG8].controlRoot.interlaced.value = settings.png8.interlaced;
-        if (settings.png8.transparency == false) {
-                saveOpt[PNG8].controlRoot.transparency.notify();
-                saveOpt[PNG8].controlRoot.matte.selection = settings.png8.matte;
-        } 
-		else {
-            saveOpt[PNG8].controlRoot.transparencyDither.selection = settings.png8.transparencyDither;
-            if (settings.png8.transparencyDither == 1) {
-                saveOpt[PNG8].controlRoot.transparencyDitherAmount.value = settings.png8.transparencyDitherAmount;
-            }
-        }    
-    } 
-	else if (settings.fileType == JPG) { //JPG
-        saveOpt[JPG].controlRoot.quality.value =  settings.jpg.quality;
-        saveOpt[JPG].controlRoot.matte.selection = settings.jpg.matte;
-        saveOpt[JPG].controlRoot.icc.value = settings.jpg.icc;
-        saveOpt[JPG].controlRoot.optimised.value = settings.jpg.optimized;
-        saveOpt[JPG].controlRoot.progressive.value = settings.jpg.progressive;
-        if (settings.jpg.progressive) { 
-            saveOpt[JPG].controlRoot.optimised.enabled = false;
-        }
-    } 
-	else if (settings.fileType == TGA) {
-        saveOpt[TGA].controlRoot.alpha.value =  settings.tga.alpha;
-        saveOpt[TGA].controlRoot.bitsPerPixel.selection = settings.tga.depth;
-        saveOpt[TGA].controlRoot.rle.value = settings.tga.rle;
-    } 
-	else if (settings.fileType == BMP) {
-        saveOpt[BMP].controlRoot.alpha.value =  settings.bmp.alpha;
-        saveOpt[BMP].controlRoot.depth.selection = settings.bmp.depth;
-        saveOpt[BMP].controlRoot.rle.value = settings.bmp.rle;
-        saveOpt[BMP].controlRoot.flipRowOrder.value = settings.bmp.flipRow;
-    }
+		
+		grpLayers.radioLayersAll.value = settings.exportAll;
+		grpLayers.radioLayersVis.value = !settings.exportAll;
+		
+		var drdNamingIdx = FileNameType.getIndex(settings.nameFiles);
+		grpNaming.drdNaming.selection = (drdNamingIdx >= 0) ? drdNamingIdx : 0;
+		
+		grpNaming.cbNaming.value = settings.allowSpaces;
+		
+		var drdLetterCaseIdx = LetterCase.getIndex(settings.letterCase);
+		grpLetterCase.drdLetterCase.selection = (drdLetterCaseIdx >= 0) ? drdLetterCaseIdx : 0;
+		
+		grpPrefix.editPrefix.text = settings.outputPrefix;
+		
+		var drdTrimIdx = TrimPrefType.getIndex(settings.trim);
+		grpTrim.drdTrim.selection = (drdTrimIdx >= 0) ? drdTrimIdx : 0;
+		
+		cbBgLayer.value = settings.exportBackground;
+		
+		var drdFileTypeIdx = 0;
+		for (var i = 0; i < saveOpt.length; ++i) {
+			if (saveOpt[i].type == settings.fileType) {
+				drdFileTypeIdx = i;
+				break;
+			}
+		}
+		grpFileType.drdFileType.selection = drdFileTypeIdx;
+		
+		// File format specific
+		
+		// FIXME: revise for correctness and make modular
+		for (var i = 0; i < saveOpt.length; ++i) {
+			switch (saveOpt[i].type) {
+			
+			case "PNG-24":
+				saveOpt[i].controlRoot.transparency.value =  settings.png24.transparency;
+				if (settings.png24.transparency == false) {
+					saveOpt[i].controlRoot.matte.enabled = true;
+					saveOpt[i].controlRoot.matte.selection = settings.png24.matte;
+				}
+				saveOpt[i].controlRoot.interlaced.value = settings.png24.interlaced;
+				break;
+				
+			case "PNG-8":
+				saveOpt[i].controlRoot.colourReduction.selection =  settings.png8.colorReduction;
+				saveOpt[i].controlRoot.colors.text = settings.png8.numberOfColors;
+				saveOpt[i].controlRoot.dither.selection = settings.png8.dither;
+				if (settings.png8.dither == 1) {
+					saveOpt[i].controlRoot.ditherAmount.enabled = true;
+					saveOpt[i].controlRoot.ditherAmount.value = settings.png8.ditherAmount;
+				}
+				saveOpt[i].controlRoot.interlaced.value = settings.png8.interlaced;
+				if (settings.png8.transparency == false) {
+						saveOpt[i].controlRoot.transparency.notify();
+						saveOpt[i].controlRoot.matte.selection = settings.png8.matte;
+				} 
+				else {
+					saveOpt[i].controlRoot.transparencyDither.selection = settings.png8.transparencyDither;
+					if (settings.png8.transparencyDither == 1) {
+						saveOpt[i].controlRoot.transparencyDitherAmount.value = settings.png8.transparencyDitherAmount;
+					}
+				}    
+				break;
+				
+			case "JPG":
+				saveOpt[i].controlRoot.quality.value =  settings.jpg.quality;
+				saveOpt[i].controlRoot.matte.selection = settings.jpg.matte;
+				saveOpt[i].controlRoot.icc.value = settings.jpg.icc;
+				saveOpt[i].controlRoot.optimised.value = settings.jpg.optimized;
+				saveOpt[i].controlRoot.progressive.value = settings.jpg.progressive;
+				if (settings.jpg.progressive) { 
+					saveOpt[i].controlRoot.optimised.enabled = false;
+				}
+				break;
+			
+			case "TGA":
+				saveOpt[i].controlRoot.alpha.value =  settings.tga.alpha;
+				saveOpt[i].controlRoot.bitsPerPixel.selection = settings.tga.depth;
+				saveOpt[i].controlRoot.rle.value = settings.tga.rle;
+				break;
+				
+			case "BMP":
+				saveOpt[i].controlRoot.alpha.value =  settings.bmp.alpha;
+				saveOpt[i].controlRoot.depth.selection = settings.bmp.depth;
+				saveOpt[i].controlRoot.rle.value = settings.bmp.rle;
+				saveOpt[i].controlRoot.flipRowOrder.value = settings.bmp.flipRow;
+				break;
+			}
+		}
+	}
 }
 
 function saveSettings(dlg, saveOpt)
@@ -807,44 +883,55 @@ function saveSettings(dlg, saveOpt)
 	// Collect settings from the dialog controls.
 	
 	var desc = new ActionDescriptor();
-	desc.putBoolean(DEFAULT_SETTINGS.exportAll, dlg.funcArea.content.grpLayers.radioLayersAll.value); 
-	desc.putInteger(DEFAULT_SETTINGS.nameFiles, dlg.funcArea.content.grpNaming.drdNaming.selection.index);
-	desc.putBoolean(DEFAULT_SETTINGS.allowSpaces, dlg.funcArea.content.grpNaming.cbNaming.value);
-	desc.putInteger(DEFAULT_SETTINGS.letterCase, dlg.funcArea.content.grpLetterCase.drdLetterCase.selection.index);
-	desc.putString(DEFAULT_SETTINGS.outputPrefix, dlg.funcArea.content.grpPrefix.editPrefix.text);
-	desc.putInteger(DEFAULT_SETTINGS.trim, dlg.funcArea.content.grpTrim.drdTrim.selection.index);
-	var cbBgLayer = dlg.funcArea.content.cbBgLayer;
-	desc.putBoolean(DEFAULT_SETTINGS.exportBackground, cbBgLayer.value && cbBgLayer.enabled);
-	desc.putInteger(DEFAULT_SETTINGS.fileType, dlg.funcArea.content.grpFileType.drdFileType.selection.index);
+	
+	with (dlg.funcArea.content) {
+		// common
+		desc.putString(DEFAULT_SETTINGS.destination, grpDest.txtDest.text); 
+		desc.putBoolean(DEFAULT_SETTINGS.exportAll, grpLayers.radioLayersAll.value); 
+		desc.putInteger(DEFAULT_SETTINGS.nameFiles, FileNameType.forIndex(grpNaming.drdNaming.selection.index));
+		desc.putBoolean(DEFAULT_SETTINGS.allowSpaces, grpNaming.cbNaming.value);
+		desc.putInteger(DEFAULT_SETTINGS.letterCase, LetterCase.forIndex(grpLetterCase.drdLetterCase.selection.index));
+		desc.putString(DEFAULT_SETTINGS.outputPrefix, grpPrefix.editPrefix.text);
+		desc.putInteger(DEFAULT_SETTINGS.trim, TrimPrefType.forIndex(grpTrim.drdTrim.selection.index));
+		desc.putBoolean(DEFAULT_SETTINGS.exportBackground, cbBgLayer.value);
+		desc.putString(DEFAULT_SETTINGS.fileType, saveOpt[grpFileType.drdFileType.selection.index].type);
 
-	desc.putInteger(DEFAULT_SETTINGS.png24.matte, saveOpt[0].controlRoot.matte.selection.index);
-	desc.putBoolean(DEFAULT_SETTINGS.png24.transparency, saveOpt[0].controlRoot.transparency.value);
-	desc.putBoolean(DEFAULT_SETTINGS.png24.interlaced, saveOpt[0].controlRoot.interlaced.value);
+		// per file format
+		
+		// PNG-24
+		desc.putInteger(DEFAULT_SETTINGS.png24.matte, saveOpt[0].controlRoot.matte.selection.index);
+		desc.putBoolean(DEFAULT_SETTINGS.png24.transparency, saveOpt[0].controlRoot.transparency.value);
+		desc.putBoolean(DEFAULT_SETTINGS.png24.interlaced, saveOpt[0].controlRoot.interlaced.value);
 
-	desc.putInteger(DEFAULT_SETTINGS.png8.colorReduction, saveOpt[1].controlRoot.colourReduction.selection.index);
-	desc.putString(DEFAULT_SETTINGS.png8.numberOfColors, saveOpt[1].controlRoot.colorsLast);
-	desc.putInteger(DEFAULT_SETTINGS.png8.dither, saveOpt[1].controlRoot.dither.selection.index);
-	desc.putInteger(DEFAULT_SETTINGS.png8.ditherAmount, saveOpt[1].controlRoot.ditherAmount.value);
-	desc.putBoolean(DEFAULT_SETTINGS.png8.interlaced, saveOpt[1].controlRoot.interlaced.value);
-	desc.putBoolean(DEFAULT_SETTINGS.png8.transparency, saveOpt[1].controlRoot.transparency.value);
-	desc.putInteger(DEFAULT_SETTINGS.png8.matte, saveOpt[1].controlRoot.matte.selection.index);
-	desc.putInteger(DEFAULT_SETTINGS.png8.transparencyDither, saveOpt[1].controlRoot.transparencyDither.selection.index);
-	desc.putInteger(DEFAULT_SETTINGS.png8.transparencyDitherAmount, saveOpt[1].controlRoot.transparencyDitherAmount.value);
+		// PNG-8
+		desc.putInteger(DEFAULT_SETTINGS.png8.colorReduction, saveOpt[1].controlRoot.colourReduction.selection.index);
+		desc.putString(DEFAULT_SETTINGS.png8.numberOfColors, saveOpt[1].controlRoot.colors.text);
+		desc.putInteger(DEFAULT_SETTINGS.png8.dither, saveOpt[1].controlRoot.dither.selection.index);
+		desc.putInteger(DEFAULT_SETTINGS.png8.ditherAmount, saveOpt[1].controlRoot.ditherAmount.value);
+		desc.putBoolean(DEFAULT_SETTINGS.png8.interlaced, saveOpt[1].controlRoot.interlaced.value);
+		desc.putBoolean(DEFAULT_SETTINGS.png8.transparency, saveOpt[1].controlRoot.transparency.value);
+		desc.putInteger(DEFAULT_SETTINGS.png8.matte, saveOpt[1].controlRoot.matte.selection.index);
+		desc.putInteger(DEFAULT_SETTINGS.png8.transparencyDither, saveOpt[1].controlRoot.transparencyDither.selection.index);
+		desc.putInteger(DEFAULT_SETTINGS.png8.transparencyDitherAmount, saveOpt[1].controlRoot.transparencyDitherAmount.value);
 
-	desc.putInteger(DEFAULT_SETTINGS.jpg.quality, saveOpt[2].controlRoot.quality.value);
-	desc.putInteger(DEFAULT_SETTINGS.jpg.matte, saveOpt[2].controlRoot.matte.selection.index);
-	desc.putBoolean(DEFAULT_SETTINGS.jpg.icc, saveOpt[2].controlRoot.icc.value);
-	desc.putBoolean(DEFAULT_SETTINGS.jpg.optimized, saveOpt[2].controlRoot.optimised.value);
-	desc.putBoolean(DEFAULT_SETTINGS.jpg.progressive, saveOpt[2].controlRoot.progressive.value);
+		// JPG
+		desc.putInteger(DEFAULT_SETTINGS.jpg.quality, saveOpt[2].controlRoot.quality.value);
+		desc.putInteger(DEFAULT_SETTINGS.jpg.matte, saveOpt[2].controlRoot.matte.selection.index);
+		desc.putBoolean(DEFAULT_SETTINGS.jpg.icc, saveOpt[2].controlRoot.icc.value);
+		desc.putBoolean(DEFAULT_SETTINGS.jpg.optimized, saveOpt[2].controlRoot.optimised.value);
+		desc.putBoolean(DEFAULT_SETTINGS.jpg.progressive, saveOpt[2].controlRoot.progressive.value);
 
-	desc.putBoolean(DEFAULT_SETTINGS.tga.alpha, saveOpt[3].controlRoot.alpha.value);
-	desc.putInteger(DEFAULT_SETTINGS.tga.depth, saveOpt[3].controlRoot.bitsPerPixel.selection.index);
-	desc.putBoolean(DEFAULT_SETTINGS.tga.rle, saveOpt[3].controlRoot.rle.value);
+		// TGA
+		desc.putBoolean(DEFAULT_SETTINGS.tga.alpha, saveOpt[3].controlRoot.alpha.value);
+		desc.putInteger(DEFAULT_SETTINGS.tga.depth, saveOpt[3].controlRoot.bitsPerPixel.selection.index);
+		desc.putBoolean(DEFAULT_SETTINGS.tga.rle, saveOpt[3].controlRoot.rle.value);
 
-	desc.putBoolean(DEFAULT_SETTINGS.bmp.alpha, saveOpt[4].controlRoot.alpha.value);
-	desc.putInteger(DEFAULT_SETTINGS.bmp.depth, saveOpt[4].controlRoot.depth.selection.index);
-	desc.putBoolean(DEFAULT_SETTINGS.bmp.rle, saveOpt[4].controlRoot.rle.value);
-	desc.putBoolean(DEFAULT_SETTINGS.bmp.flipRow, saveOpt[4].controlRoot.flipRowOrder.value);
+		// BMP
+		desc.putBoolean(DEFAULT_SETTINGS.bmp.alpha, saveOpt[4].controlRoot.alpha.value);
+		desc.putInteger(DEFAULT_SETTINGS.bmp.depth, saveOpt[4].controlRoot.depth.selection.index);
+		desc.putBoolean(DEFAULT_SETTINGS.bmp.rle, saveOpt[4].controlRoot.rle.value);
+		desc.putBoolean(DEFAULT_SETTINGS.bmp.flipRow, saveOpt[4].controlRoot.flipRowOrder.value);
+	}
 
 	// Save settings.
 	
@@ -866,18 +953,22 @@ function getSettings()
 		
 		// might throw if format changed or got corrupt
 		result = {
-			exportAll: desc.getBoolean( DEFAULT_SETTINGS.exportAll ), 
-			nameFiles: desc.getInteger( DEFAULT_SETTINGS.nameFiles ), 
-			allowSpaces: desc.getBoolean( DEFAULT_SETTINGS.allowSpaces ), 
-			letterCase: desc.getInteger( DEFAULT_SETTINGS.letterCase ), 
-			outputPrefix: desc.getString( DEFAULT_SETTINGS.outputPrefix ),
-			trim: desc.getInteger( DEFAULT_SETTINGS.trim ), 
-			exportBackground: desc.getBoolean( DEFAULT_SETTINGS.exportBackground ),
-			fileType: desc.getInteger( DEFAULT_SETTINGS.fileType ),
+			// common
+			destination: desc.getString(DEFAULT_SETTINGS.destination),
+			exportAll: desc.getBoolean(DEFAULT_SETTINGS.exportAll), 
+			nameFiles: desc.getInteger(DEFAULT_SETTINGS.nameFiles), 
+			allowSpaces: desc.getBoolean(DEFAULT_SETTINGS.allowSpaces), 
+			letterCase: desc.getInteger(DEFAULT_SETTINGS.letterCase), 
+			outputPrefix: desc.getString(DEFAULT_SETTINGS.outputPrefix),
+			trim: desc.getInteger(DEFAULT_SETTINGS.trim), 
+			exportBackground: desc.getBoolean(DEFAULT_SETTINGS.exportBackground),
+			fileType: desc.getString(DEFAULT_SETTINGS.fileType),
+			
+			// per file format
 			png24: {
-				matte:  desc.getInteger(DEFAULT_SETTINGS.png24.matte),
-				transparency:  desc.getBoolean(DEFAULT_SETTINGS.png24.transparency),
-				interlaced:  desc.getBoolean(DEFAULT_SETTINGS.png24.interlaced)
+				matte: desc.getInteger(DEFAULT_SETTINGS.png24.matte),
+				transparency: desc.getBoolean(DEFAULT_SETTINGS.png24.transparency),
+				interlaced: desc.getBoolean(DEFAULT_SETTINGS.png24.interlaced)
 			},
 			png8: {
 				colorReduction: desc.getInteger(DEFAULT_SETTINGS.png8.colorReduction),
@@ -900,13 +991,13 @@ function getSettings()
 			tga: {
 				depth: desc.getInteger(DEFAULT_SETTINGS.tga.depth),
 				alpha: desc.getBoolean(DEFAULT_SETTINGS.tga.alpha),
-				rle:  desc.getBoolean(DEFAULT_SETTINGS.tga.rle)
+				rle: desc.getBoolean(DEFAULT_SETTINGS.tga.rle)
 			},
 			bmp: {
+				depth: desc.getInteger(DEFAULT_SETTINGS.bmp.depth),
 				alpha: desc.getBoolean(DEFAULT_SETTINGS.bmp.alpha),
 				rle: desc.getBoolean(DEFAULT_SETTINGS.bmp.rle),
-				flipRow: desc.getBoolean(DEFAULT_SETTINGS.bmp.flipRow),
-				depth: desc.getInteger(DEFAULT_SETTINGS.bmp.depth)
+				flipRow: desc.getBoolean(DEFAULT_SETTINGS.bmp.flipRow)
 			}
 		};
 	}
@@ -1859,6 +1950,19 @@ function formatString(text)
 	return text.replace(/\{(\d+)\}/g, function(match, number) {
 		return (typeof args[number] != 'undefined') ? args[number] : match;
 	});
+}
+
+function indexOf(array, element)
+{
+	var index = -1;
+	for (var i = 0; i < array.length; ++i) {
+		if (array[i] === element) {
+			index = i;
+			break;
+		}
+	}
+	
+	return index;
 }
 
 function loadResource(file)
