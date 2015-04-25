@@ -46,7 +46,7 @@ dialog {
 				txtTrim: StaticText {text: "Trim:", preferredSize: [80, 20]},
 				drdTrim: DropDownList {preferredSize: [140, 20], properties: {items: ["No", "Each layer", "Combined"]}}
 			},
-			cbBgLayer: Checkbox {text: "Export background with every layer"},
+			cbBgLayer: Checkbox {text: "Lowest layer is background", helpTip: "Leaves the bottommost layer on while exporting every other layer one by one. It will act as background."},
 			grpFileType: Group {
 				orientation: "row",
 				txtFileType: StaticText {text: "File type:", preferredSize: [80, 20]},
@@ -63,7 +63,8 @@ dialog {
 			orientation: "column",
 			btnRun: Button {text: "Run"},
 			btnCancel: Button {text: "Cancel"},
-			btnSettings: Button {text: "Save Settings"}
+			txtSpace: StaticText {},
+			btnSettings: Button {text: "Save and Cancel", helpTip: "Save current settings and cancel."}
 		}
 	},
 	warning: Panel {

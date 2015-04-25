@@ -702,6 +702,9 @@ function showDialog()
 
 		var selIdx = formatDropDown.selection.index;
 		saveOpt[selIdx].handler(saveOpt[selIdx].controlRoot);
+		
+		saveSettings(dlg, saveOpt);
+		
 		dlg.close(1);
 	};
 	dlg.funcArea.buttons.btnCancel.onClick = function() {
@@ -711,6 +714,7 @@ function showDialog()
 	dlg.funcArea.buttons.btnSettings.enabled = env.cs3OrHigher;
 	dlg.funcArea.buttons.btnSettings.onClick = function() {
 		saveSettings(dlg, saveOpt);
+		dlg.close(0);
 	};
 
 	// warning message
