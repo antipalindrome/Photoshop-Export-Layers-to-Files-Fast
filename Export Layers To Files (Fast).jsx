@@ -368,20 +368,22 @@ function exportLayers(visibleOnly, progressBarWindow)
 			}
 
 			if (fileName) {
-				makeVisible(layersToExport[i]);
+				if ((prefs.trim != TrimPrefType.INDIVIDUAL) || ((layer.bounds[0] < layer.bounds[2]) && ((layer.bounds[1] < layer.bounds[3])))) { // skip empty layers when trimming
+					makeVisible(layersToExport[i]);
 
-				if (prefs.trim == TrimPrefType.INDIVIDUAL) {
-					doc.crop(layer.bounds);
+					if (prefs.trim == TrimPrefType.INDIVIDUAL) {
+						doc.crop(layer.bounds);
+					}
+
+					saveImage(fileName);
+					++retVal.count;
+
+					if (prefs.trim == TrimPrefType.INDIVIDUAL) {
+						undo(doc);
+					}
+
+					layer.visible = false;
 				}
-
-				saveImage(fileName);
-				++retVal.count;
-
-				if (prefs.trim == TrimPrefType.INDIVIDUAL) {
-					undo(doc);
-				}
-
-				layer.visible = false;
 			}
 			else {
 				retVal.error = true;
