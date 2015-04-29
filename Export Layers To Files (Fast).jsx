@@ -372,7 +372,12 @@ function exportLayers(visibleOnly, progressBarWindow)
 					makeVisible(layersToExport[i]);
 
 					if (prefs.trim == TrimPrefType.INDIVIDUAL) {
-						doc.crop(layer.bounds);
+						try {
+							doc.crop(layer.bounds);
+						}
+						catch (e) {
+							doc.trim(TrimType.TRANSPARENT);
+						}
 					}
 
 					saveImage(fileName);
