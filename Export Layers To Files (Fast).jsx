@@ -763,13 +763,13 @@ function showDialog()
 	// warning message
 	dlg.warning.message.text = formatString(dlg.warning.message.text, layerCount, visibleLayerCount);
 	
-	applyDefaults(dlg, saveOpt);
+	applySettings(dlg, saveOpt);
 	
 	dlg.center();
 	return dlg.show();
 }
 
-function applyDefaults(dlg, saveOpt)
+function applySettings(dlg, saveOpt)
 {
 	if (!env.cs3OrHigher) {
 		return;
@@ -1014,6 +1014,75 @@ function getSettings()
 	
 	return result;
 } 
+
+// Format specific definitions
+
+// Clone this class to add a new export file format
+const FORMAT_OPTS_TARGA = 
+{
+	type: "TGA",
+	
+	// Dialog GUI
+	dialogParams: function (parent)
+	{
+		var depth = parent.add("group");
+		depth.add("statictext", undefined, "Depth:");
+		var bitsPerPixelLabels = ["16 bit", "24 bit", "32 bit"];
+		parent.bitsPerPixel = depth.add("dropdownlist", undefined, bitsPerPixelLabels);
+		parent.bitsPerPixel.selection = 2;
+
+		parent.alpha = parent.add("checkbox", undefined, "With alpha channel");
+		parent.alpha.value = true;
+
+		parent.rle = parent.add("checkbox", undefined, "RLE compression");
+		parent.rle.value = true;
+	},
+	
+	// Reaction to dialog confirmation
+	onDialogSelect: function (parent)
+	{
+		prefs.format = "TGA";
+		prefs.fileExtension = ".tga";
+		prefs.formatArgs = new TargaSaveOptions();
+		prefs.formatArgs.alphaChannels = parent.alpha.value;
+		prefs.formatArgs.rleCompression = parent.rle.value;
+		var resolution_enum = [TargaBitsPerPixels.SIXTEEN, TargaBitsPerPixels.TWENTYFOUR, TargaBitsPerPixels.THIRTYTWO];
+		prefs.formatArgs.resolution = resolution_enum[parent.bitsPerPixel.selection.index];
+	},
+	
+	settingsKeys: 
+	{
+		depth: app.stringIDToTypeID("tgaDepth"),
+		alpha: app.stringIDToTypeID("tgaAlpha"),
+		rle: app.stringIDToTypeID("tgaRle")
+	},
+	
+	// Save settings into an ActionDescriptor
+	packSettings: function (desc, formatOptRoot)
+	{
+		desc.putInteger(settingsKeys.depth, formatOptRoot.bitsPerPixel.selection.index);
+		desc.putBoolean(settingsKeys.alpha, formatOptRoot.alpha.value);
+		desc.putBoolean(settingsKeys.rle, formatOptRoot.rle.value);
+	},
+	
+	// Get settings from an ActionDescriptor
+	unpackSettings: function (desc)
+	{
+		return {
+			depth: desc.getInteger(settingsKeys.depth),
+			alpha: desc.getBoolean(settingsKeys.alpha),
+			rle: desc.getBoolean(settingsKeys.rle)
+		};
+	},
+	
+	// Apply settings to dialog GUI
+	applySettings: function (settings, formatOptRoot)
+	{
+		formatOptRoot.alpha.value =  settings.format[this.type].alpha;
+		formatOptRoot.bitsPerPixel.selection = settings.format[this.type].depth;
+		formatOptRoot.rle.value = settings.format[this.type].rle;
+	}
+};
 
 // Clone these two functions to add a new export file format - GUI
 function getDialogParamsTarga(parent)
