@@ -684,7 +684,7 @@ function showDialog()
 
 	// file type - call cloned getDialogParams*() for new file formats here
 	// (add a single line, the rest is taken care of)
-	var saveOpt = [];
+	var formatOpts = [];
 	var paramFuncs = [getDialogParamsPNG24, getDialogParamsPNG8, getDialogParamsJPEG, getDialogParamsTarga, getDialogParamsBMP];
 	for (var i = 0, len = paramFuncs.length; i < len; ++i) {
 		var optionsRoot = optionsPanel.add("group");
@@ -692,19 +692,19 @@ function showDialog()
 		optionsRoot.alignChildren = "left";
 		var opts = paramFuncs[i](optionsRoot);
 		opts.controlRoot = optionsRoot;
-		saveOpt.push(opts);
+		formatOpts.push(opts);
 
-		formatDropDown.add("item", saveOpt[i].type);
+		formatDropDown.add("item", formatOpts[i].type);
 	}
 
 	// show proper file type options
 	formatDropDown.onChange = function() {
 		// Note: There's a bug in CS5 and CC where ListItem.selected doesn't report correct value in onChange().
 		// A workaround is to rely on DropDownList.selection instead.
-		for (var i = saveOpt.length - 1; i >= 0; --i) {
-			saveOpt[i].controlRoot.hide();
+		for (var i = formatOpts.length - 1; i >= 0; --i) {
+			formatOpts[i].controlRoot.hide();
 		}
-		saveOpt[this.selection.index].controlRoot.show();
+		formatOpts[this.selection.index].controlRoot.show();
 	};
 
 	formatDropDown.selection = 0;
@@ -744,9 +744,9 @@ function showDialog()
 		prefs.bgLayer = (cbBgLayer.value && cbBgLayer.enabled);
 
 		var selIdx = formatDropDown.selection.index;
-		saveOpt[selIdx].handler(saveOpt[selIdx].controlRoot);
+		formatOpts[selIdx].handler(formatOpts[selIdx].controlRoot);
 		
-		saveSettings(dlg, saveOpt);
+		saveSettings(dlg, formatOpts);
 		
 		dlg.close(1);
 	};
@@ -756,20 +756,20 @@ function showDialog()
 	
 	dlg.funcArea.buttons.btnSettings.enabled = env.cs3OrHigher;
 	dlg.funcArea.buttons.btnSettings.onClick = function() {
-		saveSettings(dlg, saveOpt);
+		saveSettings(dlg, formatOpts);
 		dlg.close(0);
 	};
 
 	// warning message
 	dlg.warning.message.text = formatString(dlg.warning.message.text, layerCount, visibleLayerCount);
 	
-	applySettings(dlg, saveOpt);
+	applySettings(dlg, formatOpts);
 	
 	dlg.center();
 	return dlg.show();
 }
 
-function applySettings(dlg, saveOpt)
+function applySettings(dlg, formatOpts)
 {
 	if (!env.cs3OrHigher) {
 		return;
@@ -809,8 +809,8 @@ function applySettings(dlg, saveOpt)
 		cbBgLayer.value = settings.exportBackground;
 		
 		var drdFileTypeIdx = 0;
-		for (var i = 0; i < saveOpt.length; ++i) {
-			if (saveOpt[i].type == settings.fileType) {
+		for (var i = 0; i < formatOpts.length; ++i) {
+			if (formatOpts[i].type == settings.fileType) {
 				drdFileTypeIdx = i;
 				break;
 			}
@@ -820,68 +820,68 @@ function applySettings(dlg, saveOpt)
 		// File format specific
 		
 		// FIXME: revise for correctness and make modular
-		for (var i = 0; i < saveOpt.length; ++i) {
-			switch (saveOpt[i].type) {
+		for (var i = 0; i < formatOpts.length; ++i) {
+			switch (formatOpts[i].type) {
 			
 			case "PNG-24":
-				saveOpt[i].controlRoot.transparency.value =  settings.png24.transparency;
+				formatOpts[i].controlRoot.transparency.value =  settings.png24.transparency;
 				if (settings.png24.transparency == false) {
-					saveOpt[i].controlRoot.matte.enabled = true;
-					saveOpt[i].controlRoot.matte.selection = settings.png24.matte;
+					formatOpts[i].controlRoot.matte.enabled = true;
+					formatOpts[i].controlRoot.matte.selection = settings.png24.matte;
 				}
-				saveOpt[i].controlRoot.interlaced.value = settings.png24.interlaced;
+				formatOpts[i].controlRoot.interlaced.value = settings.png24.interlaced;
 				break;
 				
 			case "PNG-8":
-				saveOpt[i].controlRoot.colourReduction.selection =  settings.png8.colorReduction;
-				saveOpt[i].controlRoot.colors.text = settings.png8.numberOfColors;
-				saveOpt[i].controlRoot.dither.selection = settings.png8.dither;
+				formatOpts[i].controlRoot.colourReduction.selection =  settings.png8.colorReduction;
+				formatOpts[i].controlRoot.colors.text = settings.png8.numberOfColors;
+				formatOpts[i].controlRoot.dither.selection = settings.png8.dither;
 				if (settings.png8.dither == 1) {
-					saveOpt[i].controlRoot.ditherAmount.enabled = true;
-					saveOpt[i].controlRoot.ditherAmount.value = settings.png8.ditherAmount;
+					formatOpts[i].controlRoot.ditherAmount.enabled = true;
+					formatOpts[i].controlRoot.ditherAmount.value = settings.png8.ditherAmount;
 				}
-				saveOpt[i].controlRoot.interlaced.value = settings.png8.interlaced;
+				formatOpts[i].controlRoot.interlaced.value = settings.png8.interlaced;
 				if (settings.png8.transparency == false) {
-						saveOpt[i].controlRoot.transparency.notify();
-						saveOpt[i].controlRoot.matte.selection = settings.png8.matte;
+						formatOpts[i].controlRoot.transparency.notify();
+						formatOpts[i].controlRoot.matte.selection = settings.png8.matte;
 				} 
 				else {
-					saveOpt[i].controlRoot.transparencyDither.selection = settings.png8.transparencyDither;
+					formatOpts[i].controlRoot.transparencyDither.selection = settings.png8.transparencyDither;
 					if (settings.png8.transparencyDither == 1) {
-						saveOpt[i].controlRoot.transparencyDitherAmount.value = settings.png8.transparencyDitherAmount;
+						formatOpts[i].controlRoot.transparencyDitherAmount.value = settings.png8.transparencyDitherAmount;
 					}
 				}    
 				break;
 				
 			case "JPG":
-				saveOpt[i].controlRoot.quality.value =  settings.jpg.quality;
-				saveOpt[i].controlRoot.matte.selection = settings.jpg.matte;
-				saveOpt[i].controlRoot.icc.value = settings.jpg.icc;
-				saveOpt[i].controlRoot.optimised.value = settings.jpg.optimized;
-				saveOpt[i].controlRoot.progressive.value = settings.jpg.progressive;
+				formatOpts[i].controlRoot.quality.value =  settings.jpg.quality;
+				formatOpts[i].controlRoot.matte.selection = settings.jpg.matte;
+				formatOpts[i].controlRoot.icc.value = settings.jpg.icc;
+				formatOpts[i].controlRoot.optimised.value = settings.jpg.optimized;
+				formatOpts[i].controlRoot.progressive.value = settings.jpg.progressive;
 				if (settings.jpg.progressive) { 
-					saveOpt[i].controlRoot.optimised.enabled = false;
+					formatOpts[i].controlRoot.optimised.enabled = false;
 				}
 				break;
 			
 			case "TGA":
-				saveOpt[i].controlRoot.alpha.value =  settings.tga.alpha;
-				saveOpt[i].controlRoot.bitsPerPixel.selection = settings.tga.depth;
-				saveOpt[i].controlRoot.rle.value = settings.tga.rle;
+				formatOpts[i].controlRoot.alpha.value =  settings.tga.alpha;
+				formatOpts[i].controlRoot.bitsPerPixel.selection = settings.tga.depth;
+				formatOpts[i].controlRoot.rle.value = settings.tga.rle;
 				break;
 				
 			case "BMP":
-				saveOpt[i].controlRoot.alpha.value =  settings.bmp.alpha;
-				saveOpt[i].controlRoot.depth.selection = settings.bmp.depth;
-				saveOpt[i].controlRoot.rle.value = settings.bmp.rle;
-				saveOpt[i].controlRoot.flipRowOrder.value = settings.bmp.flipRow;
+				formatOpts[i].controlRoot.alpha.value =  settings.bmp.alpha;
+				formatOpts[i].controlRoot.depth.selection = settings.bmp.depth;
+				formatOpts[i].controlRoot.rle.value = settings.bmp.rle;
+				formatOpts[i].controlRoot.flipRowOrder.value = settings.bmp.flipRow;
 				break;
 			}
 		}
 	}
 }
 
-function saveSettings(dlg, saveOpt)
+function saveSettings(dlg, formatOpts)
 {
 	if (!env.cs3OrHigher) {
 		return;
@@ -901,43 +901,43 @@ function saveSettings(dlg, saveOpt)
 		desc.putString(DEFAULT_SETTINGS.outputPrefix, grpPrefix.editPrefix.text);
 		desc.putInteger(DEFAULT_SETTINGS.trim, TrimPrefType.forIndex(grpTrim.drdTrim.selection.index));
 		desc.putBoolean(DEFAULT_SETTINGS.exportBackground, cbBgLayer.value);
-		desc.putString(DEFAULT_SETTINGS.fileType, saveOpt[grpFileType.drdFileType.selection.index].type);
+		desc.putString(DEFAULT_SETTINGS.fileType, formatOpts[grpFileType.drdFileType.selection.index].type);
 
 		// per file format
 		
 		// PNG-24
-		desc.putInteger(DEFAULT_SETTINGS.png24.matte, saveOpt[0].controlRoot.matte.selection.index);
-		desc.putBoolean(DEFAULT_SETTINGS.png24.transparency, saveOpt[0].controlRoot.transparency.value);
-		desc.putBoolean(DEFAULT_SETTINGS.png24.interlaced, saveOpt[0].controlRoot.interlaced.value);
+		desc.putInteger(DEFAULT_SETTINGS.png24.matte, formatOpts[0].controlRoot.matte.selection.index);
+		desc.putBoolean(DEFAULT_SETTINGS.png24.transparency, formatOpts[0].controlRoot.transparency.value);
+		desc.putBoolean(DEFAULT_SETTINGS.png24.interlaced, formatOpts[0].controlRoot.interlaced.value);
 
 		// PNG-8
-		desc.putInteger(DEFAULT_SETTINGS.png8.colorReduction, saveOpt[1].controlRoot.colourReduction.selection.index);
-		desc.putString(DEFAULT_SETTINGS.png8.numberOfColors, saveOpt[1].controlRoot.colors.text);
-		desc.putInteger(DEFAULT_SETTINGS.png8.dither, saveOpt[1].controlRoot.dither.selection.index);
-		desc.putInteger(DEFAULT_SETTINGS.png8.ditherAmount, saveOpt[1].controlRoot.ditherAmount.value);
-		desc.putBoolean(DEFAULT_SETTINGS.png8.interlaced, saveOpt[1].controlRoot.interlaced.value);
-		desc.putBoolean(DEFAULT_SETTINGS.png8.transparency, saveOpt[1].controlRoot.transparency.value);
-		desc.putInteger(DEFAULT_SETTINGS.png8.matte, saveOpt[1].controlRoot.matte.selection.index);
-		desc.putInteger(DEFAULT_SETTINGS.png8.transparencyDither, saveOpt[1].controlRoot.transparencyDither.selection.index);
-		desc.putInteger(DEFAULT_SETTINGS.png8.transparencyDitherAmount, saveOpt[1].controlRoot.transparencyDitherAmount.value);
+		desc.putInteger(DEFAULT_SETTINGS.png8.colorReduction, formatOpts[1].controlRoot.colourReduction.selection.index);
+		desc.putString(DEFAULT_SETTINGS.png8.numberOfColors, formatOpts[1].controlRoot.colors.text);
+		desc.putInteger(DEFAULT_SETTINGS.png8.dither, formatOpts[1].controlRoot.dither.selection.index);
+		desc.putInteger(DEFAULT_SETTINGS.png8.ditherAmount, formatOpts[1].controlRoot.ditherAmount.value);
+		desc.putBoolean(DEFAULT_SETTINGS.png8.interlaced, formatOpts[1].controlRoot.interlaced.value);
+		desc.putBoolean(DEFAULT_SETTINGS.png8.transparency, formatOpts[1].controlRoot.transparency.value);
+		desc.putInteger(DEFAULT_SETTINGS.png8.matte, formatOpts[1].controlRoot.matte.selection.index);
+		desc.putInteger(DEFAULT_SETTINGS.png8.transparencyDither, formatOpts[1].controlRoot.transparencyDither.selection.index);
+		desc.putInteger(DEFAULT_SETTINGS.png8.transparencyDitherAmount, formatOpts[1].controlRoot.transparencyDitherAmount.value);
 
 		// JPG
-		desc.putInteger(DEFAULT_SETTINGS.jpg.quality, saveOpt[2].controlRoot.quality.value);
-		desc.putInteger(DEFAULT_SETTINGS.jpg.matte, saveOpt[2].controlRoot.matte.selection.index);
-		desc.putBoolean(DEFAULT_SETTINGS.jpg.icc, saveOpt[2].controlRoot.icc.value);
-		desc.putBoolean(DEFAULT_SETTINGS.jpg.optimized, saveOpt[2].controlRoot.optimised.value);
-		desc.putBoolean(DEFAULT_SETTINGS.jpg.progressive, saveOpt[2].controlRoot.progressive.value);
+		desc.putInteger(DEFAULT_SETTINGS.jpg.quality, formatOpts[2].controlRoot.quality.value);
+		desc.putInteger(DEFAULT_SETTINGS.jpg.matte, formatOpts[2].controlRoot.matte.selection.index);
+		desc.putBoolean(DEFAULT_SETTINGS.jpg.icc, formatOpts[2].controlRoot.icc.value);
+		desc.putBoolean(DEFAULT_SETTINGS.jpg.optimized, formatOpts[2].controlRoot.optimised.value);
+		desc.putBoolean(DEFAULT_SETTINGS.jpg.progressive, formatOpts[2].controlRoot.progressive.value);
 
 		// TGA
-		desc.putBoolean(DEFAULT_SETTINGS.tga.alpha, saveOpt[3].controlRoot.alpha.value);
-		desc.putInteger(DEFAULT_SETTINGS.tga.depth, saveOpt[3].controlRoot.bitsPerPixel.selection.index);
-		desc.putBoolean(DEFAULT_SETTINGS.tga.rle, saveOpt[3].controlRoot.rle.value);
+		desc.putBoolean(DEFAULT_SETTINGS.tga.alpha, formatOpts[3].controlRoot.alpha.value);
+		desc.putInteger(DEFAULT_SETTINGS.tga.depth, formatOpts[3].controlRoot.bitsPerPixel.selection.index);
+		desc.putBoolean(DEFAULT_SETTINGS.tga.rle, formatOpts[3].controlRoot.rle.value);
 
 		// BMP
-		desc.putBoolean(DEFAULT_SETTINGS.bmp.alpha, saveOpt[4].controlRoot.alpha.value);
-		desc.putInteger(DEFAULT_SETTINGS.bmp.depth, saveOpt[4].controlRoot.depth.selection.index);
-		desc.putBoolean(DEFAULT_SETTINGS.bmp.rle, saveOpt[4].controlRoot.rle.value);
-		desc.putBoolean(DEFAULT_SETTINGS.bmp.flipRow, saveOpt[4].controlRoot.flipRowOrder.value);
+		desc.putBoolean(DEFAULT_SETTINGS.bmp.alpha, formatOpts[4].controlRoot.alpha.value);
+		desc.putInteger(DEFAULT_SETTINGS.bmp.depth, formatOpts[4].controlRoot.depth.selection.index);
+		desc.putBoolean(DEFAULT_SETTINGS.bmp.rle, formatOpts[4].controlRoot.rle.value);
+		desc.putBoolean(DEFAULT_SETTINGS.bmp.flipRow, formatOpts[4].controlRoot.flipRowOrder.value);
 	}
 
 	// Save settings.
