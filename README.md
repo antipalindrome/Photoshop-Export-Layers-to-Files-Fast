@@ -29,6 +29,7 @@ Features:
 * Files are named either using layer names or automatic layer indices.
 * Lowest layer can be treated as common background.
 * Exported images can have layer size or canvas size (trimming option).
+* Last used dialog settings are remembered.
 
 You can also see [what's coming next](https://github.com/jwa107/Photoshop-Export-Layers-to-Files-Fast/wiki/Feature-Roadmap) and browse some of our [performance test results](https://github.com/jwa107/Photoshop-Export-Layers-to-Files-Fast/wiki/Performance-Test-Results).
 
