@@ -119,42 +119,6 @@ const DEFAULT_SETTINGS = {
 	trim: app.stringIDToTypeID("trim"),
 	exportBackground: app.stringIDToTypeID("exportBackground"),
 	fileType: app.stringIDToTypeID("fileType"),
-	
-	// per format
-	png24 : {
-		matte: app.stringIDToTypeID("png24Matte"),
-		transparency: app.stringIDToTypeID("png24Transparency"),
-		interlaced: app.stringIDToTypeID("png24Interlaced"),
-	},
-	png8: {
-		colorReduction: app.stringIDToTypeID("png8ColorReduction"),
-		numberOfColors: app.stringIDToTypeID("png8NumberOfColors"),
-		dither: app.stringIDToTypeID("png8Dither"),
-		ditherAmount: app.stringIDToTypeID("png8DitherAmount"),
-		interlaced: app.stringIDToTypeID("png8Interlaced"),
-		transparency: app.stringIDToTypeID("png8Transparency"),
-		matte: app.stringIDToTypeID("png8Matte"),
-		transparencyDither: app.stringIDToTypeID("png8TransparencyDither"),
-		transparencyDitherAmount: app.stringIDToTypeID("png8TransparencyDitherAmount")
-	},
-	jpg: {
-		quality: app.stringIDToTypeID("jpgQuality"),
-		matte: app.stringIDToTypeID("jpgMatte"),
-		icc: app.stringIDToTypeID("jpgIcc"),
-		optimized: app.stringIDToTypeID("jpgOptimized"),
-		progressive: app.stringIDToTypeID("jpgProgressive")
-	},
-	tga: {
-		depth: app.stringIDToTypeID("tgaDepth"),
-		alpha: app.stringIDToTypeID("tgaAlpha"),
-		rle: app.stringIDToTypeID("tgaRle")
-	},
-	bmp: {
-        depth: app.stringIDToTypeID("bmpDepth"),
-		alpha: app.stringIDToTypeID("bmpAlpha"),
-		rle: app.stringIDToTypeID("bmpRle"),
-		flipRow: app.stringIDToTypeID("bmpFlipRow")
-	}
 };
 
 //
@@ -787,7 +751,7 @@ function applySettings(dlg, formatOpts)
 		return;
 	}
 	
-	var settings = getSettings();
+	var settings = getSettings(formatOpts);
 	if (settings == null) {
 		return;
 	}
@@ -831,64 +795,8 @@ function applySettings(dlg, formatOpts)
 		
 		// File format specific
 		
-		// FIXME: revise for correctness and make modular
 		for (var i = 0; i < formatOpts.length; ++i) {
-			switch (formatOpts[i].opt.type) {
-			
-			case "PNG-24":
-				formatOpts[i].controlRoot.transparency.value =  settings.png24.transparency;
-				if (settings.png24.transparency == false) {
-					formatOpts[i].controlRoot.matte.enabled = true;
-					formatOpts[i].controlRoot.matte.selection = settings.png24.matte;
-				}
-				formatOpts[i].controlRoot.interlaced.value = settings.png24.interlaced;
-				break;
-				
-			case "PNG-8":
-				formatOpts[i].controlRoot.colourReduction.selection =  settings.png8.colorReduction;
-				formatOpts[i].controlRoot.colors.text = settings.png8.numberOfColors;
-				formatOpts[i].controlRoot.dither.selection = settings.png8.dither;
-				if (settings.png8.dither == 1) {
-					formatOpts[i].controlRoot.ditherAmount.enabled = true;
-					formatOpts[i].controlRoot.ditherAmount.value = settings.png8.ditherAmount;
-				}
-				formatOpts[i].controlRoot.interlaced.value = settings.png8.interlaced;
-				if (settings.png8.transparency == false) {
-						formatOpts[i].controlRoot.transparency.notify();
-						formatOpts[i].controlRoot.matte.selection = settings.png8.matte;
-				} 
-				else {
-					formatOpts[i].controlRoot.transparencyDither.selection = settings.png8.transparencyDither;
-					if (settings.png8.transparencyDither == 1) {
-						formatOpts[i].controlRoot.transparencyDitherAmount.value = settings.png8.transparencyDitherAmount;
-					}
-				}    
-				break;
-				
-			case "JPG":
-				formatOpts[i].controlRoot.quality.value =  settings.jpg.quality;
-				formatOpts[i].controlRoot.matte.selection = settings.jpg.matte;
-				formatOpts[i].controlRoot.icc.value = settings.jpg.icc;
-				formatOpts[i].controlRoot.optimised.value = settings.jpg.optimized;
-				formatOpts[i].controlRoot.progressive.value = settings.jpg.progressive;
-				if (settings.jpg.progressive) { 
-					formatOpts[i].controlRoot.optimised.enabled = false;
-				}
-				break;
-			
-			case "TGA":
-				formatOpts[i].controlRoot.alpha.value =  settings.tga.alpha;
-				formatOpts[i].controlRoot.bitsPerPixel.selection = settings.tga.depth;
-				formatOpts[i].controlRoot.rle.value = settings.tga.rle;
-				break;
-				
-			case "BMP":
-				formatOpts[i].controlRoot.alpha.value =  settings.bmp.alpha;
-				formatOpts[i].controlRoot.depth.selection = settings.bmp.depth;
-				formatOpts[i].controlRoot.rle.value = settings.bmp.rle;
-				formatOpts[i].controlRoot.flipRowOrder.value = settings.bmp.flipRow;
-				break;
-			}
+			formatOpts[i].opt.applySettings(settings, formatOpts[i].controlRoot);
 		}
 	}
 }
@@ -917,39 +825,9 @@ function saveSettings(dlg, formatOpts)
 
 		// per file format
 		
-		// PNG-24
-		desc.putInteger(DEFAULT_SETTINGS.png24.matte, formatOpts[0].controlRoot.matte.selection.index);
-		desc.putBoolean(DEFAULT_SETTINGS.png24.transparency, formatOpts[0].controlRoot.transparency.value);
-		desc.putBoolean(DEFAULT_SETTINGS.png24.interlaced, formatOpts[0].controlRoot.interlaced.value);
-
-		// PNG-8
-		desc.putInteger(DEFAULT_SETTINGS.png8.colorReduction, formatOpts[1].controlRoot.colourReduction.selection.index);
-		desc.putString(DEFAULT_SETTINGS.png8.numberOfColors, formatOpts[1].controlRoot.colors.text);
-		desc.putInteger(DEFAULT_SETTINGS.png8.dither, formatOpts[1].controlRoot.dither.selection.index);
-		desc.putInteger(DEFAULT_SETTINGS.png8.ditherAmount, formatOpts[1].controlRoot.ditherAmount.value);
-		desc.putBoolean(DEFAULT_SETTINGS.png8.interlaced, formatOpts[1].controlRoot.interlaced.value);
-		desc.putBoolean(DEFAULT_SETTINGS.png8.transparency, formatOpts[1].controlRoot.transparency.value);
-		desc.putInteger(DEFAULT_SETTINGS.png8.matte, formatOpts[1].controlRoot.matte.selection.index);
-		desc.putInteger(DEFAULT_SETTINGS.png8.transparencyDither, formatOpts[1].controlRoot.transparencyDither.selection.index);
-		desc.putInteger(DEFAULT_SETTINGS.png8.transparencyDitherAmount, formatOpts[1].controlRoot.transparencyDitherAmount.value);
-
-		// JPG
-		desc.putInteger(DEFAULT_SETTINGS.jpg.quality, formatOpts[2].controlRoot.quality.value);
-		desc.putInteger(DEFAULT_SETTINGS.jpg.matte, formatOpts[2].controlRoot.matte.selection.index);
-		desc.putBoolean(DEFAULT_SETTINGS.jpg.icc, formatOpts[2].controlRoot.icc.value);
-		desc.putBoolean(DEFAULT_SETTINGS.jpg.optimized, formatOpts[2].controlRoot.optimised.value);
-		desc.putBoolean(DEFAULT_SETTINGS.jpg.progressive, formatOpts[2].controlRoot.progressive.value);
-
-		// TGA
-		desc.putBoolean(DEFAULT_SETTINGS.tga.alpha, formatOpts[3].controlRoot.alpha.value);
-		desc.putInteger(DEFAULT_SETTINGS.tga.depth, formatOpts[3].controlRoot.bitsPerPixel.selection.index);
-		desc.putBoolean(DEFAULT_SETTINGS.tga.rle, formatOpts[3].controlRoot.rle.value);
-
-		// BMP
-		desc.putBoolean(DEFAULT_SETTINGS.bmp.alpha, formatOpts[4].controlRoot.alpha.value);
-		desc.putInteger(DEFAULT_SETTINGS.bmp.depth, formatOpts[4].controlRoot.depth.selection.index);
-		desc.putBoolean(DEFAULT_SETTINGS.bmp.rle, formatOpts[4].controlRoot.rle.value);
-		desc.putBoolean(DEFAULT_SETTINGS.bmp.flipRow, formatOpts[4].controlRoot.flipRowOrder.value);
+		for (var i = 0; i < formatOpts.length; ++i) {
+			formatOpts[i].opt.packSettings(desc, formatOpts[i].controlRoot);
+		}
 	}
 
 	// Save settings.
@@ -958,7 +836,7 @@ function saveSettings(dlg, formatOpts)
 	app.putCustomOptions(USER_SETTINGS_ID, desc, true);
 }
 
-function getSettings()
+function getSettings(formatOpts)
 {
 	if (!env.cs3OrHigher) {
 		return null;
@@ -982,43 +860,16 @@ function getSettings()
 			trim: desc.getInteger(DEFAULT_SETTINGS.trim), 
 			exportBackground: desc.getBoolean(DEFAULT_SETTINGS.exportBackground),
 			fileType: desc.getString(DEFAULT_SETTINGS.fileType),
+
+			// per file format filled below
 			
-			// per file format
-			png24: {
-				matte: desc.getInteger(DEFAULT_SETTINGS.png24.matte),
-				transparency: desc.getBoolean(DEFAULT_SETTINGS.png24.transparency),
-				interlaced: desc.getBoolean(DEFAULT_SETTINGS.png24.interlaced)
-			},
-			png8: {
-				colorReduction: desc.getInteger(DEFAULT_SETTINGS.png8.colorReduction),
-				numberOfColors: desc.getString(DEFAULT_SETTINGS.png8.numberOfColors),
-				dither: desc.getInteger(DEFAULT_SETTINGS.png8.dither),
-				ditherAmount: desc.getInteger(DEFAULT_SETTINGS.png8.ditherAmount),
-				interlaced: desc.getBoolean(DEFAULT_SETTINGS.png8.interlaced),
-				transparency: desc.getBoolean(DEFAULT_SETTINGS.png8.transparency),
-				matte: desc.getInteger(DEFAULT_SETTINGS.png8.matte),
-				transparencyDither: desc.getInteger(DEFAULT_SETTINGS.png8.transparencyDither),
-				transparencyDitherAmount: desc.getInteger(DEFAULT_SETTINGS.png8.transparencyDitherAmount)
-			},
-			jpg: {
-				quality: desc.getInteger(DEFAULT_SETTINGS.jpg.quality),
-				matte: desc.getInteger(DEFAULT_SETTINGS.jpg.matte),
-				icc: desc.getBoolean(DEFAULT_SETTINGS.jpg.icc),
-				optimized: desc.getBoolean(DEFAULT_SETTINGS.jpg.optimized),
-				progressive: desc.getBoolean(DEFAULT_SETTINGS.jpg.progressive),
-			},
-			tga: {
-				depth: desc.getInteger(DEFAULT_SETTINGS.tga.depth),
-				alpha: desc.getBoolean(DEFAULT_SETTINGS.tga.alpha),
-				rle: desc.getBoolean(DEFAULT_SETTINGS.tga.rle)
-			},
-			bmp: {
-				depth: desc.getInteger(DEFAULT_SETTINGS.bmp.depth),
-				alpha: desc.getBoolean(DEFAULT_SETTINGS.bmp.alpha),
-				rle: desc.getBoolean(DEFAULT_SETTINGS.bmp.rle),
-				flipRow: desc.getBoolean(DEFAULT_SETTINGS.bmp.flipRow)
-			}
+			// format: []
 		};
+		
+		result.format = [];
+		for (var i = 0; i < formatOpts.length; ++i) {
+			result.format[formatOpts[i].opt.type] = formatOpts[i].opt.unpackSettings(desc);
+		}
 	}
 	catch (e) {
 		return null;
@@ -1129,7 +980,7 @@ function getFormatOptsJPEG()
 			parent.matte = row.add("dropdownlist", undefined, ["White", "Black", "Gray", "-", "Background", "Foreground"]);
 			parent.matte.selection = 0;
 
-			// colour profile
+			// color profile
 			parent.icc = parent.add("checkbox", undefined, "ICC Profile");
 
 			// optimised
@@ -1206,8 +1057,11 @@ function getFormatOptsJPEG()
 			formatOptRoot.matte.selection = formatSettings.matte;
 			formatOptRoot.icc.value = formatSettings.icc;
 			formatOptRoot.optimised.value = formatSettings.optimized;
-			formatOptRoot.optimised.enabled = !formatSettings.progressive;
-			formatOptRoot.progressive.value = formatSettings.progressive;
+			
+			formatOptRoot.quality.notify("onChanging");
+			if (formatOptRoot.progressive.value != formatSettings.progressive) {
+				formatOptRoot.progressive.notify();
+			}
 		}
 	};
 }
@@ -1255,7 +1109,7 @@ function getFormatOptsPNG24()
 			var GRAY = new RGBColor();
 			GRAY.red = 127; GRAY.green = 127; GRAY.blue = 127;
 
-			const matteColours = [WHITE, BLACK, GRAY, BLACK, app.backgroundColor.rgb, app.foregroundColor.rgb];
+			const matteColors = [WHITE, BLACK, GRAY, BLACK, app.backgroundColor.rgb, app.foregroundColor.rgb];
 
 			prefs.formatArgs = new ExportOptionsSaveForWeb();
 			with (prefs.formatArgs) {
@@ -1263,7 +1117,7 @@ function getFormatOptsPNG24()
 				PNG8 = false;
 				interlaced = parent.interlaced.value;
 				transparency = parent.transparency.value;
-				matteColor = matteColours[parent.matte.selection.index];
+				matteColor = matteColors[parent.matte.selection.index];
 			}
 		},
 		
@@ -1296,10 +1150,13 @@ function getFormatOptsPNG24()
 		applySettings: function (settings, formatOptRoot)
 		{
 			const formatSettings = settings.format[this.type];
-			formatOptRoot.transparency.value = formatSettings.transparency;
 			formatOptRoot.matte.selection = formatSettings.matte;
 			formatOptRoot.matte.enabled = !formatSettings.transparency;
 			formatOptRoot.interlaced.value = formatSettings.interlaced;
+			
+			if (formatOptRoot.transparency.value != formatSettings.transparency) {
+				formatOptRoot.transparency.notify();
+			}
 		}
 	};
 }
@@ -1319,7 +1176,7 @@ function getFormatOptsPNG8()
 			var row = parent.add("group");
 			var crLabel = row.add("statictext", undefined, "Color reduction:");
 			crLabel.preferredSize = [LABEL_WIDTH, ROW_HEIGHT];
-			parent.colourReduction = row.add("dropdownlist", undefined, [
+			parent.colorReduction = row.add("dropdownlist", undefined, [
 				"Perceptual",
 				"Selective",
 				"Adaptive",
@@ -1330,7 +1187,7 @@ function getFormatOptsPNG8()
 				"Mac OS",
 				"Windows"
 			]);
-			parent.colourReduction.selection = 1;
+			parent.colorReduction.selection = 1;
 
 			// number of colors
 			row = parent.add("group");
@@ -1380,6 +1237,7 @@ function getFormatOptsPNG8()
 
 			parent.dither.onChange = function() {
 				ditherAmountGroup.enabled = (this.selection == 1);
+				parent.ditherAmount.notify("onChanging");
 			};
 
 			// interlaced
@@ -1419,6 +1277,7 @@ function getFormatOptsPNG8()
 
 			parent.transparencyDither.onChange = function() {
 				transDitherAmountGroup.enabled = (this.selection == 1);
+				parent.transparencyDitherAmount.notify("onChanging");
 			};
 
 			// transparency dither amount
@@ -1462,13 +1321,13 @@ function getFormatOptsPNG8()
 			BLACK.red = 0; BLACK.green = 0; BLACK.blue = 0;
 			var GRAY = new RGBColor();
 			GRAY.red = 127; GRAY.green = 127; GRAY.blue = 127;
-			const matteColours = [WHITE, BLACK, GRAY, BLACK, app.backgroundColor.rgb, app.foregroundColor.rgb];
+			const matteColors = [WHITE, BLACK, GRAY, BLACK, app.backgroundColor.rgb, app.foregroundColor.rgb];
 
 			prefs.formatArgs = new ExportOptionsSaveForWeb();
 			with (prefs.formatArgs) {
 				format = SaveDocumentType.PNG;
 				PNG8 = true;
-				colorReduction = colorReductionType[parent.colourReduction.selection.index];
+				colorReduction = colorReductionType[parent.colorReduction.selection.index];
 				colors = parseInt(parent.colors.text, 10);
 				dither = ditherType[parent.dither.selection.index];
 				if (dither == Dither.DIFFUSION) {
@@ -1476,7 +1335,7 @@ function getFormatOptsPNG8()
 				}
 				interlaced = parent.interlaced.value;
 				transparency = parent.transparency.value;
-				matteColor = matteColours[parent.matte.selection.index];
+				matteColor = matteColors[parent.matte.selection.index];
 				if (transparency) {
 					transparencyDither = ditherType[parent.transparencyDither.selection.index];
 					if (transparencyDither == Dither.DIFFUSION) {
@@ -1502,7 +1361,7 @@ function getFormatOptsPNG8()
 		// Save settings into an ActionDescriptor
 		packSettings: function (desc, formatOptRoot)
 		{
-			desc.putInteger(this.settingsKeys.colorReduction, formatOptRoot.colourReduction.selection.index);
+			desc.putInteger(this.settingsKeys.colorReduction, formatOptRoot.colorReduction.selection.index);
 			desc.putString(this.settingsKeys.numberOfColors, formatOptRoot.colors.text);
 			desc.putInteger(this.settingsKeys.dither, formatOptRoot.dither.selection.index);
 			desc.putInteger(this.settingsKeys.ditherAmount, formatOptRoot.ditherAmount.value);
@@ -1533,19 +1392,23 @@ function getFormatOptsPNG8()
 		applySettings: function (settings, formatOptRoot)
 		{
 			const formatSettings = settings.format[this.type];
-			formatOptRoot.colourReduction.selection = formatSettings.colorReduction;
+			formatOptRoot.colorReduction.selection = formatSettings.colorReduction;
 			formatOptRoot.colors.text = formatSettings.numberOfColors;
 			formatOptRoot.dither.selection = formatSettings.dither;
+			//formatOptRoot.dither.notify("onChange");
 			formatOptRoot.ditherAmount.value = formatSettings.ditherAmount;
-			formatOptRoot.ditherAmount.enabled = (formatSettings.dither == 1);
 			formatOptRoot.interlaced.value = formatSettings.interlaced;
 			formatOptRoot.matte.selection = formatSettings.matte;
-			if (formatOptRoot.transparency.value != formatSettings.transparency) {
-				formatOptRoot.transparency.notify();
-			}
 			formatOptRoot.transparencyDither.selection = formatSettings.transparencyDither;
 			//formatOptRoot.transparencyDither.notify("onChange");
 			formatOptRoot.transparencyDitherAmount.value = formatSettings.transparencyDitherAmount;
+			
+			formatOptRoot.colors.notify();
+			if (formatOptRoot.transparency.value != formatSettings.transparency) {
+				formatOptRoot.transparency.notify();
+			}
+			formatOptRoot.ditherAmount.notify("onChanging");
+			formatOptRoot.transparencyDitherAmount.notify("onChanging");
 		}
 	};
 }
