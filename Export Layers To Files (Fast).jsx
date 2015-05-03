@@ -682,19 +682,31 @@ function showDialog()
 	var formatDropDown = dlg.funcArea.content.grpFileType.drdFileType;
 	var optionsPanel = dlg.funcArea.content.pnlOptions;
 
-	// file type - call cloned getDialogParams*() for new file formats here
-	// (add a single line, the rest is taken care of)
-	var formatOpts = [];
-	var paramFuncs = [getDialogParamsPNG24, getDialogParamsPNG8, getDialogParamsJPEG, getDialogParamsTarga, getDialogParamsBMP];
-	for (var i = 0, len = paramFuncs.length; i < len; ++i) {
+	// Add your format definition here; the rest is taken care of.
+	var formatFuncs = [
+		getFormatOptsPNG24,
+		getFormatOptsPNG8,
+		getFormatOptsJPEG,
+		getFormatOptsTarga,
+		getFormatOptsBMP
+	];
+	var formatOpts = [
+		{opt: null, controlRoot: null},
+		{opt: null, controlRoot: null},
+		{opt: null, controlRoot: null},
+		{opt: null, controlRoot: null},
+		{opt: null, controlRoot: null}
+	];
+	for (var i = 0, len = formatFuncs.length; i < len; ++i) {
 		var optionsRoot = optionsPanel.add("group");
 		optionsRoot.orientation = "column";
 		optionsRoot.alignChildren = "left";
-		var opts = paramFuncs[i](optionsRoot);
-		opts.controlRoot = optionsRoot;
-		formatOpts.push(opts);
+		
+		formatOpts[i].controlRoot = optionsRoot;
+		formatOpts[i].opt = formatFuncs[i]();
+		formatOpts[i].opt.dialogParams(optionsRoot);
 
-		formatDropDown.add("item", formatOpts[i].type);
+		formatDropDown.add("item", formatOpts[i].opt.type);
 	}
 
 	// show proper file type options
@@ -744,7 +756,7 @@ function showDialog()
 		prefs.bgLayer = (cbBgLayer.value && cbBgLayer.enabled);
 
 		var selIdx = formatDropDown.selection.index;
-		formatOpts[selIdx].handler(formatOpts[selIdx].controlRoot);
+		formatOpts[selIdx].opt.onDialogSelect(formatOpts[selIdx].controlRoot);
 		
 		saveSettings(dlg, formatOpts);
 		
@@ -810,7 +822,7 @@ function applySettings(dlg, formatOpts)
 		
 		var drdFileTypeIdx = 0;
 		for (var i = 0; i < formatOpts.length; ++i) {
-			if (formatOpts[i].type == settings.fileType) {
+			if (formatOpts[i].opt.type == settings.fileType) {
 				drdFileTypeIdx = i;
 				break;
 			}
@@ -821,7 +833,7 @@ function applySettings(dlg, formatOpts)
 		
 		// FIXME: revise for correctness and make modular
 		for (var i = 0; i < formatOpts.length; ++i) {
-			switch (formatOpts[i].type) {
+			switch (formatOpts[i].opt.type) {
 			
 			case "PNG-24":
 				formatOpts[i].controlRoot.transparency.value =  settings.png24.transparency;
@@ -901,7 +913,7 @@ function saveSettings(dlg, formatOpts)
 		desc.putString(DEFAULT_SETTINGS.outputPrefix, grpPrefix.editPrefix.text);
 		desc.putInteger(DEFAULT_SETTINGS.trim, TrimPrefType.forIndex(grpTrim.drdTrim.selection.index));
 		desc.putBoolean(DEFAULT_SETTINGS.exportBackground, cbBgLayer.value);
-		desc.putString(DEFAULT_SETTINGS.fileType, formatOpts[grpFileType.drdFileType.selection.index].type);
+		desc.putString(DEFAULT_SETTINGS.fileType, formatOpts[grpFileType.drdFileType.selection.index].opt.type);
 
 		// per file format
 		
@@ -1017,441 +1029,619 @@ function getSettings()
 
 // Format specific definitions
 
-// Clone this class to add a new export file format
-const FORMAT_OPTS_TARGA = 
+// Clone this function-class to add a new export file format
+function getFormatOptsTarga()
 {
-	type: "TGA",
-	
-	// Dialog GUI
-	dialogParams: function (parent)
-	{
-		var depth = parent.add("group");
-		depth.add("statictext", undefined, "Depth:");
-		var bitsPerPixelLabels = ["16 bit", "24 bit", "32 bit"];
-		parent.bitsPerPixel = depth.add("dropdownlist", undefined, bitsPerPixelLabels);
-		parent.bitsPerPixel.selection = 2;
+	return {
+		type: "TGA",
+		
+		// Dialog GUI
+		dialogParams: function (parent)
+		{
+			var depth = parent.add("group");
+			depth.add("statictext", undefined, "Depth:");
+			var bitsPerPixelLabels = ["16 bit", "24 bit", "32 bit"];
+			parent.bitsPerPixel = depth.add("dropdownlist", undefined, bitsPerPixelLabels);
+			parent.bitsPerPixel.selection = 2;
 
-		parent.alpha = parent.add("checkbox", undefined, "With alpha channel");
-		parent.alpha.value = true;
+			parent.alpha = parent.add("checkbox", undefined, "With alpha channel");
+			parent.alpha.value = true;
 
-		parent.rle = parent.add("checkbox", undefined, "RLE compression");
-		parent.rle.value = true;
-	},
-	
-	// Reaction to dialog confirmation
-	onDialogSelect: function (parent)
-	{
-		prefs.format = "TGA";
-		prefs.fileExtension = ".tga";
-		prefs.formatArgs = new TargaSaveOptions();
-		prefs.formatArgs.alphaChannels = parent.alpha.value;
-		prefs.formatArgs.rleCompression = parent.rle.value;
-		var resolution_enum = [TargaBitsPerPixels.SIXTEEN, TargaBitsPerPixels.TWENTYFOUR, TargaBitsPerPixels.THIRTYTWO];
-		prefs.formatArgs.resolution = resolution_enum[parent.bitsPerPixel.selection.index];
-	},
-	
-	settingsKeys: 
-	{
-		depth: app.stringIDToTypeID("tgaDepth"),
-		alpha: app.stringIDToTypeID("tgaAlpha"),
-		rle: app.stringIDToTypeID("tgaRle")
-	},
-	
-	// Save settings into an ActionDescriptor
-	packSettings: function (desc, formatOptRoot)
-	{
-		desc.putInteger(settingsKeys.depth, formatOptRoot.bitsPerPixel.selection.index);
-		desc.putBoolean(settingsKeys.alpha, formatOptRoot.alpha.value);
-		desc.putBoolean(settingsKeys.rle, formatOptRoot.rle.value);
-	},
-	
-	// Get settings from an ActionDescriptor
-	unpackSettings: function (desc)
-	{
-		return {
-			depth: desc.getInteger(settingsKeys.depth),
-			alpha: desc.getBoolean(settingsKeys.alpha),
-			rle: desc.getBoolean(settingsKeys.rle)
-		};
-	},
-	
-	// Apply settings to dialog GUI
-	applySettings: function (settings, formatOptRoot)
-	{
-		formatOptRoot.alpha.value =  settings.format[this.type].alpha;
-		formatOptRoot.bitsPerPixel.selection = settings.format[this.type].depth;
-		formatOptRoot.rle.value = settings.format[this.type].rle;
-	}
-};
-
-// Clone these two functions to add a new export file format - GUI
-function getDialogParamsTarga(parent)
-{
-	var depth = parent.add("group");
-	depth.add("statictext", undefined, "Depth:");
-	var bitsPerPixelLabels = ["16 bit", "24 bit", "32 bit"];
-	parent.bitsPerPixel = depth.add("dropdownlist", undefined, bitsPerPixelLabels);
-	parent.bitsPerPixel.selection = 2;
-
-	parent.alpha = parent.add("checkbox", undefined, "With alpha channel");
-	parent.alpha.value = true;
-
-	parent.rle = parent.add("checkbox", undefined, "RLE compression");
-	parent.rle.value = true;
-
-	return {type: "TGA", handler: onDialogSelectTarga};
+			parent.rle = parent.add("checkbox", undefined, "RLE compression");
+			parent.rle.value = true;
+		},
+		
+		// Reaction to dialog confirmation
+		onDialogSelect: function (parent)
+		{
+			prefs.format = "TGA";
+			prefs.fileExtension = ".tga";
+			prefs.formatArgs = new TargaSaveOptions();
+			prefs.formatArgs.alphaChannels = parent.alpha.value;
+			prefs.formatArgs.rleCompression = parent.rle.value;
+			var resolution_enum = [TargaBitsPerPixels.SIXTEEN, TargaBitsPerPixels.TWENTYFOUR, TargaBitsPerPixels.THIRTYTWO];
+			prefs.formatArgs.resolution = resolution_enum[parent.bitsPerPixel.selection.index];
+		},
+		
+		settingsKeys: 
+		{
+			depth: app.stringIDToTypeID("tgaDepth"),
+			alpha: app.stringIDToTypeID("tgaAlpha"),
+			rle: app.stringIDToTypeID("tgaRle")
+		},
+		
+		// Save settings into an ActionDescriptor
+		packSettings: function (desc, formatOptRoot)
+		{
+			desc.putInteger(this.settingsKeys.depth, formatOptRoot.bitsPerPixel.selection.index);
+			desc.putBoolean(this.settingsKeys.alpha, formatOptRoot.alpha.value);
+			desc.putBoolean(this.settingsKeys.rle, formatOptRoot.rle.value);
+		},
+		
+		// Get settings from an ActionDescriptor
+		unpackSettings: function (desc)
+		{
+			return {
+				depth: desc.getInteger(this.settingsKeys.depth),
+				alpha: desc.getBoolean(this.settingsKeys.alpha),
+				rle: desc.getBoolean(this.settingsKeys.rle)
+			};
+		},
+		
+		// Apply settings to dialog GUI
+		applySettings: function (settings, formatOptRoot)
+		{
+			formatOptRoot.alpha.value = settings.format[this.type].alpha;
+			formatOptRoot.bitsPerPixel.selection = settings.format[this.type].depth;
+			formatOptRoot.rle.value = settings.format[this.type].rle;
+		}
+	};
 }
 
-// Clone these two functions to add a new export file format - result handler
-function onDialogSelectTarga(parent)
+function getFormatOptsJPEG()
 {
-	prefs.format = "TGA";
-	prefs.fileExtension = ".tga";
-	prefs.formatArgs = new TargaSaveOptions();
-	prefs.formatArgs.alphaChannels = parent.alpha.value;
-	prefs.formatArgs.rleCompression = parent.rle.value;
-	var resolution_enum = [TargaBitsPerPixels.SIXTEEN, TargaBitsPerPixels.TWENTYFOUR, TargaBitsPerPixels.THIRTYTWO];
-	prefs.formatArgs.resolution = resolution_enum[parent.bitsPerPixel.selection.index];
-}
+	return {
+		type: "JPG",
+		
+		// Dialog GUI
+		dialogParams: function (parent)
+		{
+			const ROW_HEIGHT = 16;
 
-function getDialogParamsJPEG(parent)
-{
-	const ROW_HEIGHT = 16;
+			// quality
+			var row = parent.add("group");
+			var qualityLabel = row.add("statictext", undefined, "Quality:");
+			qualityLabel.preferredSize = [40, ROW_HEIGHT];
+			parent.quality = row.add("slider", undefined, 12, 0, 12);
+			parent.quality.preferredSize = [140, 20];
+			var qualityValue = row.add("statictext", undefined, "12");
+			qualityValue.preferredSize = [30, ROW_HEIGHT];
 
-	// quality
-	var row = parent.add("group");
-	var qualityLabel = row.add("statictext", undefined, "Quality:");
-	qualityLabel.preferredSize = [40, ROW_HEIGHT];
-	parent.quality = row.add("slider", undefined, 12, 0, 12);
-	parent.quality.preferredSize = [140, 20];
-	var qualityValue = row.add("statictext", undefined, "12");
-	qualityValue.preferredSize = [30, ROW_HEIGHT];
+			parent.quality.onChanging = function() {
+				this.value = Math.round(this.value);
+				qualityValue.text = this.value;
+			};
 
-	parent.quality.onChanging = function() {
-		this.value = Math.round(this.value);
-		qualityValue.text = this.value;
-	};
+			// matte
+			row = parent.add("group");
+			var matteLabel = row.add("statictext", undefined, "Matte:");
+			matteLabel.preferredSize = [40, ROW_HEIGHT];
+			parent.matte = row.add("dropdownlist", undefined, ["White", "Black", "Gray", "-", "Background", "Foreground"]);
+			parent.matte.selection = 0;
 
-	// matte
-	row = parent.add("group");
-	var matteLabel = row.add("statictext", undefined, "Matte:");
-	matteLabel.preferredSize = [40, ROW_HEIGHT];
-	parent.matte = row.add("dropdownlist", undefined, ["White", "Black", "Gray", "-", "Background", "Foreground"]);
-	parent.matte.selection = 0;
+			// colour profile
+			parent.icc = parent.add("checkbox", undefined, "ICC Profile");
 
-	// colour profile
-	parent.icc = parent.add("checkbox", undefined, "ICC Profile");
+			// optimised
+			parent.optimised = parent.add("checkbox", undefined, "Optimized");
+			parent.optimised.value = true;
 
-	// optimised
-	parent.optimised = parent.add("checkbox", undefined, "Optimized");
-	parent.optimised.value = true;
-
-	// progressive
-	parent.progressive = parent.add("checkbox", undefined, "Progressive");
-	parent.progressive.onClick = function() {
-		parent.optimised.enabled = ! this.value;
-	};
-
-	return {type: "JPG", handler: onDialogSelectJPEG};
-}
-
-function onDialogSelectJPEG(parent)
-{
-	prefs.format = "JPG";
-	prefs.fileExtension = ".jpg";
-	prefs.formatArgs = new JPEGSaveOptions();
-	const matteValue = [MatteType.WHITE, MatteType.BLACK, MatteType.SEMIGRAY, MatteType.NONE, MatteType.BACKGROUND, MatteType.FOREGROUND];
-	with (prefs.formatArgs) {
-		quality = parent.quality.value;
-		matte = matteValue[parent.matte.selection.index];
-		embedColorProfile = parent.icc.value;
-		if (parent.progressive.value) {
-			formatOptions = FormatOptions.PROGRESSIVE;
-			scans = 3;
-		}
-		else if (parent.optimised.value) {
-			formatOptions = FormatOptions.OPTIMIZEDBASELINE;
-		}
-		else {
-			formatOptions = FormatOptions.STANDARDBASELINE;
-		}
-	}
-}
-
-function getDialogParamsPNG24(parent)
-{
-	const ROW_HEIGHT = 16;
-
-	// matte
-	var row = parent.add("group");
-	var matteLabel = row.add("statictext", undefined, "Matte:");
-	matteLabel.preferredSize = [40, ROW_HEIGHT];
-	parent.matte = row.add("dropdownlist", undefined, ["White", "Black", "Gray", "-", "Background", "Foreground"]);
-	parent.matte.selection = 0;
-	parent.matte.enabled = false;
-
-	// transparency
-	parent.transparency = parent.add("checkbox", undefined, "Transparency");
-	parent.transparency.value = true;
-
-	parent.transparency.onClick = function() {
-		parent.matte.enabled = ! this.value;
-	};
-
-	// interlaced
-	parent.interlaced = parent.add("checkbox", undefined, "Interlaced");
-
-	return {type: "PNG-24", handler: onDialogSelectPNG24};
-}
-
-function onDialogSelectPNG24(parent)
-{
-	prefs.format = "PNG-24";
-	prefs.fileExtension = ".png";
-
-	var WHITE = new RGBColor();
-	WHITE.red = 255; WHITE.green = 255; WHITE.blue = 255;
-	var BLACK = new RGBColor();
-	BLACK.red = 0; BLACK.green = 0; BLACK.blue = 0;
-	var GRAY = new RGBColor();
-	GRAY.red = 127; GRAY.green = 127; GRAY.blue = 127;
-
-	const matteColours = [WHITE, BLACK, GRAY, BLACK, app.backgroundColor.rgb, app.foregroundColor.rgb];
-
-	prefs.formatArgs = new ExportOptionsSaveForWeb();
-	with (prefs.formatArgs) {
-		format = SaveDocumentType.PNG;
-		PNG8 = false;
-		interlaced = parent.interlaced.value;
-		transparency = parent.transparency.value;
-		matteColor = matteColours[parent.matte.selection.index];
-	}
-}
-
-function getDialogParamsPNG8(parent)
-{
-	const ROW_HEIGHT = 16;
-	const LABEL_WIDTH = 105;
-
-	// color reduction
-	var row = parent.add("group");
-	var crLabel = row.add("statictext", undefined, "Color reduction:");
-	crLabel.preferredSize = [LABEL_WIDTH, ROW_HEIGHT];
-	parent.colourReduction = row.add("dropdownlist", undefined, [
-		"Perceptual",
-		"Selective",
-		"Adaptive",
-		"Restrictive (Web)",
-		"-",
-		"Black & White",
-		"Grayscale",
-		"Mac OS",
-		"Windows"
-	]);
-	parent.colourReduction.selection = 1;
-
-	// number of colors
-	row = parent.add("group");
-	var colorsLabel = row.add("statictext", undefined, "Number of colors:");
-	colorsLabel.preferredSize = [LABEL_WIDTH, ROW_HEIGHT];
-	parent.colors = row.add("edittext", undefined, "256");
-	parent.colors.preferredSize = [70, 18];
-	parent.colorsLast = 256;
-
-	parent.colors.onChange = function() {
-		var colorNum = parseInt(this.text, 10);
-		if (isNaN(colorNum)) {
-			colorNum = parent.colorsLast;
-		}
-		else if (colorNum < 2) {
-			colorNum = 2;
-		}
-		else if (colorNum > 256) {
-			colorNum = 256;
-		}
-		this.text = colorNum;
-		parent.colorsLast = colorNum;
-	};
-
-	// dither
-	row = parent.add("group");
-	var ditherLabel = row.add("statictext", undefined, "Dither:");
-	ditherLabel.preferredSize = [LABEL_WIDTH, ROW_HEIGHT];
-	parent.dither = row.add("dropdownlist", undefined, [
-		"None",
-		"Diffusion",
-		"Pattern",
-		"Noise"
-	]);
-	parent.dither.selection = 0;
-
-	// dither amount
-	var ditherAmountGroup = row.add("group");
-	parent.ditherAmount = ditherAmountGroup.add("slider", undefined, 100, 0, 100);
-	var ditherAmountValue = ditherAmountGroup.add("statictext", undefined, "100%");
-	ditherAmountGroup.enabled = false;
-
-	parent.ditherAmount.onChanging = function() {
-		this.value = Math.round(this.value);
-		ditherAmountValue.text = "" + this.value + "%";
-	};
-
-	parent.dither.onChange = function() {
-		ditherAmountGroup.enabled = (this.selection == 1);
-	};
-
-	// interlaced
-	parent.interlaced = parent.add("checkbox", undefined, "Interlaced");
-
-	// transparency
-	var transparencyPanel = parent.add("panel", undefined, "Transparency:");
-	transparencyPanel.orientation = "column";
-	transparencyPanel.alignChildren = "left";
-	parent.transparency = transparencyPanel.add("checkbox", undefined, "Enabled");
-	parent.transparency.value = true;
-
-	parent.transparency.onClick = function() {
-		matteRow.enabled = ! this.value;
-		tdRow.enabled = this.value;
-	};
-
-	// matte
-	var matteRow = transparencyPanel.add("group");
-	var matteLabel = matteRow.add("statictext", undefined, "Matte:");
-	matteLabel.preferredSize = [LABEL_WIDTH + 8, ROW_HEIGHT];
-	parent.matte = matteRow.add("dropdownlist", undefined, ["White", "Black", "Gray", "-", "Background", "Foreground"]);
-	parent.matte.selection = 0;
-	matteRow.enabled = false;
-
-	// transparency dither
-	var tdRow = transparencyPanel.add("group");
-	var transDitherLabel = tdRow.add("statictext", undefined, "Transparency dither:");
-	transDitherLabel.preferredSize = [LABEL_WIDTH + 8, ROW_HEIGHT];
-	parent.transparencyDither = tdRow.add("dropdownlist", undefined, [
-		"None",
-		"Diffusion",
-		"Pattern",
-		"Noise"
-	]);
-	parent.transparencyDither.selection = 0;
-
-	parent.transparencyDither.onChange = function() {
-		transDitherAmountGroup.enabled = (this.selection == 1);
-	};
-
-	// transparency dither amount
-	var transDitherAmountGroup = tdRow.add("group");
-	parent.transparencyDitherAmount = transDitherAmountGroup.add("slider", undefined, 100, 0, 100);
-	var transDitherAmountValue = transDitherAmountGroup.add("statictext", undefined, "100%");
-	transDitherAmountGroup.enabled = false;
-
-	parent.transparencyDitherAmount.onChanging = function() {
-		this.value = Math.round(this.value);
-		transDitherAmountValue.text = "" + this.value + "%";
-	};
-
-	return {type: "PNG-8", handler: onDialogSelectPNG8};
-}
-
-function onDialogSelectPNG8(parent)
-{
-	prefs.format = "PNG-8";
-	prefs.fileExtension = ".png";
-
-	const colorReductionType = [
-		ColorReductionType.PERCEPTUAL,
-		ColorReductionType.SELECTIVE,
-		ColorReductionType.ADAPTIVE,
-		ColorReductionType.RESTRICTIVE,
-		null,
-		ColorReductionType.BLACKWHITE,
-		ColorReductionType.GRAYSCALE,
-		ColorReductionType.MACINTOSH,
-		ColorReductionType.WINDOWS
-	];
-	const ditherType = [
-		Dither.NONE,
-		Dither.DIFFUSION,
-		Dither.PATTERN,
-		Dither.NOISE
-	];
-	var WHITE = new RGBColor();
-	WHITE.red = 255; WHITE.green = 255; WHITE.blue = 255;
-	var BLACK = new RGBColor();
-	BLACK.red = 0; BLACK.green = 0; BLACK.blue = 0;
-	var GRAY = new RGBColor();
-	GRAY.red = 127; GRAY.green = 127; GRAY.blue = 127;
-	const matteColours = [WHITE, BLACK, GRAY, BLACK, app.backgroundColor.rgb, app.foregroundColor.rgb];
-
-	prefs.formatArgs = new ExportOptionsSaveForWeb();
-	with (prefs.formatArgs) {
-		format = SaveDocumentType.PNG;
-		PNG8 = true;
-		colorReduction = colorReductionType[parent.colourReduction.selection.index];
-		colors = parseInt(parent.colors.text, 10);
-		dither = ditherType[parent.dither.selection.index];
-		if (dither == Dither.DIFFUSION) {
-			ditherAmount = parent.ditherAmount.value;
-		}
-		interlaced = parent.interlaced.value;
-		transparency = parent.transparency.value;
-		matteColor = matteColours[parent.matte.selection.index];
-		if (transparency) {
-			transparencyDither = ditherType[parent.transparencyDither.selection.index];
-			if (transparencyDither == Dither.DIFFUSION) {
-				transparencyAmount = parent.transparencyDitherAmount.value;
+			// progressive
+			parent.progressive = parent.add("checkbox", undefined, "Progressive");
+			parent.progressive.onClick = function() {
+				parent.optimised.enabled = ! this.value;
+			};
+		},
+		
+		// Reaction to dialog confirmation
+		onDialogSelect: function (parent)
+		{
+			prefs.format = "JPG";
+			prefs.fileExtension = ".jpg";
+			prefs.formatArgs = new JPEGSaveOptions();
+			const matteValue = [MatteType.WHITE, MatteType.BLACK, MatteType.SEMIGRAY, MatteType.NONE, MatteType.BACKGROUND, MatteType.FOREGROUND];
+			with (prefs.formatArgs) {
+				quality = parent.quality.value;
+				matte = matteValue[parent.matte.selection.index];
+				embedColorProfile = parent.icc.value;
+				if (parent.progressive.value) {
+					formatOptions = FormatOptions.PROGRESSIVE;
+					scans = 3;
+				}
+				else if (parent.optimised.value) {
+					formatOptions = FormatOptions.OPTIMIZEDBASELINE;
+				}
+				else {
+					formatOptions = FormatOptions.STANDARDBASELINE;
+				}
 			}
+		},
+		
+		settingsKeys: 
+		{
+			quality: app.stringIDToTypeID("jpgQuality"),
+			matte: app.stringIDToTypeID("jpgMatte"),
+			icc: app.stringIDToTypeID("jpgIcc"),
+			optimized: app.stringIDToTypeID("jpgOptimized"),
+			progressive: app.stringIDToTypeID("jpgProgressive")
+		},
+		
+		// Save settings into an ActionDescriptor
+		packSettings: function (desc, formatOptRoot)
+		{
+			desc.putInteger(this.settingsKeys.quality, formatOptRoot.quality.value);
+			desc.putInteger(this.settingsKeys.matte, formatOptRoot.matte.selection.index);
+			desc.putBoolean(this.settingsKeys.icc, formatOptRoot.icc.value);
+			desc.putBoolean(this.settingsKeys.optimized, formatOptRoot.optimised.value);
+			desc.putBoolean(this.settingsKeys.progressive, formatOptRoot.progressive.value);
+		},
+		
+		// Get settings from an ActionDescriptor
+		unpackSettings: function (desc)
+		{
+			return {
+				quality: desc.getInteger(this.settingsKeys.quality),
+				matte: desc.getInteger(this.settingsKeys.matte),
+				icc: desc.getBoolean(this.settingsKeys.icc),
+				optimized: desc.getBoolean(this.settingsKeys.optimized),
+				progressive: desc.getBoolean(this.settingsKeys.progressive)
+			};
+		},
+		
+		// Apply settings to dialog GUI
+		applySettings: function (settings, formatOptRoot)
+		{
+			const formatSettings = settings.format[this.type];
+			formatOptRoot.quality.value = formatSettings.quality;
+			formatOptRoot.matte.selection = formatSettings.matte;
+			formatOptRoot.icc.value = formatSettings.icc;
+			formatOptRoot.optimised.value = formatSettings.optimized;
+			formatOptRoot.optimised.enabled = !formatSettings.progressive;
+			formatOptRoot.progressive.value = formatSettings.progressive;
 		}
-	}
+	};
 }
 
-function getDialogParamsBMP(parent)
+function getFormatOptsPNG24()
 {
-	// bit depth
-	var depth = parent.add("group");
-	depth.add("statictext", undefined, "Depth:");
-	var depthLabels = [
-		"32 bit",
-		"24 bit",
-		"RGB 565 (16 bit)",
-		"ARGB 1555 (16 bit)",
-		"ARGB 4444 (16 bit)"
-	];
-	parent.depth = depth.add("dropdownlist", undefined, depthLabels);
-	parent.depth.selection = 0;
+	return {
+		type: "PNG-24",
+		
+		// Dialog GUI
+		dialogParams: function (parent)
+		{
+			const ROW_HEIGHT = 16;
 
-	// alpha
-	parent.alpha = parent.add("checkbox", undefined, "With alpha channel");
-	parent.alpha.value = true;
+			// matte
+			var row = parent.add("group");
+			var matteLabel = row.add("statictext", undefined, "Matte:");
+			matteLabel.preferredSize = [40, ROW_HEIGHT];
+			parent.matte = row.add("dropdownlist", undefined, ["White", "Black", "Gray", "-", "Background", "Foreground"]);
+			parent.matte.selection = 0;
+			parent.matte.enabled = false;
 
-	// RLE
-	parent.rle = parent.add("checkbox", undefined, "RLE compression");
-	parent.rle.value = true;
+			// transparency
+			parent.transparency = parent.add("checkbox", undefined, "Transparency");
+			parent.transparency.value = true;
 
-	// flip row order
-	parent.flipRowOrder = parent.add("checkbox", undefined, "Flip row order");
-	parent.flipRowOrder.value = false;
+			parent.transparency.onClick = function() {
+				parent.matte.enabled = ! this.value;
+			};
 
-	return {type: "BMP", handler: onDialogSelectBMP};
+			// interlaced
+			parent.interlaced = parent.add("checkbox", undefined, "Interlaced");
+		},
+		
+		// Reaction to dialog confirmation
+		onDialogSelect: function (parent)
+		{
+			prefs.format = "PNG-24";
+			prefs.fileExtension = ".png";
+
+			var WHITE = new RGBColor();
+			WHITE.red = 255; WHITE.green = 255; WHITE.blue = 255;
+			var BLACK = new RGBColor();
+			BLACK.red = 0; BLACK.green = 0; BLACK.blue = 0;
+			var GRAY = new RGBColor();
+			GRAY.red = 127; GRAY.green = 127; GRAY.blue = 127;
+
+			const matteColours = [WHITE, BLACK, GRAY, BLACK, app.backgroundColor.rgb, app.foregroundColor.rgb];
+
+			prefs.formatArgs = new ExportOptionsSaveForWeb();
+			with (prefs.formatArgs) {
+				format = SaveDocumentType.PNG;
+				PNG8 = false;
+				interlaced = parent.interlaced.value;
+				transparency = parent.transparency.value;
+				matteColor = matteColours[parent.matte.selection.index];
+			}
+		},
+		
+		settingsKeys: 
+		{
+			matte: app.stringIDToTypeID("png24Matte"),
+			transparency: app.stringIDToTypeID("png24Transparency"),
+			interlaced: app.stringIDToTypeID("png24Interlaced")
+		},
+		
+		// Save settings into an ActionDescriptor
+		packSettings: function (desc, formatOptRoot)
+		{
+			desc.putInteger(this.settingsKeys.matte, formatOptRoot.matte.selection.index);
+			desc.putBoolean(this.settingsKeys.transparency, formatOptRoot.transparency.value);
+			desc.putBoolean(this.settingsKeys.interlaced, formatOptRoot.interlaced.value);
+		},
+		
+		// Get settings from an ActionDescriptor
+		unpackSettings: function (desc)
+		{
+			return {
+				matte: desc.getInteger(this.settingsKeys.matte),
+				transparency: desc.getBoolean(this.settingsKeys.transparency),
+				interlaced: desc.getBoolean(this.settingsKeys.interlaced)
+			};
+		},
+		
+		// Apply settings to dialog GUI
+		applySettings: function (settings, formatOptRoot)
+		{
+			const formatSettings = settings.format[this.type];
+			formatOptRoot.transparency.value = formatSettings.transparency;
+			formatOptRoot.matte.selection = formatSettings.matte;
+			formatOptRoot.matte.enabled = !formatSettings.transparency;
+			formatOptRoot.interlaced.value = formatSettings.interlaced;
+		}
+	};
 }
 
-function onDialogSelectBMP(parent)
+function getFormatOptsPNG8()
 {
-	prefs.format = "BMP";
-	prefs.fileExtension = ".bmp";
-	prefs.formatArgs = new BMPSaveOptions();
-	prefs.formatArgs.osType = OperatingSystem.WINDOWS;
-	prefs.formatArgs.alphaChannels = parent.alpha.value;
-	prefs.formatArgs.rleCompression = parent.rle.value;
-	prefs.formatArgs.flipRowOrder = parent.flipRowOrder.value;
-	var resolution_enum = [
-		BMPDepthType.THIRTYTWO,
-		BMPDepthType.TWENTYFOUR,
-		BMPDepthType.BMP_R5G6B5,
-		BMPDepthType.BMP_A1R5G5B5,
-		BMPDepthType.BMP_A4R4G4B4
-	];
-	prefs.formatArgs.depth = resolution_enum[parent.depth.selection.index];
+	return {
+		type: "PNG-8",
+		
+		// Dialog GUI
+		dialogParams: function (parent)
+		{
+			const ROW_HEIGHT = 16;
+			const LABEL_WIDTH = 105;
+
+			// color reduction
+			var row = parent.add("group");
+			var crLabel = row.add("statictext", undefined, "Color reduction:");
+			crLabel.preferredSize = [LABEL_WIDTH, ROW_HEIGHT];
+			parent.colourReduction = row.add("dropdownlist", undefined, [
+				"Perceptual",
+				"Selective",
+				"Adaptive",
+				"Restrictive (Web)",
+				"-",
+				"Black & White",
+				"Grayscale",
+				"Mac OS",
+				"Windows"
+			]);
+			parent.colourReduction.selection = 1;
+
+			// number of colors
+			row = parent.add("group");
+			var colorsLabel = row.add("statictext", undefined, "Number of colors:");
+			colorsLabel.preferredSize = [LABEL_WIDTH, ROW_HEIGHT];
+			parent.colors = row.add("edittext", undefined, "256");
+			parent.colors.preferredSize = [70, 18];
+			parent.colorsLast = 256;
+
+			parent.colors.onChange = function() {
+				var colorNum = parseInt(this.text, 10);
+				if (isNaN(colorNum)) {
+					colorNum = parent.colorsLast;
+				}
+				else if (colorNum < 2) {
+					colorNum = 2;
+				}
+				else if (colorNum > 256) {
+					colorNum = 256;
+				}
+				this.text = colorNum;
+				parent.colorsLast = colorNum;
+			};
+
+			// dither
+			row = parent.add("group");
+			var ditherLabel = row.add("statictext", undefined, "Dither:");
+			ditherLabel.preferredSize = [LABEL_WIDTH, ROW_HEIGHT];
+			parent.dither = row.add("dropdownlist", undefined, [
+				"None",
+				"Diffusion",
+				"Pattern",
+				"Noise"
+			]);
+			parent.dither.selection = 0;
+
+			// dither amount
+			var ditherAmountGroup = row.add("group");
+			parent.ditherAmount = ditherAmountGroup.add("slider", undefined, 100, 0, 100);
+			var ditherAmountValue = ditherAmountGroup.add("statictext", undefined, "100%");
+			ditherAmountGroup.enabled = false;
+
+			parent.ditherAmount.onChanging = function() {
+				this.value = Math.round(this.value);
+				ditherAmountValue.text = "" + this.value + "%";
+			};
+
+			parent.dither.onChange = function() {
+				ditherAmountGroup.enabled = (this.selection == 1);
+			};
+
+			// interlaced
+			parent.interlaced = parent.add("checkbox", undefined, "Interlaced");
+
+			// transparency
+			var transparencyPanel = parent.add("panel", undefined, "Transparency:");
+			transparencyPanel.orientation = "column";
+			transparencyPanel.alignChildren = "left";
+			parent.transparency = transparencyPanel.add("checkbox", undefined, "Enabled");
+			parent.transparency.value = true;
+
+			parent.transparency.onClick = function() {
+				matteRow.enabled = ! this.value;
+				tdRow.enabled = this.value;
+			};
+
+			// matte
+			var matteRow = transparencyPanel.add("group");
+			var matteLabel = matteRow.add("statictext", undefined, "Matte:");
+			matteLabel.preferredSize = [LABEL_WIDTH + 8, ROW_HEIGHT];
+			parent.matte = matteRow.add("dropdownlist", undefined, ["White", "Black", "Gray", "-", "Background", "Foreground"]);
+			parent.matte.selection = 0;
+			matteRow.enabled = false;
+
+			// transparency dither
+			var tdRow = transparencyPanel.add("group");
+			var transDitherLabel = tdRow.add("statictext", undefined, "Transparency dither:");
+			transDitherLabel.preferredSize = [LABEL_WIDTH + 8, ROW_HEIGHT];
+			parent.transparencyDither = tdRow.add("dropdownlist", undefined, [
+				"None",
+				"Diffusion",
+				"Pattern",
+				"Noise"
+			]);
+			parent.transparencyDither.selection = 0;
+
+			parent.transparencyDither.onChange = function() {
+				transDitherAmountGroup.enabled = (this.selection == 1);
+			};
+
+			// transparency dither amount
+			var transDitherAmountGroup = tdRow.add("group");
+			parent.transparencyDitherAmount = transDitherAmountGroup.add("slider", undefined, 100, 0, 100);
+			var transDitherAmountValue = transDitherAmountGroup.add("statictext", undefined, "100%");
+			transDitherAmountGroup.enabled = false;
+
+			parent.transparencyDitherAmount.onChanging = function() {
+				this.value = Math.round(this.value);
+				transDitherAmountValue.text = "" + this.value + "%";
+			};
+		},
+		
+		// Reaction to dialog confirmation
+		onDialogSelect: function (parent)
+		{
+			prefs.format = "PNG-8";
+			prefs.fileExtension = ".png";
+
+			const colorReductionType = [
+				ColorReductionType.PERCEPTUAL,
+				ColorReductionType.SELECTIVE,
+				ColorReductionType.ADAPTIVE,
+				ColorReductionType.RESTRICTIVE,
+				null,
+				ColorReductionType.BLACKWHITE,
+				ColorReductionType.GRAYSCALE,
+				ColorReductionType.MACINTOSH,
+				ColorReductionType.WINDOWS
+			];
+			const ditherType = [
+				Dither.NONE,
+				Dither.DIFFUSION,
+				Dither.PATTERN,
+				Dither.NOISE
+			];
+			var WHITE = new RGBColor();
+			WHITE.red = 255; WHITE.green = 255; WHITE.blue = 255;
+			var BLACK = new RGBColor();
+			BLACK.red = 0; BLACK.green = 0; BLACK.blue = 0;
+			var GRAY = new RGBColor();
+			GRAY.red = 127; GRAY.green = 127; GRAY.blue = 127;
+			const matteColours = [WHITE, BLACK, GRAY, BLACK, app.backgroundColor.rgb, app.foregroundColor.rgb];
+
+			prefs.formatArgs = new ExportOptionsSaveForWeb();
+			with (prefs.formatArgs) {
+				format = SaveDocumentType.PNG;
+				PNG8 = true;
+				colorReduction = colorReductionType[parent.colourReduction.selection.index];
+				colors = parseInt(parent.colors.text, 10);
+				dither = ditherType[parent.dither.selection.index];
+				if (dither == Dither.DIFFUSION) {
+					ditherAmount = parent.ditherAmount.value;
+				}
+				interlaced = parent.interlaced.value;
+				transparency = parent.transparency.value;
+				matteColor = matteColours[parent.matte.selection.index];
+				if (transparency) {
+					transparencyDither = ditherType[parent.transparencyDither.selection.index];
+					if (transparencyDither == Dither.DIFFUSION) {
+						transparencyAmount = parent.transparencyDitherAmount.value;
+					}
+				}
+			}
+		},
+		
+		settingsKeys: 
+		{
+			colorReduction: app.stringIDToTypeID("png8ColorReduction"),
+			numberOfColors: app.stringIDToTypeID("png8NumberOfColors"),
+			dither: app.stringIDToTypeID("png8Dither"),
+			ditherAmount: app.stringIDToTypeID("png8DitherAmount"),
+			interlaced: app.stringIDToTypeID("png8Interlaced"),
+			transparency: app.stringIDToTypeID("png8Transparency"),
+			matte: app.stringIDToTypeID("png8Matte"),
+			transparencyDither: app.stringIDToTypeID("png8TransparencyDither"),
+			transparencyDitherAmount: app.stringIDToTypeID("png8TransparencyDitherAmount")
+		},
+		
+		// Save settings into an ActionDescriptor
+		packSettings: function (desc, formatOptRoot)
+		{
+			desc.putInteger(this.settingsKeys.colorReduction, formatOptRoot.colourReduction.selection.index);
+			desc.putString(this.settingsKeys.numberOfColors, formatOptRoot.colors.text);
+			desc.putInteger(this.settingsKeys.dither, formatOptRoot.dither.selection.index);
+			desc.putInteger(this.settingsKeys.ditherAmount, formatOptRoot.ditherAmount.value);
+			desc.putBoolean(this.settingsKeys.interlaced, formatOptRoot.interlaced.value);
+			desc.putBoolean(this.settingsKeys.transparency, formatOptRoot.transparency.value);
+			desc.putInteger(this.settingsKeys.matte, formatOptRoot.matte.selection.index);
+			desc.putInteger(this.settingsKeys.transparencyDither, formatOptRoot.transparencyDither.selection.index);
+			desc.putInteger(this.settingsKeys.transparencyDitherAmount, formatOptRoot.transparencyDitherAmount.value);
+		},
+		
+		// Get settings from an ActionDescriptor
+		unpackSettings: function (desc)
+		{
+			return {
+				colorReduction: desc.getInteger(this.settingsKeys.colorReduction),
+				numberOfColors: desc.getString(this.settingsKeys.numberOfColors),
+				dither: desc.getInteger(this.settingsKeys.dither),
+				ditherAmount: desc.getInteger(this.settingsKeys.ditherAmount),
+				interlaced: desc.getBoolean(this.settingsKeys.interlaced),
+				transparency: desc.getBoolean(this.settingsKeys.transparency),
+				matte: desc.getInteger(this.settingsKeys.matte),
+				transparencyDither: desc.getInteger(this.settingsKeys.transparencyDither),
+				transparencyDitherAmount: desc.getInteger(this.settingsKeys.transparencyDitherAmount)
+			};
+		},
+		
+		// Apply settings to dialog GUI
+		applySettings: function (settings, formatOptRoot)
+		{
+			const formatSettings = settings.format[this.type];
+			formatOptRoot.colourReduction.selection = formatSettings.colorReduction;
+			formatOptRoot.colors.text = formatSettings.numberOfColors;
+			formatOptRoot.dither.selection = formatSettings.dither;
+			formatOptRoot.ditherAmount.value = formatSettings.ditherAmount;
+			formatOptRoot.ditherAmount.enabled = (formatSettings.dither == 1);
+			formatOptRoot.interlaced.value = formatSettings.interlaced;
+			formatOptRoot.matte.selection = formatSettings.matte;
+			if (formatOptRoot.transparency.value != formatSettings.transparency) {
+				formatOptRoot.transparency.notify();
+			}
+			formatOptRoot.transparencyDither.selection = formatSettings.transparencyDither;
+			//formatOptRoot.transparencyDither.notify("onChange");
+			formatOptRoot.transparencyDitherAmount.value = formatSettings.transparencyDitherAmount;
+		}
+	};
+}
+
+function getFormatOptsBMP()
+{
+	return {
+		type: "BMP",
+		
+		// Dialog GUI
+		dialogParams: function (parent)
+		{
+			// bit depth
+			var depth = parent.add("group");
+			depth.add("statictext", undefined, "Depth:");
+			var depthLabels = [
+				"32 bit",
+				"24 bit",
+				"RGB 565 (16 bit)",
+				"ARGB 1555 (16 bit)",
+				"ARGB 4444 (16 bit)"
+			];
+			parent.depth = depth.add("dropdownlist", undefined, depthLabels);
+			parent.depth.selection = 0;
+
+			// alpha
+			parent.alpha = parent.add("checkbox", undefined, "With alpha channel");
+			parent.alpha.value = true;
+
+			// RLE
+			parent.rle = parent.add("checkbox", undefined, "RLE compression");
+			parent.rle.value = true;
+
+			// flip row order
+			parent.flipRowOrder = parent.add("checkbox", undefined, "Flip row order");
+			parent.flipRowOrder.value = false;
+		},
+		
+		// Reaction to dialog confirmation
+		onDialogSelect: function (parent)
+		{
+			prefs.format = "BMP";
+			prefs.fileExtension = ".bmp";
+			prefs.formatArgs = new BMPSaveOptions();
+			prefs.formatArgs.osType = OperatingSystem.WINDOWS;
+			prefs.formatArgs.alphaChannels = parent.alpha.value;
+			prefs.formatArgs.rleCompression = parent.rle.value;
+			prefs.formatArgs.flipRowOrder = parent.flipRowOrder.value;
+			var resolution_enum = [
+				BMPDepthType.THIRTYTWO,
+				BMPDepthType.TWENTYFOUR,
+				BMPDepthType.BMP_R5G6B5,
+				BMPDepthType.BMP_A1R5G5B5,
+				BMPDepthType.BMP_A4R4G4B4
+			];
+			prefs.formatArgs.depth = resolution_enum[parent.depth.selection.index];
+		},
+		
+		settingsKeys: 
+		{
+			depth: app.stringIDToTypeID("bmpDepth"),
+			alpha: app.stringIDToTypeID("bmpAlpha"),
+			rle: app.stringIDToTypeID("bmpRle"),
+			flipRow: app.stringIDToTypeID("bmpFlipRow")
+		},
+		
+		// Save settings into an ActionDescriptor
+		packSettings: function (desc, formatOptRoot)
+		{
+			desc.putBoolean(this.settingsKeys.alpha, formatOptRoot.alpha.value);
+			desc.putInteger(this.settingsKeys.depth, formatOptRoot.depth.selection.index);
+			desc.putBoolean(this.settingsKeys.rle, formatOptRoot.rle.value);
+			desc.putBoolean(this.settingsKeys.flipRow, formatOptRoot.flipRowOrder.value);
+		},
+		
+		// Get settings from an ActionDescriptor
+		unpackSettings: function (desc)
+		{
+			return {
+				depth: desc.getInteger(this.settingsKeys.depth),
+				alpha: desc.getBoolean(this.settingsKeys.alpha),
+				rle: desc.getBoolean(this.settingsKeys.rle),
+				flipRow: desc.getBoolean(this.settingsKeys.flipRow)
+			};
+		},
+		
+		// Apply settings to dialog GUI
+		applySettings: function (settings, formatOptRoot)
+		{
+			const formatSettings = settings.format[this.type];
+			formatOptRoot.alpha.value = formatSettings.alpha;
+			formatOptRoot.depth.selection = formatSettings.depth;
+			formatOptRoot.rle.value = formatSettings.rle;
+			formatOptRoot.flipRowOrder.value = formatSettings.flipRow;
+		}
+	};
 }
 
 
