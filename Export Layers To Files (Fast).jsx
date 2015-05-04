@@ -756,7 +756,6 @@ function applySettings(dlg, formatOpts)
 		return;
 	}
 	
-	// FIXME: test effect on dynamic enabling/disabling of controls
 	with (dlg.funcArea.content) {
 		// Common settings
 		
@@ -766,18 +765,22 @@ function applySettings(dlg, formatOpts)
 			prefs.filePath = destFolder;
 		}
 		
-		grpLayers.radioLayersAll.value = settings.exportAll;
-		grpLayers.radioLayersVis.value = !settings.exportAll;
+		if ((grpLayers.radioLayersAll.value != settings.exportAll) && grpLayers.radioLayersVis.enabled) {
+			grpLayers.radioLayersVis.notify();
+		}
 		
 		var drdNamingIdx = FileNameType.getIndex(settings.nameFiles);
 		grpNaming.drdNaming.selection = (drdNamingIdx >= 0) ? drdNamingIdx : 0;
 		
-		grpNaming.cbNaming.value = settings.allowSpaces;
+		if (grpNaming.cbNaming.value != settings.allowSpaces) {
+			grpNaming.cbNaming.notify();
+		}
 		
 		var drdLetterCaseIdx = LetterCase.getIndex(settings.letterCase);
 		grpLetterCase.drdLetterCase.selection = (drdLetterCaseIdx >= 0) ? drdLetterCaseIdx : 0;
 		
 		grpPrefix.editPrefix.text = settings.outputPrefix;
+		grpPrefix.editPrefix.notify("onChange");
 		
 		var drdTrimIdx = TrimPrefType.getIndex(settings.trim);
 		grpTrim.drdTrim.selection = (drdTrimIdx >= 0) ? drdTrimIdx : 0;
