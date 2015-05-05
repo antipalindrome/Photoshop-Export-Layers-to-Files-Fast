@@ -30,6 +30,7 @@ Features:
 * Lowest layer can be treated as common background.
 * Exported images can have layer size or canvas size (trimming option).
 * Last used dialog settings are remembered.
+* A selected group can be exported as usual (layer by layer) while everything else is left in tact. (This way variable content can be exported for complex fixed background and foreground.)
 
 You can also see [what's coming next](https://github.com/hsw107/Photoshop-Export-Layers-to-Files-Fast/wiki/Feature-Roadmap) and browse some of our [performance test results](https://github.com/hsw107/Photoshop-Export-Layers-to-Files-Fast/wiki/Performance-Test-Results).
 
@@ -52,6 +53,10 @@ Mac: /Applications/Adobe Photoshop VERSION/Presets/Scripts/
 
 Version History:
 -------------------------------
+<b>05 May 2015</b> by [Skjorn](https://github.com/skjorn)
+
+* A selected group can be exported as usual (layer by layer) while everything else is left in tact. (This way variable content can be exported for complex fixed background and foreground.) _Works only for the first selected group!_ If no layer/group is selected, the topmost one is assumed by Photoshop. All parent groups of the selection are made visible. Visibility of exported layers is not taken into account; all are exported.
+
 <b>25 April 2015</b> by [Hanna Walter](https://github.com/hsw107) and [Skjorn](https://github.com/skjorn)
 
 * Last user settings remembered for versions CS 3 and higher.
