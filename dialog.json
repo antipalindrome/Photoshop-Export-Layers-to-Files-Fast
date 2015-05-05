@@ -22,7 +22,8 @@ dialog {
 				orientation: "row",
 				txtLayers: StaticText {text: "Export:", preferredSize: [80, 20]},
 				radioLayersAll: RadioButton {text: "All layers", preferredSize: [80, 20], value: true},
-				radioLayersVis: RadioButton {text: "Visible only", preferredSize: [80, 20]}
+				radioLayersVis: RadioButton {text: "Visible only", preferredSize: [100, 20]},
+				radioLayersSel: RadioButton {text: "Selected group", preferredSize: [120, 20]}
 			},
 			grpNaming: Group {
 				orientation: "row",
@@ -70,7 +71,7 @@ dialog {
 	warning: Panel {
 		alignChildren: "fill",
 		message: StaticText {
-			text: "This document contains {0} layer(s), {1} of them visible.\n\nProcessing a large number of layers may take some time!\n\n(If you check \"Allow spaces\", make sure they are not replaced by Photoshop itself in \"Save For Web\" settings.)",
+			text: "This document contains {0} layer(s), {1} of them visible, {2} selected.\n\nProcessing a large number of layers may take some time!\n\n(If you check \"Allow spaces\", make sure they are not replaced by Photoshop itself in \"Save For Web\" settings.)",
 			properties: {
 				multiline: true
 			}

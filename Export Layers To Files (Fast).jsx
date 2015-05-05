@@ -105,13 +105,34 @@ const TrimPrefType = {
 	}
 };
 
+const ExportLayerTarget = {
+	ALL_LAYERS: 1,
+	VISIBLE_LAYERS: 2,
+	SELECTED_LAYERS: 3,		// Export selection, leave the rest as is, visibility for parent groups will be forced.
+
+	values: function()
+	{
+		return [this.ALL_LAYERS, this.VISIBLE_LAYERS, this.SELECTED_LAYERS];
+	},
+	
+	forIndex: function(index) 
+	{
+		return this.values()[index];
+	},
+	
+	getIndex: function(value) 
+	{
+		return indexOf(this.values(), value);
+	}
+};
+
 // Settings
 
 const USER_SETTINGS_ID = "exportLayersToFilesCustomDefaultSettings";  	
 const DEFAULT_SETTINGS = {
 	// common
 	destination: app.stringIDToTypeID("destFolder"),
-	exportAll: app.stringIDToTypeID("exportAll"),
+	exportLayerTarget: app.stringIDToTypeID("exportLayerTarget"),
 	nameFiles: app.stringIDToTypeID("nameFiles"),
 	allowSpaces: app.stringIDToTypeID("allowSpaces"),
 	letterCase:	app.stringIDToTypeID("letterCase"),
@@ -132,9 +153,11 @@ var prefs = new Object();
 var userCancelled = false;
 var layers;
 var visibleLayers;
+var selectedLayers;
 var groups;
 var layerCount = 0;
 var visibleLayerCount = 0;
+var selectedLayerCount = 0;
 
 
 //
@@ -160,7 +183,7 @@ function main()
 		prefs.filePath = Folder.myDocuments;
 	}
 	prefs.formatArgs = null;
-	prefs.visibleOnly = false;
+	prefs.exportLayerTarget = ExportLayerTarget.ALL_LAYERS;
 	prefs.outputPrefix = "";
 	prefs.naming = FileNameType.AS_LAYERS_NO_EXT;
 	prefs.namingLetterCase = LetterCase.KEEP;
@@ -184,6 +207,7 @@ function main()
 	}
 	layerCount = layerCountResult.layerCount;
 	visibleLayerCount = layerCountResult.visibleLayerCount;
+	selectedLayerCount = layerCountResult.selectedLayerCount;
 	var countDuration = profiler.getDuration(true, true);
 	if (env.profiling) {
 		alert("Layers counted in " + profiler.format(countDuration), "Debug info");
@@ -202,6 +226,7 @@ function main()
 		}
 		layers = collected.layers;
 		visibleLayers = collected.visibleLayers;
+		selectedLayers = collected.selectedLayers;
 		groups = collected.groups;
 		var collectionDuration = profiler.getDuration(true, true);
 		if (env.profiling) {
@@ -211,7 +236,7 @@ function main()
 		// export
 		profiler.resetLastTime();
 
-		var count = exportLayers(prefs.visibleOnly, progressBarWindow);
+		var count = exportLayers(prefs.exportLayerTarget, progressBarWindow);
 		var exportDuration = profiler.getDuration(true, true);
 
 		var message = "";
@@ -235,7 +260,7 @@ function main()
 	}
 }
 
-function exportLayers(visibleOnly, progressBarWindow)
+function exportLayers(exportLayerTarget, progressBarWindow)
 {
 	var retVal = {
 		count: 0,
@@ -243,8 +268,39 @@ function exportLayers(visibleOnly, progressBarWindow)
 	};
 	var doc = app.activeDocument;
 
+	// Select a subset of layers to export.
+	
 	var layerCount = layers.length;
+	var layersToExport;
+	switch (exportLayerTarget) {
+	
+	case ExportLayerTarget.ALL_LAYERS:
+		layersToExport = layers;
+		break;
+	
+	case ExportLayerTarget.VISIBLE_LAYERS:
+		layersToExport = visibleLayers;
+		break;
+	
+	case ExportLayerTarget.SELECTED_LAYERS:
+		layersToExport = selectedLayers;
+		// Bg layer is redundant since everything else outside the selection is essentially a background/foreground.
+		prefs.bgLayer = false;
+		break;
+		
+	default:
+		layersToExport = layers;
+		break;
+	}
 
+	const count = prefs.bgLayer ? layersToExport.length - 1 : layersToExport.length;
+	
+	if (count < 1) {
+		return retVal;
+	}
+	
+	// Export.
+	
 	if ((layerCount == 1) && layers[0].layer.isBackgroundLayer) {
 		// Flattened images don't support LayerComps or visibility toggling, so export it directly.
 		if (saveImage(layers[0].layer.name)) {
@@ -255,18 +311,15 @@ function exportLayers(visibleOnly, progressBarWindow)
 		}
 	}
 	else {
-		var layersToExport = visibleOnly ? visibleLayers : layers;
-		const count = prefs.bgLayer ? layersToExport.length - 1 : layersToExport.length;
-
 		// Single trim of all layers combined.
 		if (prefs.trim == TrimPrefType.COMBINED) {
 			const UPDATE_NUM = 20;
 			if (progressBarWindow) {
-				var stepCount = visibleOnly ? 1 : count / UPDATE_NUM + 1;
+				var stepCount = (exportLayerTarget == ExportLayerTarget.ALL_LAYERS) ? count / UPDATE_NUM + 1 : 1;
 				showProgressBar(progressBarWindow, "Trimming...", stepCount);
 			}
 
-			if (! visibleOnly) {
+			if (exportLayerTarget == ExportLayerTarget.ALL_LAYERS) {
 				// For combined trim across all layers, make all layers visible.
 				for (var i = 0; i < count; ++i) {
 					makeVisible(layersToExport[i]);
@@ -634,14 +687,20 @@ function showDialog()
 
 	// layer subset selection
 	dlg.funcArea.content.grpLayers.radioLayersAll.onClick = function() {
-		prefs.visibleOnly = false;
+		prefs.exportLayerTarget = ExportLayerTarget.ALL_LAYERS;
 		dlg.funcArea.content.cbBgLayer.enabled = (layerCount > 1);
 	};
 	dlg.funcArea.content.grpLayers.radioLayersVis.onClick = function() {
-		prefs.visibleOnly = true;
+		prefs.exportLayerTarget = ExportLayerTarget.VISIBLE_LAYERS;
 		dlg.funcArea.content.cbBgLayer.enabled = (visibleLayerCount > 1);
 	};
+	dlg.funcArea.content.grpLayers.radioLayersSel.onClick = function() {
+		prefs.exportLayerTarget = ExportLayerTarget.SELECTED_LAYERS;
+		dlg.funcArea.content.cbBgLayer.enabled = false;
+		dlg.funcArea.content.cbBgLayer.value = false;
+	};
 	dlg.funcArea.content.grpLayers.radioLayersVis.enabled = (visibleLayerCount > 0);
+	dlg.funcArea.content.grpLayers.radioLayersSel.enabled = (selectedLayerCount > 0);
 
 	var formatDropDown = dlg.funcArea.content.grpFileType.drdFileType;
 	var optionsPanel = dlg.funcArea.content.pnlOptions;
@@ -737,7 +796,7 @@ function showDialog()
 	};
 
 	// warning message
-	dlg.warning.message.text = formatString(dlg.warning.message.text, layerCount, visibleLayerCount);
+	dlg.warning.message.text = formatString(dlg.warning.message.text, layerCount, visibleLayerCount, selectedLayerCount);
 	
 	applySettings(dlg, formatOpts);
 	
@@ -765,8 +824,19 @@ function applySettings(dlg, formatOpts)
 			prefs.filePath = destFolder;
 		}
 		
-		if ((grpLayers.radioLayersAll.value != settings.exportAll) && grpLayers.radioLayersVis.enabled) {
-			grpLayers.radioLayersVis.notify();
+		switch (settings.exportLayerTarget) {
+		
+		case ExportLayerTarget.VISIBLE_LAYERS:
+			if (grpLayers.radioLayersVis.enabled) {
+				grpLayers.radioLayersVis.notify();
+			}
+			break;
+		
+		case ExportLayerTarget.SELECTED_LAYERS:
+			if (grpLayers.radioLayersSel.enabled) {
+				grpLayers.radioLayersSel.notify();
+			}
+			break;
 		}
 		
 		var drdNamingIdx = FileNameType.getIndex(settings.nameFiles);
@@ -816,8 +886,17 @@ function saveSettings(dlg, formatOpts)
 	
 	with (dlg.funcArea.content) {
 		// common
+		
+		var exportLayerTarget = ExportLayerTarget.ALL_LAYERS;
+		if (grpLayers.radioLayersVis.value) {
+			exportLayerTarget = ExportLayerTarget.VISIBLE_LAYERS;
+		}
+		else if (grpLayers.radioLayersSel.value) {
+			exportLayerTarget = ExportLayerTarget.SELECTED_LAYERS;
+		}
+		
 		desc.putString(DEFAULT_SETTINGS.destination, grpDest.txtDest.text); 
-		desc.putBoolean(DEFAULT_SETTINGS.exportAll, grpLayers.radioLayersAll.value); 
+		desc.putInteger(DEFAULT_SETTINGS.exportLayerTarget, exportLayerTarget); 
 		desc.putInteger(DEFAULT_SETTINGS.nameFiles, FileNameType.forIndex(grpNaming.drdNaming.selection.index));
 		desc.putBoolean(DEFAULT_SETTINGS.allowSpaces, grpNaming.cbNaming.value);
 		desc.putInteger(DEFAULT_SETTINGS.letterCase, LetterCase.forIndex(grpLetterCase.drdLetterCase.selection.index));
@@ -855,7 +934,7 @@ function getSettings(formatOpts)
 		result = {
 			// common
 			destination: desc.getString(DEFAULT_SETTINGS.destination),
-			exportAll: desc.getBoolean(DEFAULT_SETTINGS.exportAll), 
+			exportLayerTarget: desc.getInteger(DEFAULT_SETTINGS.exportLayerTarget), 
 			nameFiles: desc.getInteger(DEFAULT_SETTINGS.nameFiles), 
 			allowSpaces: desc.getBoolean(DEFAULT_SETTINGS.allowSpaces), 
 			letterCase: desc.getInteger(DEFAULT_SETTINGS.letterCase), 
@@ -1600,6 +1679,7 @@ function collectLayersAM(progressBarWindow)
 {
 	var layers = [],
 	    visibleLayers = [],
+		selectedLayers = [],
 	    groups = [];
 	var layerCount = 0;
 
@@ -1646,9 +1726,10 @@ function collectLayersAM(progressBarWindow)
 		}
 
 		// Query current selection.
-		/*ref = new ActionReference();
-		 ref.putEnumerated(idLyr, idOrdn, app.charIDToTypeID("Trgt"));
-		 var selectionDesc = app.executeActionGet(ref);*/
+		ref = new ActionReference();
+		ref.putEnumerated(idLyr, idOrdn, app.charIDToTypeID("Trgt"));
+		var selectionDesc = app.executeActionGet(ref);
+		var selectionIdx = selectionDesc.getInteger(app.charIDToTypeID("ItmI"));
 
 		try {
 			// Collect normal layers.
@@ -1656,6 +1737,7 @@ function collectLayersAM(progressBarWindow)
 			var layerVisible;
 			var currentGroup = null;
 			var layerSection;
+			var selected = 0;
 			for (var i = layerCount; i >= 1; --i) {
 				// check if it's an art layer (not a group) that can be selected
 				ref = new ActionReference();
@@ -1680,6 +1762,9 @@ function collectLayersAM(progressBarWindow)
 							if (layerVisible && visibleInGroup[visibleInGroup.length - 1]) {
 								visibleLayers.push(layer);
 							}
+							if (selected > 0) {
+								selectedLayers.push(layer);
+							}
 							if (currentGroup) {
 								currentGroup.children.push(layer);
 							}
@@ -1695,11 +1780,19 @@ function collectLayersAM(progressBarWindow)
 						}
 						currentGroup = group;
 						visibleInGroup.push(layerVisible && visibleInGroup[visibleInGroup.length - 1]);
+						// Only check for selected groups. In CS2, 1 and only 1 layer/group is always selected (active).
+						// It is useless to export just 1 art layer, so only layer groups (sets) are supported.
+						if ((selectionIdx == i) || (selected > 0)) {
+							selected++;
+						}
 					}
 				}
 				else if (layerSection == "layerSectionEnd") {
 					currentGroup = currentGroup.parent;
 					visibleInGroup.pop();
+					if (selected > 0) {
+						selected--;
+					}
 				}
 
 				if (progressBarWindow && ((i % FEW_LAYERS == 0) || (i == layerCount))) {
@@ -1750,7 +1843,7 @@ function collectLayersAM(progressBarWindow)
 		}
 	}
 
-	return {layers: layers, visibleLayers: visibleLayers, groups: groups};
+	return {layers: layers, visibleLayers: visibleLayers, selectedLayers: selectedLayers, groups: groups};
 }
 
 function countLayersAM(progressBarWindow)
@@ -1758,11 +1851,13 @@ function countLayersAM(progressBarWindow)
 	var layerCount = 0;
 	var preciseLayerCount = 0;
 	var visLayerCount = 0;
+	var selLayerCount = 0;
 
 	var ref = null;
 	var desc = null;
 
 	const idOrdn = app.charIDToTypeID("Ordn");
+	const idLyr = app.charIDToTypeID("Lyr ");
 
 	// Get layer count reported by the active Document object - it never includes the background.
 	ref = new ActionReference();
@@ -1770,6 +1865,13 @@ function countLayersAM(progressBarWindow)
 	desc = app.executeActionGet(ref);
 	layerCount = desc.getInteger(app.charIDToTypeID("NmbL"));
 
+	// Query current selection.
+	ref = new ActionReference();
+	ref.putEnumerated(idLyr, idOrdn, app.charIDToTypeID("Trgt"));
+	var selectionDesc = app.executeActionGet(ref);
+	// Something is always selected even if nothing is selected in GUI.
+	var selectionIdx = selectionDesc.getInteger(app.charIDToTypeID("ItmI"));
+		 
 	if (layerCount == 0) {
 		// This is a flattened image that contains only the background (which is always visible).
 		preciseLayerCount = 1;
@@ -1779,7 +1881,6 @@ function countLayersAM(progressBarWindow)
 		// There are more layers that may or may not contain a background. The background is always at 0;
 		// other layers are indexed from 1.
 
-		const idLyr = app.charIDToTypeID("Lyr ");
 		const idLayerSection = app.stringIDToTypeID("layerSection");
 		const idVsbl = app.charIDToTypeID("Vsbl");
 		const idNull = app.charIDToTypeID("null");
@@ -1804,6 +1905,7 @@ function countLayersAM(progressBarWindow)
 			var visibleInGroup = [true];
 			var layerVisible;
 			var layerSection;
+			var selected = 0;
 			for (var i = layerCount; i >= 1; --i) {
 				// check if it's an art layer (not a group) that can be selected
 				ref = new ActionReference();
@@ -1816,12 +1918,23 @@ function countLayersAM(progressBarWindow)
 					if (layerVisible && visibleInGroup[visibleInGroup.length - 1]) {
 						visLayerCount++;
 					}
+					if (selected > 0) {
+						selLayerCount++;
+					}
 				}
 				else if (layerSection == "layerSectionStart") {
 					visibleInGroup.push(layerVisible && visibleInGroup[visibleInGroup.length - 1]);
+					// Only check for selected groups. In CS2, 1 and only 1 layer/group is always selected (active).
+					// It is useless to export just 1 art layer, so only layer groups (sets) are supported.
+					if ((selectionIdx == i) || (selected > 0)) {
+						selected++;
+					}
 				}
 				else if (layerSection == "layerSectionEnd") {
 					visibleInGroup.pop();
+					if (selected > 0) {
+						selected--;
+					}
 				}
 
 				if (progressBarWindow && ((i % FEW_LAYERS == 0) || (i == layerCount))) {
@@ -1859,7 +1972,7 @@ function countLayersAM(progressBarWindow)
 		}
 	}
 
-	return {layerCount: preciseLayerCount, visibleLayerCount: visLayerCount};
+	return {layerCount: preciseLayerCount, visibleLayerCount: visLayerCount, selectedLayerCount: selLayerCount};
 }
 
 function exportPng24AM(fileName, options)
