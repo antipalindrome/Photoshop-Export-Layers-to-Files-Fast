@@ -1168,6 +1168,7 @@ function getFormatOptsPNG24()
 
 			// transparency
 			parent.transparency = parent.add("checkbox", undefined, "Transparency");
+			parent.transparency.preferredSize = [120, ROW_HEIGHT];
 			parent.transparency.value = true;
 
 			parent.transparency.onClick = function() {
@@ -1176,6 +1177,7 @@ function getFormatOptsPNG24()
 
 			// interlaced
 			parent.interlaced = parent.add("checkbox", undefined, "Interlaced");
+			parent.interlaced.preferredSize = [120, ROW_HEIGHT];
 		},
 		
 		// Reaction to dialog confirmation
