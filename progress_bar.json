@@ -1,4 +1,4 @@
-﻿palette {
+palette {
 	text: "Please wait...",
 	preferredSize: [350, 60],
 	orientation: "column",
