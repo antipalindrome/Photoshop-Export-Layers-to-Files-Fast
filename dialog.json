@@ -15,7 +15,7 @@ dialog {
 			grpDest: Group {
 				orientation: "row",
 				alignChildren: "left",
-				txtDest: EditText {preferredSize: [310, 20], properties: {readonly: true}},
+				txtDest: EditText {preferredSize: [310, 20], properties: {readonly: false}},
 				btnDest: Button {text: "Browse..."}
 			},
 			grpLayers: Group {
@@ -47,7 +47,11 @@ dialog {
 				txtTrim: StaticText {text: "Trim:", preferredSize: [80, 20]},
 				drdTrim: DropDownList {preferredSize: [140, 20], properties: {items: ["No", "Each layer", "Combined"]}}
 			},
-			cbBgLayer: Checkbox {text: "Lowest layer is background", helpTip: "Leaves the bottommost layer on while exporting every other layer one by one. It will act as background."},
+			cbLayerGroup: Group {
+				orientation: "row",
+				cbBgLayer: Checkbox {text: "Lowest layer is background", helpTip: "Leaves the bottommost layer on while exporting every other layer one by one. It will act as background."},
+				cbTopGroupFolder: Checkbox {text: "Top Groups as Sub Folder", helpTip: "Let All top groups be sub folders."},
+			},
 			grpFileType: Group {
 				orientation: "row",
 				txtFileType: StaticText {text: "File type:", preferredSize: [80, 20]},
