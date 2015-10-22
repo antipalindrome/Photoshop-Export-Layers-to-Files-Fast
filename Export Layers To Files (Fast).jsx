@@ -128,7 +128,7 @@ const ExportLayerTarget = {
 
 // Settings
 
-const USER_SETTINGS_ID = "exportLayersToFilesCustomDefaultSettings";  	
+const USER_SETTINGS_ID = "exportLayersToFilesCustomDefaultSettings";
 const DEFAULT_SETTINGS = {
 	// common
 	destination: app.stringIDToTypeID("destFolder"),
@@ -139,6 +139,7 @@ const DEFAULT_SETTINGS = {
 	outputPrefix: app.stringIDToTypeID("outputPrefix"),
 	trim: app.stringIDToTypeID("trim"),
 	exportBackground: app.stringIDToTypeID("exportBackground"),
+	topGroupAsLayer: app.stringIDToTypeID("topGroupAsLayer"),
 	topGroupFolder: app.stringIDToTypeID("topGroupFolder"),
 	fileType: app.stringIDToTypeID("fileType"),
 };
@@ -220,6 +221,11 @@ function main()
 
 		// collect layers
 		profiler.resetLastTime();
+
+		if (prefs.topGroupAsLayer){
+			mergeTopGroups(app.activeDocument);
+		}
+
 		var collected = collectLayers(progressBarWindow);
 		if (userCancelled) {
 			alert("Export cancelled! No files saved.", "Finished", false);
@@ -229,6 +235,7 @@ function main()
 		visibleLayers = collected.visibleLayers;
 		selectedLayers = collected.selectedLayers;
 		groups = collected.groups;
+
 		var collectionDuration = profiler.getDuration(true, true);
 		if (env.profiling) {
 			alert("Layers collected in " + profiler.format(collectionDuration), "Debug info");
@@ -261,6 +268,20 @@ function main()
 	}
 }
 
+function mergeTopGroups(doc){
+	var layerSets = doc.layerSets;
+	var layerSetList=[];
+	for (var i = 0; i < layerSets.length; i++){
+		layerSetList.push(layerSets[i]);
+	}
+	for (var i = 0; i < layerSetList.length; i++){
+		var layerSet = layerSetList[i];
+		var visible = layerSet.visible;
+		var layer = layerSet.merge();
+		layer.visible = visible;
+	}
+}
+
 function exportLayers(exportLayerTarget, progressBarWindow)
 {
 	var retVal = {
@@ -268,6 +289,12 @@ function exportLayers(exportLayerTarget, progressBarWindow)
 		error: false
 	};
 	var doc = app.activeDocument;
+	var collected = collectLayers(null);
+	layers = collected.layers;
+	visibleLayers = collected.visibleLayers;
+	selectedLayers = collected.selectedLayers;
+	groups = collected.groups;
+
 
 	// Select a subset of layers to export.
 	
@@ -800,6 +827,9 @@ function showDialog()
 		var cbBgLayer = dlg.funcArea.content.cbLayerGroup.cbBgLayer;
 		prefs.bgLayer = (cbBgLayer.value && cbBgLayer.enabled);
 
+		var cbTopGroupAsLayer = dlg.funcArea.content.cbLayerGroup.cbTopGroupAsLayer;
+		prefs.topGroupAsLayer = (cbTopGroupAsLayer.value && cbTopGroupAsLayer.enabled);
+
 		var cbTopGroupFolder = dlg.funcArea.content.cbLayerGroup.cbTopGroupFolder;
 		prefs.topGroupFolder = (cbTopGroupFolder.value && cbTopGroupFolder.enabled);
 
@@ -885,6 +915,7 @@ function applySettings(dlg, formatOpts)
 		grpTrim.drdTrim.selection = (drdTrimIdx >= 0) ? drdTrimIdx : 0;
 		
 		cbLayerGroup.cbBgLayer.value = settings.exportBackground;
+		cbLayerGroup.cbTopGroupAsLayer.value = settings.topGroupAsLayer;
 		cbLayerGroup.cbTopGroupFolder.value = settings.topGroupFolder;
 		
 		var drdFileTypeIdx = 0;
@@ -932,6 +963,7 @@ function saveSettings(dlg, formatOpts)
 		desc.putString(DEFAULT_SETTINGS.outputPrefix, grpPrefix.editPrefix.text);
 		desc.putInteger(DEFAULT_SETTINGS.trim, TrimPrefType.forIndex(grpTrim.drdTrim.selection.index));
 		desc.putBoolean(DEFAULT_SETTINGS.exportBackground, cbLayerGroup.cbBgLayer.value);
+		desc.putBoolean(DEFAULT_SETTINGS.topGroupAsLayer, cbLayerGroup.cbTopGroupAsLayer.value);
 		desc.putBoolean(DEFAULT_SETTINGS.topGroupFolder, cbLayerGroup.cbTopGroupFolder.value);
 		desc.putString(DEFAULT_SETTINGS.fileType, formatOpts[grpFileType.drdFileType.selection.index].opt.type);
 
@@ -971,6 +1003,7 @@ function getSettings(formatOpts)
 			outputPrefix: desc.getString(DEFAULT_SETTINGS.outputPrefix),
 			trim: desc.getInteger(DEFAULT_SETTINGS.trim), 
 			exportBackground: desc.getBoolean(DEFAULT_SETTINGS.exportBackground),
+			topGroupAsLayer: desc.getBoolean(DEFAULT_SETTINGS.topGroupAsLayer),
 			topGroupFolder: desc.getBoolean(DEFAULT_SETTINGS.topGroupFolder),
 			fileType: desc.getString(DEFAULT_SETTINGS.fileType),
 

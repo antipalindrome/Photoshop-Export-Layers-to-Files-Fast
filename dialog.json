@@ -50,6 +50,7 @@ dialog {
 			cbLayerGroup: Group {
 				orientation: "row",
 				cbBgLayer: Checkbox {text: "Lowest layer is background", helpTip: "Leaves the bottommost layer on while exporting every other layer one by one. It will act as background."},
+				cbTopGroupAsLayer: Checkbox {text: "Top Groups as Layers", helpTip: "Merge Top Groups First."},
 				cbTopGroupFolder: Checkbox {text: "Top Groups as Sub Folder", helpTip: "Let All top groups be sub folders."},
 			},
 			grpFileType: Group {
