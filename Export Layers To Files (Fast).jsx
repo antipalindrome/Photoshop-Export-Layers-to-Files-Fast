@@ -139,6 +139,7 @@ const DEFAULT_SETTINGS = {
 	outputPrefix: app.stringIDToTypeID("outputPrefix"),
 	trim: app.stringIDToTypeID("trim"),
 	exportBackground: app.stringIDToTypeID("exportBackground"),
+	groupFolder: app.stringIDToTypeID("groupFolder"),
 	fileType: app.stringIDToTypeID("fileType"),
 };
 
@@ -376,7 +377,7 @@ function exportLayers(exportLayerTarget, progressBarWindow)
 				break;
 
 			case FileNameType.INDEX_ASC:
-				fileName = makeFileNameFromIndex(count - i, countDigits);
+				fileName = makeFileNameFromIndex(count - i, countDigits, layer);
 				break;
 
 			case FileNameType.INDEX_DESC:
@@ -455,10 +456,10 @@ function saveImage(fileName)
 	return true;
 }
 
-function makeFileNameFromIndex(index, numOfDigits)
+function makeFileNameFromIndex(index, numOfDigits, layer)
 {
 	var fileName = "" + padder(index, numOfDigits);
-	return getUniqueFileName(fileName);
+	return getUniqueFileName(fileName, layer);
 }
 
 function makeFileNameFromLayerName(layer, stripExt)
@@ -473,10 +474,10 @@ function makeFileNameFromLayerName(layer, stripExt)
 	if (fileName.length == 0) {
 		fileName = "Layer";
 	}
-	return getUniqueFileName(fileName);
+	return getUniqueFileName(fileName, layer);
 }
 
-function getUniqueFileName(fileName)
+function getUniqueFileName(fileName, layer)
 {
 	var ext = prefs.fileExtension;
 	// makeValidFileName() here basically just converts the space between the prefix and the core file name,
@@ -491,10 +492,34 @@ function getUniqueFileName(fileName)
 		fileName = fileName.toUpperCase();
 		ext = ext.toUpperCase();
 	}
-	fileName = prefs.filePath + "/" + fileName;
+
+	var filePath = prefs.filePath;
+	var folderPath = ""
+	if (prefs.groupFolder){
+		// Check if the current group is the document
+		if (layer.parent == activeDocument){
+			fileName = filePath + "/" + fileName;
+		} else {
+			// Create the folder path for each parents
+			var parentLayer = layer.parent;
+			while (parentLayer){
+				if (parentLayer.parent == activeDocument){
+					break;
+				}
+				folderPath = "/" + makeValidFileName(parentLayer.name, prefs.replaceSpaces) + folderPath;
+				parentLayer = parentLayer.parent;
+			}
+			var myFolder = new Folder(filePath + folderPath + "/");
+			if(!myFolder.exists) myFolder.create();
+
+			fileName = filePath + folderPath + "/" + fileName;
+		}
+	} else {
+		fileName = filePath + "/" + fileName;
+	}
 
 	// Check if the file already exists. In such case a numeric suffix will be added to disambiguate.
-	var uniqueName = fileName;
+	var uniqueName = fileName + "@2x";
 	for (var i = 1; i <= 100; ++i) {
 		var handle = File(uniqueName + ext);
 		if (handle.exists) {
@@ -680,7 +705,6 @@ function showDialog()
 	dlg.funcArea.content.grpDest.btnDest.onClick = function() {
 		var newFilePath = Folder.selectDialog("Select destination folder", prefs.filePath);
 		if (newFilePath) {
-			prefs.filePath = newFilePath;
 			dlg.funcArea.content.grpDest.txtDest.text = newFilePath.fsName;
 		}
 	};
@@ -688,16 +712,16 @@ function showDialog()
 	// layer subset selection
 	dlg.funcArea.content.grpLayers.radioLayersAll.onClick = function() {
 		prefs.exportLayerTarget = ExportLayerTarget.ALL_LAYERS;
-		dlg.funcArea.content.cbBgLayer.enabled = (layerCount > 1);
+		dlg.funcArea.content.cbLayerGroup.cbBgLayer.enabled = (layerCount > 1);
 	};
 	dlg.funcArea.content.grpLayers.radioLayersVis.onClick = function() {
 		prefs.exportLayerTarget = ExportLayerTarget.VISIBLE_LAYERS;
-		dlg.funcArea.content.cbBgLayer.enabled = (visibleLayerCount > 1);
+		dlg.funcArea.content.cbLayerGroup.cbBgLayer.enabled = (visibleLayerCount > 1);
 	};
 	dlg.funcArea.content.grpLayers.radioLayersSel.onClick = function() {
 		prefs.exportLayerTarget = ExportLayerTarget.SELECTED_LAYERS;
-		dlg.funcArea.content.cbBgLayer.enabled = false;
-		dlg.funcArea.content.cbBgLayer.value = false;
+		dlg.funcArea.content.cbLayerGroup.cbBgLayer.enabled = false;
+		dlg.funcArea.content.cbLayerGroup.cbBgLayer.value = false;
 	};
 	dlg.funcArea.content.grpLayers.radioLayersVis.enabled = (visibleLayerCount > 0);
 	dlg.funcArea.content.grpLayers.radioLayersSel.enabled = (selectedLayerCount > 0);
@@ -761,7 +785,7 @@ function showDialog()
 	dlg.funcArea.content.grpTrim.drdTrim.selection = 0;
 
 	// background layer setting
-	dlg.funcArea.content.cbBgLayer.enabled = (layerCount > 1);
+	dlg.funcArea.content.cbLayerGroup.cbBgLayer.enabled = (layerCount > 1);
 
 	// buttons
 	dlg.funcArea.buttons.btnRun.onClick = function() {
@@ -775,12 +799,21 @@ function showDialog()
 		prefs.naming = FileNameType.forIndex(dlg.funcArea.content.grpNaming.drdNaming.selection.index);
 		prefs.namingLetterCase = LetterCase.forIndex(dlg.funcArea.content.grpLetterCase.drdLetterCase.selection.index);
 		prefs.trim = TrimPrefType.forIndex(dlg.funcArea.content.grpTrim.drdTrim.selection.index);
-		var cbBgLayer = dlg.funcArea.content.cbBgLayer;
+		var cbBgLayer = dlg.funcArea.content.cbLayerGroup.cbBgLayer;
 		prefs.bgLayer = (cbBgLayer.value && cbBgLayer.enabled);
+
+		var cbGroupFolder = dlg.funcArea.content.cbLayerGroup.cbGroupFolder;
+		prefs.groupFolder = (cbGroupFolder.value && cbGroupFolder.enabled);
+
+		prefs.filePath = dlg.funcArea.content.grpDest.txtDest.text;
+		var destFolder = new Folder(prefs.filePath);
+		if (!destFolder.exists){
+			destFolder.create();
+		}
 
 		var selIdx = formatDropDown.selection.index;
 		formatOpts[selIdx].opt.onDialogSelect(formatOpts[selIdx].controlRoot);
-		
+
 		saveSettings(dlg, formatOpts);
 		
 		dlg.close(1);
@@ -819,10 +852,8 @@ function applySettings(dlg, formatOpts)
 		// Common settings
 		
 		var destFolder = new Folder(settings.destination);
-		if (destFolder.exists) {
-			grpDest.txtDest.text = destFolder.fsName;
-			prefs.filePath = destFolder;
-		}
+		grpDest.txtDest.text = destFolder.fsName;
+		prefs.filePath = destFolder;
 		
 		switch (settings.exportLayerTarget) {
 		
@@ -855,7 +886,8 @@ function applySettings(dlg, formatOpts)
 		var drdTrimIdx = TrimPrefType.getIndex(settings.trim);
 		grpTrim.drdTrim.selection = (drdTrimIdx >= 0) ? drdTrimIdx : 0;
 		
-		cbBgLayer.value = settings.exportBackground;
+		cbLayerGroup.cbBgLayer.value = settings.exportBackground;
+		cbLayerGroup.cbGroupFolder.value = settings.groupFolder;
 		
 		var drdFileTypeIdx = 0;
 		for (var i = 0; i < formatOpts.length; ++i) {
@@ -894,7 +926,6 @@ function saveSettings(dlg, formatOpts)
 		else if (grpLayers.radioLayersSel.value) {
 			exportLayerTarget = ExportLayerTarget.SELECTED_LAYERS;
 		}
-		
 		desc.putString(DEFAULT_SETTINGS.destination, grpDest.txtDest.text); 
 		desc.putInteger(DEFAULT_SETTINGS.exportLayerTarget, exportLayerTarget); 
 		desc.putInteger(DEFAULT_SETTINGS.nameFiles, FileNameType.forIndex(grpNaming.drdNaming.selection.index));
@@ -902,7 +933,8 @@ function saveSettings(dlg, formatOpts)
 		desc.putInteger(DEFAULT_SETTINGS.letterCase, LetterCase.forIndex(grpLetterCase.drdLetterCase.selection.index));
 		desc.putString(DEFAULT_SETTINGS.outputPrefix, grpPrefix.editPrefix.text);
 		desc.putInteger(DEFAULT_SETTINGS.trim, TrimPrefType.forIndex(grpTrim.drdTrim.selection.index));
-		desc.putBoolean(DEFAULT_SETTINGS.exportBackground, cbBgLayer.value);
+		desc.putBoolean(DEFAULT_SETTINGS.exportBackground, cbLayerGroup.cbBgLayer.value);
+		desc.putBoolean(DEFAULT_SETTINGS.groupFolder, cbLayerGroup.cbGroupFolder.value);
 		desc.putString(DEFAULT_SETTINGS.fileType, formatOpts[grpFileType.drdFileType.selection.index].opt.type);
 
 		// per file format
@@ -941,6 +973,7 @@ function getSettings(formatOpts)
 			outputPrefix: desc.getString(DEFAULT_SETTINGS.outputPrefix),
 			trim: desc.getInteger(DEFAULT_SETTINGS.trim), 
 			exportBackground: desc.getBoolean(DEFAULT_SETTINGS.exportBackground),
+			groupFolder: desc.getBoolean(DEFAULT_SETTINGS.groupFolder),
 			fileType: desc.getString(DEFAULT_SETTINGS.fileType),
 
 			// per file format filled below
