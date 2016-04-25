@@ -519,7 +519,7 @@ function getUniqueFileName(fileName, layer)
 	}
 
 	// Check if the file already exists. In such case a numeric suffix will be added to disambiguate.
-	var uniqueName = fileName + "@2x";
+	var uniqueName = fileName;
 	for (var i = 1; i <= 100; ++i) {
 		var handle = File(uniqueName + ext);
 		if (handle.exists) {
