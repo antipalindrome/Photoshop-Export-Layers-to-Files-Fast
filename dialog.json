@@ -45,7 +45,8 @@ dialog {
 			grpTrim: Group {
 				orientation: "row",
 				txtTrim: StaticText {text: "Trim:", preferredSize: [80, 20]},
-				drdTrim: DropDownList {preferredSize: [140, 20], properties: {items: ["No", "Each layer", "Combined"]}}
+				drdTrim: DropDownList {preferredSize: [140, 20], properties: {items: ["No", "Each layer", "Combined"]}},
+				cbTrim: Checkbox {text: "Use trim()", helpTip: "Won't trim if a background layer is on, but may behave better on Mac."}
 			},
 			cbBgLayer: Checkbox {text: "Lowest layer is background", helpTip: "Leaves the bottommost layer on while exporting every other layer one by one. It will act as background."},
 			grpFileType: Group {
@@ -54,7 +55,7 @@ dialog {
 				drdFileType: DropDownList {preferredSize: [70, 20]}
 			},
 			pnlOptions: Panel {
-				text: "Options:", 
+				text: "Options:",
 				orientation: "stack",
 				alignment: "fill",
 				preferredSize: [200, 100]
