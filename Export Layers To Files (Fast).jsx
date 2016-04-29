@@ -24,7 +24,7 @@ app.bringToFront();
 // Type definitions
 //
 
-const FileNameType = {
+var FileNameType = {
 	AS_LAYERS: 1,
 	INDEX_ASC: 2,
 	INDEX_DESC: 3,
@@ -46,7 +46,7 @@ const FileNameType = {
 	}
 };
 
-const LetterCase = {
+var LetterCase = {
 	KEEP: 1,
 	LOWERCASE: 2,
 	UPPERCASE: 3,
@@ -84,7 +84,7 @@ const LetterCase = {
 	}
 };
 
-const TrimPrefType = {
+var TrimPrefType = {
 	DONT_TRIM: 1,
 	INDIVIDUAL: 2,
 	COMBINED: 3,
@@ -105,7 +105,7 @@ const TrimPrefType = {
 	}
 };
 
-const ExportLayerTarget = {
+var ExportLayerTarget = {
 	ALL_LAYERS: 1,
 	VISIBLE_LAYERS: 2,
 	SELECTED_LAYERS: 3,		// Export selection, leave the rest as is, visibility for parent groups will be forced.
@@ -128,8 +128,8 @@ const ExportLayerTarget = {
 
 // Settings
 
-const USER_SETTINGS_ID = "exportLayersToFilesCustomDefaultSettings";
-const DEFAULT_SETTINGS = {
+var USER_SETTINGS_ID = "exportLayersToFilesCustomDefaultSettings";
+var DEFAULT_SETTINGS = {
 	// common
 	destination: app.stringIDToTypeID("destFolder"),
 	exportLayerTarget: app.stringIDToTypeID("exportLayerTarget"),
@@ -309,7 +309,7 @@ function exportLayers(exportLayerTarget, progressBarWindow)
 		break;
 	}
 
-	const count = prefs.bgLayer ? layersToExport.length - 1 : layersToExport.length;
+	var count = prefs.bgLayer ? layersToExport.length - 1 : layersToExport.length;
 
 	if (count < 1) {
 		return retVal;
@@ -329,7 +329,7 @@ function exportLayers(exportLayerTarget, progressBarWindow)
 	else {
 		// Single trim of all layers combined.
 		if (prefs.trim == TrimPrefType.COMBINED) {
-			const UPDATE_NUM = 20;
+			var UPDATE_NUM = 20;
 			if (progressBarWindow) {
 				var stepCount = (exportLayerTarget == ExportLayerTarget.ALL_LAYERS) ? count / UPDATE_NUM + 1 : 1;
 				showProgressBar(progressBarWindow, "Trimming...", stepCount);
@@ -1216,7 +1216,7 @@ function getFormatOptsJPEG()
 		// Dialog GUI
 		dialogParams: function (parent)
 		{
-			const ROW_HEIGHT = 16;
+			var ROW_HEIGHT = 16;
 
 			// quality
 			var row = parent.add("group");
@@ -1259,7 +1259,7 @@ function getFormatOptsJPEG()
 			prefs.format = "JPG";
 			prefs.fileExtension = ".jpg";
 			prefs.formatArgs = new JPEGSaveOptions();
-			const matteValue = [MatteType.WHITE, MatteType.BLACK, MatteType.SEMIGRAY, MatteType.NONE, MatteType.BACKGROUND, MatteType.FOREGROUND];
+			var matteValue = [MatteType.WHITE, MatteType.BLACK, MatteType.SEMIGRAY, MatteType.NONE, MatteType.BACKGROUND, MatteType.FOREGROUND];
 			with (prefs.formatArgs) {
 				quality = parent.quality.value;
 				matte = matteValue[parent.matte.selection.index];
@@ -1311,7 +1311,7 @@ function getFormatOptsJPEG()
 		// Apply settings to dialog GUI
 		applySettings: function (settings, formatOptRoot)
 		{
-			const formatSettings = settings.format[this.type];
+			var formatSettings = settings.format[this.type];
 			formatOptRoot.quality.value = formatSettings.quality;
 			formatOptRoot.matte.selection = formatSettings.matte;
 			formatOptRoot.icc.value = formatSettings.icc;
@@ -1333,7 +1333,7 @@ function getFormatOptsPNG24()
 		// Dialog GUI
 		dialogParams: function (parent)
 		{
-			const ROW_HEIGHT = 16;
+			var ROW_HEIGHT = 16;
 
 			// matte
 			var row = parent.add("group");
@@ -1370,7 +1370,7 @@ function getFormatOptsPNG24()
 			var GRAY = new RGBColor();
 			GRAY.red = 127; GRAY.green = 127; GRAY.blue = 127;
 
-			const matteColors = [WHITE, BLACK, GRAY, BLACK, app.backgroundColor.rgb, app.foregroundColor.rgb];
+			var matteColors = [WHITE, BLACK, GRAY, BLACK, app.backgroundColor.rgb, app.foregroundColor.rgb];
 
 			prefs.formatArgs = new ExportOptionsSaveForWeb();
 			with (prefs.formatArgs) {
@@ -1410,7 +1410,7 @@ function getFormatOptsPNG24()
 		// Apply settings to dialog GUI
 		applySettings: function (settings, formatOptRoot)
 		{
-			const formatSettings = settings.format[this.type];
+			var formatSettings = settings.format[this.type];
 			formatOptRoot.matte.selection = formatSettings.matte;
 			formatOptRoot.matte.enabled = !formatSettings.transparency;
 			formatOptRoot.interlaced.value = formatSettings.interlaced;
@@ -1430,8 +1430,8 @@ function getFormatOptsPNG8()
 		// Dialog GUI
 		dialogParams: function (parent)
 		{
-			const ROW_HEIGHT = 16;
-			const LABEL_WIDTH = 105;
+			var ROW_HEIGHT = 16;
+			var LABEL_WIDTH = 105;
 
 			// color reduction
 			var row = parent.add("group");
@@ -1559,7 +1559,7 @@ function getFormatOptsPNG8()
 			prefs.format = "PNG-8";
 			prefs.fileExtension = ".png";
 
-			const colorReductionType = [
+			var colorReductionType = [
 				ColorReductionType.PERCEPTUAL,
 				ColorReductionType.SELECTIVE,
 				ColorReductionType.ADAPTIVE,
@@ -1570,7 +1570,7 @@ function getFormatOptsPNG8()
 				ColorReductionType.MACINTOSH,
 				ColorReductionType.WINDOWS
 			];
-			const ditherType = [
+			var ditherType = [
 				Dither.NONE,
 				Dither.DIFFUSION,
 				Dither.PATTERN,
@@ -1582,7 +1582,7 @@ function getFormatOptsPNG8()
 			BLACK.red = 0; BLACK.green = 0; BLACK.blue = 0;
 			var GRAY = new RGBColor();
 			GRAY.red = 127; GRAY.green = 127; GRAY.blue = 127;
-			const matteColors = [WHITE, BLACK, GRAY, BLACK, app.backgroundColor.rgb, app.foregroundColor.rgb];
+			var matteColors = [WHITE, BLACK, GRAY, BLACK, app.backgroundColor.rgb, app.foregroundColor.rgb];
 
 			prefs.formatArgs = new ExportOptionsSaveForWeb();
 			with (prefs.formatArgs) {
@@ -1652,7 +1652,7 @@ function getFormatOptsPNG8()
 		// Apply settings to dialog GUI
 		applySettings: function (settings, formatOptRoot)
 		{
-			const formatSettings = settings.format[this.type];
+			var formatSettings = settings.format[this.type];
 			formatOptRoot.colorReduction.selection = formatSettings.colorReduction;
 			formatOptRoot.colors.text = formatSettings.numberOfColors;
 			formatOptRoot.dither.selection = formatSettings.dither;
@@ -1759,7 +1759,7 @@ function getFormatOptsBMP()
 		// Apply settings to dialog GUI
 		applySettings: function (settings, formatOptRoot)
 		{
-			const formatSettings = settings.format[this.type];
+			var formatSettings = settings.format[this.type];
 			formatOptRoot.alpha.value = formatSettings.alpha;
 			formatOptRoot.depth.selection = formatSettings.depth;
 			formatOptRoot.rle.value = formatSettings.rle;
@@ -1865,7 +1865,7 @@ function collectLayersAM(progressBarWindow)
 	var ref = null;
 	var desc = null;
 
-	const idOrdn = app.charIDToTypeID("Ordn");
+	var idOrdn = app.charIDToTypeID("Ordn");
 
 	// Get layer count reported by the active Document object - it never includes the background.
 	ref = new ActionReference();
@@ -1884,14 +1884,14 @@ function collectLayersAM(progressBarWindow)
 		// There are more layers that may or may not contain a background. The background is always at 0;
 		// other layers are indexed from 1.
 
-		const idLyr = app.charIDToTypeID("Lyr ");
-		const idLayerSection = app.stringIDToTypeID("layerSection");
-		const idVsbl = app.charIDToTypeID("Vsbl");
-		const idNull = app.charIDToTypeID("null");
-		const idSlct = app.charIDToTypeID("slct");
-		const idMkVs = app.charIDToTypeID("MkVs");
+		var idLyr = app.charIDToTypeID("Lyr ");
+		var idLayerSection = app.stringIDToTypeID("layerSection");
+		var idVsbl = app.charIDToTypeID("Vsbl");
+		var idNull = app.charIDToTypeID("null");
+		var idSlct = app.charIDToTypeID("slct");
+		var idMkVs = app.charIDToTypeID("MkVs");
 
-		const FEW_LAYERS = 10;
+		var FEW_LAYERS = 10;
 
 		// newer PS's freeze or crash on Mac OS X Yosemite
 		//if (layerCount <= FEW_LAYERS) {
@@ -2013,7 +2013,7 @@ function collectLayersAM(progressBarWindow)
 		// restore selection (unfortunately CS2 doesn't support multiselection, so only the topmost layer is re-selected)
 		/*desc.clear();
 		 ref = new ActionReference();
-		 const totalLayerCount = selectionDesc.getInteger(app.charIDToTypeID("Cnt "));
+		 var totalLayerCount = selectionDesc.getInteger(app.charIDToTypeID("Cnt "));
 		 ref.putIndex(idLyr, selectionDesc.getInteger(app.charIDToTypeID("ItmI")) - (totalLayerCount - layerCount));
 		 desc.putReference(idNull, ref);
 		 desc.putBoolean(idMkVs, false);
@@ -2037,8 +2037,8 @@ function countLayersAM(progressBarWindow)
 	var ref = null;
 	var desc = null;
 
-	const idOrdn = app.charIDToTypeID("Ordn");
-	const idLyr = app.charIDToTypeID("Lyr ");
+	var idOrdn = app.charIDToTypeID("Ordn");
+	var idLyr = app.charIDToTypeID("Lyr ");
 
 	// Get layer count reported by the active Document object - it never includes the background.
 	ref = new ActionReference();
@@ -2062,13 +2062,13 @@ function countLayersAM(progressBarWindow)
 		// There are more layers that may or may not contain a background. The background is always at 0;
 		// other layers are indexed from 1.
 
-		const idLayerSection = app.stringIDToTypeID("layerSection");
-		const idVsbl = app.charIDToTypeID("Vsbl");
-		const idNull = app.charIDToTypeID("null");
-		const idSlct = app.charIDToTypeID("slct");
-		const idMkVs = app.charIDToTypeID("MkVs");
+		var idLayerSection = app.stringIDToTypeID("layerSection");
+		var idVsbl = app.charIDToTypeID("Vsbl");
+		var idNull = app.charIDToTypeID("null");
+		var idSlct = app.charIDToTypeID("slct");
+		var idMkVs = app.charIDToTypeID("MkVs");
 
-		const FEW_LAYERS = 10;
+		var FEW_LAYERS = 10;
 
 		// newer PS's freeze or crash on Mac OS X Yosemite
 		//if (layerCount <= FEW_LAYERS) {
