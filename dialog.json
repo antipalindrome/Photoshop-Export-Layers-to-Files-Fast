@@ -40,7 +40,8 @@ dialog {
 				orientation: "row",
 				alignChildren: "left",
 				txtPrefix: StaticText {text: "Output prefix:", preferredSize: [80, 20]},
-				editPrefix: EditText {preferredSize: [230, 20]}
+				editPrefix: EditText {preferredSize: [140, 20]},
+				cbFolderTree: Checkbox {text: "Groups as folders", helpTip: "Exports groups as a folder tree."}
 			},
 			grpTrim: Group {
 				orientation: "row",
