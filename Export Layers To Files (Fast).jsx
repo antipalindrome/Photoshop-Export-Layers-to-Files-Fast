@@ -140,7 +140,8 @@ const DEFAULT_SETTINGS = {
 	trim: app.stringIDToTypeID("trim"),
 	exportBackground: app.stringIDToTypeID("exportBackground"),
 	fileType: app.stringIDToTypeID("fileType"),
-	forceTrimMethod: app.stringIDToTypeID("forceTrimMethod")
+	forceTrimMethod: app.stringIDToTypeID("forceTrimMethod"),
+	groupsAsFolders: app.stringIDToTypeID("groupsAsFolders")
 };
 
 //
@@ -192,6 +193,7 @@ function main()
 	prefs.bgLayer = false;
 	prefs.trim = TrimPrefType.DONT_TRIM;
 	prefs.forceTrimMethod = false;
+	prefs.groupsAsFolders = true;
 
 	userCancelled = false;
 
@@ -235,24 +237,36 @@ function main()
 			alert("Layers collected in " + profiler.format(collectionDuration), "Debug info");
 		}
 
+		// create unique folders
+
+		var foldersOk = !prefs.groupsAsFolders;
+		if (prefs.groupsAsFolders) {
+			foldersOk = createUniqueFolders(prefs.exportLayerTarget);
+			if (foldersOk !== true) {
+				alert(foldersOk + " Not exporting layers.", "Failed", true);
+			}
+		}
+
 		// export
-		profiler.resetLastTime();
+		if (foldersOk === true) {
+			profiler.resetLastTime();
 
-		var count = exportLayers(prefs.exportLayerTarget, progressBarWindow);
-		var exportDuration = profiler.getDuration(true, true);
+			var count = exportLayers(prefs.exportLayerTarget, progressBarWindow);
+			var exportDuration = profiler.getDuration(true, true);
 
-		var message = "";
-		if (userCancelled) {
-			message += "Export cancelled!\n\n";
+			var message = "";
+			if (userCancelled) {
+				message += "Export cancelled!\n\n";
+			}
+			message += "Saved " + count.count + " files.";
+			if (env.profiling) {
+				message += "\n\nExport function took " + profiler.format(collectionDuration) + " + " + profiler.format(exportDuration) + " to perform.";
+			}
+			if (count.error) {
+				message += "\n\nSome layers failed to export! (Are there many layers with the same name?)";
+			}
+			alert(message, "Finished", count.error);
 		}
-		message += "Saved " + count.count + " files.";
-		if (env.profiling) {
-			message += "\n\nExport function took " + profiler.format(collectionDuration) + " + " + profiler.format(exportDuration) + " to perform.";
-		}
-		if (count.error) {
-			message += "\n\nSome layers failed to export! (Are there many layers with the same name?)";
-		}
-		alert(message, "Finished", count.error);
 
 		app.activeDocument.close(SaveOptions.DONOTSAVECHANGES);
 		env.documentCopy = null;
@@ -370,19 +384,19 @@ function exportLayers(exportLayerTarget, progressBarWindow)
 			switch (prefs.naming) {
 
 			case FileNameType.AS_LAYERS_NO_EXT:
-				fileName = makeFileNameFromLayerName(layer, true);
+				fileName = makeFileNameFromLayerName(layersToExport[i], true);
 				break;
 
 			case FileNameType.AS_LAYERS:
-				fileName = makeFileNameFromLayerName(layer, false);
+				fileName = makeFileNameFromLayerName(layersToExport[i], false);
 				break;
 
 			case FileNameType.INDEX_ASC:
-				fileName = makeFileNameFromIndex(count - i, countDigits);
+				fileName = makeFileNameFromIndex(count - i, countDigits, layersToExport[i]);
 				break;
 
 			case FileNameType.INDEX_DESC:
-				fileName = makeFileNameFromIndex(i + 1, countDigits);
+				fileName = makeFileNameFromIndex(i + 1, countDigits, layersToExport[i]);
 				break;
 			}
 
@@ -407,8 +421,17 @@ function exportLayers(exportLayerTarget, progressBarWindow)
 						}
 					}
 
-					saveImage(fileName);
-					++retVal.count;
+					var folderSafe = true;
+					if (prefs.groupsAsFolders) {
+						var parentFolder = (new File(fileName)).parent;
+						folderSafe = createFolder(parentFolder);
+						retVal.error = (retVal.error || !folderSafe);
+					}
+
+					if (folderSafe) {
+						saveImage(fileName);
+						++retVal.count;
+					}
 
 					if (prefs.trim == TrimPrefType.INDIVIDUAL) {
 						undo(doc);
@@ -438,6 +461,101 @@ function exportLayers(exportLayerTarget, progressBarWindow)
 	return retVal;
 }
 
+function createFolder(folder)
+{
+	var result = true;
+	var missingFolders = [];
+
+	var parentFolder = folder;
+	while (parentFolder) {
+		if (!parentFolder.exists) {
+			missingFolders.push(parentFolder);
+		}
+
+		parentFolder = parentFolder.parent;
+	}
+
+	try {
+		for (var i = missingFolders.length - 1; i >= 0; --i) {
+			if (!missingFolders[i].create()) {
+				result = false;
+				break;
+			}
+		}
+	}
+	catch (e) {
+		result = false;
+	}
+
+	return result;
+}
+
+function createUniqueFolders(exportLayerTarget)
+{
+	var isTargetGroup;
+
+	switch (exportLayerTarget) {
+
+	case ExportLayerTarget.VISIBLE_LAYERS:
+		isTargetGroup = function(group)
+		{
+			return group.visible;
+		};
+		break;
+
+	case ExportLayerTarget.SELECTED_LAYERS:
+		isTargetGroup = function(group)
+		{
+			return group.selected;
+		};
+		break;
+
+	default:
+		isTargetGroup = function(group)
+		{
+			return true;
+		};
+		break;
+	}
+
+	for (var i = 0; i < groups.length; ++i) {
+		var group = groups[i];
+		if (isTargetGroup(group)) {
+			var path = makeFolderName(group);
+			var folder = new Folder(path);
+			if (folder.exists) {
+				var renamed = false;
+				for (var j = 1; j <= 100; ++j) {
+					var handle = new Folder(path + "-" + padder(j, 3));
+					if (!handle.exists) {
+						try {
+							renamed = folder.rename(handle.name);
+						}
+						catch (e) {}
+						break;
+					}
+				}
+
+				if (!renamed) {
+					return "Directory '" + folder.name + "' already exists. Failed to rename.";
+				}
+			}
+
+			folder = new Folder(path);
+			try {
+				if (!folder.create()) {
+					throw new Error();
+				}
+			}
+			catch (e) {
+				return "Failed to create directory '" + folder.name + "'.";
+			}
+		}
+	}
+
+	return true;
+}
+
 function saveImage(fileName)
 {
 	if (prefs.formatArgs instanceof ExportOptionsSaveForWeb) {
@@ -465,15 +583,27 @@ function saveImage(fileName)
 	return true;
 }
 
-function makeFileNameFromIndex(index, numOfDigits)
+function makeFolderName(group)
+{
+	var folderName = makeValidFileName(group.layer.name, prefs.replaceSpaces);
+	if (folderName.length == 0) {
+		folderName = "Group";
+	}
+
+	folderName = prefs.filePath + "/" + folderName;
+
+	return folderName;
+}
+
+function makeFileNameFromIndex(index, numOfDigits, layer)
 {
 	var fileName = "" + padder(index, numOfDigits);
-	return getUniqueFileName(fileName);
+	return getUniqueFileName(fileName, layer);
 }
 
 function makeFileNameFromLayerName(layer, stripExt)
 {
-	var fileName = makeValidFileName(layer.name, prefs.replaceSpaces);
+	var fileName = makeValidFileName(layer.layer.name, prefs.replaceSpaces);
 	if (stripExt) {
 		var dotIdx = fileName.indexOf('.');
 		if (dotIdx >= 0) {
@@ -483,16 +613,17 @@ function makeFileNameFromLayerName(layer, stripExt)
 	if (fileName.length == 0) {
 		fileName = "Layer";
 	}
-	return getUniqueFileName(fileName);
+	return getUniqueFileName(fileName, layer);
 }
 
-function getUniqueFileName(fileName)
+function getUniqueFileName(fileName, layer)
 {
 	var ext = prefs.fileExtension;
 	// makeValidFileName() here basically just converts the space between the prefix and the core file name,
 	// but it's a good idea to keep file naming conventions in one place, i.e. inside makeValidFileName(),
 	// and rely on them exclusively.
-	fileName = makeValidFileName(prefs.outputPrefix + fileName, prefs.replaceSpaces);
+	var outputPrefix = prefs.groupsAsFolders ? "" : prefs.outputPrefix;
+	fileName = makeValidFileName(outputPrefix + fileName, prefs.replaceSpaces);
 	if (prefs.namingLetterCase == LetterCase.LOWERCASE) {
 		fileName = fileName.toLowerCase();
 		ext = ext.toLowerCase();
@@ -501,7 +632,17 @@ function getUniqueFileName(fileName)
 		fileName = fileName.toUpperCase();
 		ext = ext.toUpperCase();
 	}
-	fileName = prefs.filePath + "/" + fileName;
+
+	var localFolders = "";
+	if (prefs.groupsAsFolders) {
+		var parent = layer.parent;
+		while (parent) {
+			localFolders = makeValidFileName(parent.layer.name, prefs.replaceSpaces) + "/" + localFolders;
+			parent = parent.parent;
+		}
+	}
+
+	fileName = prefs.filePath + "/" + localFolders + fileName;
 
 	// Check if the file already exists. In such case a numeric suffix will be added to disambiguate.
 	var uniqueName = fileName;
@@ -759,6 +900,11 @@ function showDialog()
 		this.text = makeValidFileName(this.text, prefs.replaceSpaces);
 	};
 
+	dlg.funcArea.content.grpPrefix.cbFolderTree.onClick = function()
+	{
+		dlg.funcArea.content.grpPrefix.editPrefix.enabled = !this.value;
+	};
+
 	// file naming options
 	dlg.funcArea.content.grpNaming.drdNaming.selection = 0;
 	dlg.funcArea.content.grpLetterCase.drdLetterCase.selection = 0;
@@ -791,6 +937,8 @@ function showDialog()
 		if (prefs.outputPrefix.length > 0) {
 			prefs.outputPrefix += " ";
 		}
+
+		prefs.groupsAsFolders = dlg.funcArea.content.grpPrefix.cbFolderTree.value;
 
 		prefs.naming = FileNameType.forIndex(dlg.funcArea.content.grpNaming.drdNaming.selection.index);
 		prefs.namingLetterCase = LetterCase.forIndex(dlg.funcArea.content.grpLetterCase.drdLetterCase.selection.index);
@@ -872,6 +1020,9 @@ function applySettings(dlg, formatOpts)
 
 		grpPrefix.editPrefix.text = settings.outputPrefix;
 		grpPrefix.editPrefix.notify("onChange");
+		if (grpPrefix.cbFolderTree.value != settings.groupsAsFolders) {
+			grpPrefix.cbFolderTree.notify();
+		}
 
 		var drdTrimIdx = TrimPrefType.getIndex(settings.trim);
 		grpTrim.drdTrim.selection = (drdTrimIdx >= 0) ? drdTrimIdx : 0;
@@ -923,6 +1074,7 @@ function saveSettings(dlg, formatOpts)
 		desc.putBoolean(DEFAULT_SETTINGS.allowSpaces, grpNaming.cbNaming.value);
 		desc.putInteger(DEFAULT_SETTINGS.letterCase, LetterCase.forIndex(grpLetterCase.drdLetterCase.selection.index));
 		desc.putString(DEFAULT_SETTINGS.outputPrefix, grpPrefix.editPrefix.text);
+		desc.putBoolean(DEFAULT_SETTINGS.groupsAsFolders, grpPrefix.cbFolderTree.value);
 		desc.putInteger(DEFAULT_SETTINGS.trim, TrimPrefType.forIndex(grpTrim.drdTrim.selection.index));
 		desc.putBoolean(DEFAULT_SETTINGS.exportBackground, cbBgLayer.value);
 		desc.putString(DEFAULT_SETTINGS.fileType, formatOpts[grpFileType.drdFileType.selection.index].opt.type);
@@ -962,6 +1114,7 @@ function getSettings(formatOpts)
 			allowSpaces: desc.getBoolean(DEFAULT_SETTINGS.allowSpaces),
 			letterCase: desc.getInteger(DEFAULT_SETTINGS.letterCase),
 			outputPrefix: desc.getString(DEFAULT_SETTINGS.outputPrefix),
+			groupsAsFolders: desc.getBoolean(DEFAULT_SETTINGS.groupsAsFolders),
 			trim: desc.getInteger(DEFAULT_SETTINGS.trim),
 			exportBackground: desc.getBoolean(DEFAULT_SETTINGS.exportBackground),
 			fileType: desc.getString(DEFAULT_SETTINGS.fileType),
@@ -1798,6 +1951,7 @@ function collectLayersAM(progressBarWindow)
 					}
 					else {
 						var group = {layer: activeLayer, parent: currentGroup, children: []};
+						group.visible = (layerVisible && visibleInGroup[visibleInGroup.length - 1]);
 						if (group.parent == null) {
 							groups.push(group);
 						}
@@ -1805,11 +1959,12 @@ function collectLayersAM(progressBarWindow)
 							group.parent.children.push(group);
 						}
 						currentGroup = group;
-						visibleInGroup.push(layerVisible && visibleInGroup[visibleInGroup.length - 1]);
+						visibleInGroup.push(group.visible);
 						// Only check for selected groups. In CS2, 1 and only 1 layer/group is always selected (active).
 						// It is useless to export just 1 art layer, so only layer groups (sets) are supported.
 						if ((selectionIdx == i) || (selected > 0)) {
 							selected++;
+							group.selected = true;
 						}
 					}
 				}
