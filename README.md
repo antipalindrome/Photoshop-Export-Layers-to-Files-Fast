@@ -20,7 +20,7 @@ Features:
 * Supported export formats:
   * PNG (8 and 24 bit)
   * JPEG
-  * Targa 
+  * Targa
   * BMP
 * Handles nesting in grouped layers.
 * Export either all layers or visible only.
@@ -31,14 +31,15 @@ Features:
 * Exported images can have layer size or canvas size (trimming option).
 * Last used dialog settings are remembered.
 * A selected group can be exported as usual (layer by layer) while everything else is left in tact. (This way variable content can be exported for complex fixed background and foreground.)
+* Can export groups as folder hierarchy. Conflicting folders are renamed.
 
 You can also see [what's coming next](https://github.com/jwa107/Photoshop-Export-Layers-to-Files-Fast/wiki/Feature-Roadmap) and browse some of our [performance test results](https://github.com/jwa107/Photoshop-Export-Layers-to-Files-Fast/wiki/Performance-Test-Results).
 
-Requirements: 
+Requirements:
 -------------------------------
 Adobe Photoshop CS2 or higher.
 
-How To Use: 
+How To Use:
 -------------------------------
 1. Open Photoshop
 2. File -> Scripts -> Browse...
@@ -53,6 +54,10 @@ Mac: /Applications/Adobe Photoshop VERSION/Presets/Scripts/
 
 Version History:
 -------------------------------
+<b>29 April 2016</b> by [Skjorn](https://github.com/skjorn)
+
+* The option "Groups as folders" exports layers in a folder tree (same as groups) instead of a flat list.
+
 <b>05 May 2015</b> by [Skjorn](https://github.com/skjorn)
 
 * A selected group can be exported as usual (layer by layer) while everything else is left in tact. (This way variable content can be exported for complex fixed background and foreground.) _Works only for the first selected group!_ If no layer/group is selected, the topmost one is assumed by Photoshop. All parent groups of the selection are made visible. Visibility of exported layers is not taken into account; all are exported.
