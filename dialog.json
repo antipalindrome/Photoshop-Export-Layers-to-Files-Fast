@@ -40,18 +40,20 @@ dialog {
 				orientation: "row",
 				alignChildren: "left",
 				txtPrefix: StaticText {text: "Output prefix:", preferredSize: [80, 20]},
-				editPrefix: EditText {preferredSize: [230, 20]}
+				editPrefix: EditText {preferredSize: [140, 20]},
+				cbFolderTree: Checkbox {text: "Groups as folders", helpTip: "Exports groups as a folder tree."}
 			},
 			grpTrim: Group {
 				orientation: "row",
 				txtTrim: StaticText {text: "Trim:", preferredSize: [80, 20]},
-				drdTrim: DropDownList {preferredSize: [140, 20], properties: {items: ["No", "Each layer", "Combined"]}}
+				drdTrim: DropDownList {preferredSize: [140, 20], properties: {items: ["No", "Each layer", "Combined"]}},
+				cbTrim: Checkbox {text: "Use trim()", helpTip: "Won't trim if a background layer is on, but may behave better on Mac."}
 			},
+			cbBgLayer: Checkbox {text: "Lowest layer is background", helpTip: "Leaves the bottommost layer on while exporting every other layer one by one. It will act as background."},
 			cbLayerGroup: Group {
 				orientation: "row",
-				cbBgLayer: Checkbox {text: "Lowest layer is background", helpTip: "Leaves the bottommost layer on while exporting every other layer one by one. It will act as background."},
-				cbTopGroupAsLayer: Checkbox {text: "Top Groups as Layers", helpTip: "Merge Top Groups First."},
-				cbTopGroupFolder: Checkbox {text: "Top Groups as Sub Folder", helpTip: "Let All top groups be sub folders."},
+				cbTopGroupAsLayer: Checkbox {text: "Top Groups as layers", helpTip: "Merge Top Groups first."},
+				cbTopGroupFolder: Checkbox {text: "Top Groups as folders", helpTip: "Let All top groups be sub folders."},
 			},
 			grpFileType: Group {
 				orientation: "row",
@@ -59,7 +61,7 @@ dialog {
 				drdFileType: DropDownList {preferredSize: [70, 20]}
 			},
 			pnlOptions: Panel {
-				text: "Options:", 
+				text: "Options:",
 				orientation: "stack",
 				alignment: "fill",
 				preferredSize: [200, 100]
