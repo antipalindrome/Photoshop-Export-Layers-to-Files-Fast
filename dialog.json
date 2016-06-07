@@ -16,7 +16,8 @@ dialog {
 				orientation: "row",
 				alignChildren: "left",
 				txtDest: EditText {preferredSize: [310, 20], properties: {readonly: true}},
-				btnDest: Button {text: "Browse..."}
+				btnDest: Button {text: "Browse..."},
+				cbOverwrite: Checkbox {text: "Overwrite"}
 			},
 			grpLayers: Group {
 				orientation: "row",
