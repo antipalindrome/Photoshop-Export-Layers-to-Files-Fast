@@ -967,7 +967,12 @@ function showDialog()
 	// warning message
 	dlg.warning.message.text = formatString(dlg.warning.message.text, layerCount, visibleLayerCount, selectedLayerCount);
 
-	applySettings(dlg, formatOpts);
+	try {
+		applySettings(dlg, formatOpts);
+	}
+	catch (err) {
+		alert("Failed to restore previous settings. Default settings applied.\n\n(Error: " + err.toString() + ")", "Settings not restored", true);
+	}
 
 	dlg.center();
 	return dlg.show();
