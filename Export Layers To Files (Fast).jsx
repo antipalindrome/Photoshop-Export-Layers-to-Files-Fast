@@ -132,6 +132,7 @@ var USER_SETTINGS_ID = "exportLayersToFilesCustomDefaultSettings";
 var DEFAULT_SETTINGS = {
 	// common
 	destination: app.stringIDToTypeID("destFolder"),
+	overwrite: app.stringIDToTypeID("overwrite"),
 	exportLayerTarget: app.stringIDToTypeID("exportLayerTarget"),
 	nameFiles: app.stringIDToTypeID("nameFiles"),
 	allowSpaces: app.stringIDToTypeID("allowSpaces"),
@@ -194,6 +195,7 @@ function main()
 	prefs.trim = TrimPrefType.DONT_TRIM;
 	prefs.forceTrimMethod = false;
 	prefs.groupsAsFolders = true;
+	prefs.overwrite = false;
 
 	userCancelled = false;
 
@@ -523,7 +525,7 @@ function createUniqueFolders(exportLayerTarget)
 		if (isTargetGroup(group)) {
 			var path = makeFolderName(group);
 			var folder = new Folder(path);
-			if (folder.exists) {
+			if (folder.exists && !prefs.overwrite) {
 				var renamed = false;
 				for (var j = 1; j <= 100; ++j) {
 					var handle = new Folder(path + "-" + padder(j, 3));
@@ -648,7 +650,7 @@ function getUniqueFileName(fileName, layer)
 	var uniqueName = fileName;
 	for (var i = 1; i <= 100; ++i) {
 		var handle = File(uniqueName + ext);
-		if (handle.exists) {
+		if (handle.exists && !prefs.overwrite) {
 			uniqueName = fileName + "-" + padder(i, 3);
 		}
 		else {
@@ -836,6 +838,10 @@ function showDialog()
 		}
 	};
 
+	dlg.funcArea.content.grpDest.cbOverwrite.onClick = function() {
+		prefs.overwrite = this.value;
+	};
+
 	// layer subset selection
 	dlg.funcArea.content.grpLayers.radioLayersAll.onClick = function() {
 		prefs.exportLayerTarget = ExportLayerTarget.ALL_LAYERS;
@@ -1020,6 +1026,10 @@ function applySettings(dlg, formatOpts)
 			grpNaming.cbNaming.notify();
 		}
 
+		if (grpDest.cbOverwrite.value != settings.overwrite) {
+			grpDest.cbOverwrite.notify();
+		}
+
 		var drdLetterCaseIdx = LetterCase.getIndex(settings.letterCase);
 		grpLetterCase.drdLetterCase.selection = (drdLetterCaseIdx >= 0) ? drdLetterCaseIdx : 0;
 
@@ -1074,6 +1084,7 @@ function saveSettings(dlg, formatOpts)
 		}
 
 		desc.putString(DEFAULT_SETTINGS.destination, grpDest.txtDest.text);
+	desc.putBoolean(DEFAULT_SETTINGS.overwrite, grpDest.cbOverwrite.value);
 		desc.putInteger(DEFAULT_SETTINGS.exportLayerTarget, exportLayerTarget);
 		desc.putInteger(DEFAULT_SETTINGS.nameFiles, FileNameType.forIndex(grpNaming.drdNaming.selection.index));
 		desc.putBoolean(DEFAULT_SETTINGS.allowSpaces, grpNaming.cbNaming.value);
@@ -1114,6 +1125,7 @@ function getSettings(formatOpts)
 		result = {
 			// common
 			destination: desc.getString(DEFAULT_SETTINGS.destination),
+			overwrite:  desc.getBoolean(DEFAULT_SETTINGS.overwrite),
 			exportLayerTarget: desc.getInteger(DEFAULT_SETTINGS.exportLayerTarget),
 			nameFiles: desc.getInteger(DEFAULT_SETTINGS.nameFiles),
 			allowSpaces: desc.getBoolean(DEFAULT_SETTINGS.allowSpaces),
