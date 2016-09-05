@@ -218,7 +218,7 @@ function main()
 	}
 
 	// show dialogue
-	if (showDialog()) {
+	if (showDialog() === 1) {
 		env.documentCopy = app.activeDocument.duplicate();
 
 		// collect layers
