@@ -134,6 +134,7 @@ var DEFAULT_SETTINGS = {
 	topGroupAsLayer: app.stringIDToTypeID("topGroupAsLayer"),
 	topGroupFolder: app.stringIDToTypeID("topGroupFolder"),
 	destination: app.stringIDToTypeID("destFolder"),
+	overwrite: app.stringIDToTypeID("overwrite"),
 	exportLayerTarget: app.stringIDToTypeID("exportLayerTarget"),
 	nameFiles: app.stringIDToTypeID("nameFiles"),
 	allowSpaces: app.stringIDToTypeID("allowSpaces"),
@@ -196,6 +197,7 @@ function main()
 	prefs.trim = TrimPrefType.DONT_TRIM;
 	prefs.forceTrimMethod = false;
 	prefs.groupsAsFolders = true;
+	prefs.overwrite = false;
 
 	userCancelled = false;
 
@@ -220,7 +222,7 @@ function main()
 	}
 
 	// show dialogue
-	if (showDialog()) {
+	if (showDialog() === 1) {
 		env.documentCopy = app.activeDocument.duplicate();
 
 		// collect layers
@@ -528,7 +530,7 @@ function createUniqueFolders(exportLayerTarget)
 		if (isTargetGroup(group)) {
 			var path = makeFolderName(group);
 			var folder = new Folder(path);
-			if (folder.exists) {
+			if (folder.exists && !prefs.overwrite) {
 				var renamed = false;
 				for (var j = 1; j <= 100; ++j) {
 					var handle = new Folder(path + "-" + padder(j, 3));
@@ -671,7 +673,7 @@ function getUniqueFileName(fileName, layer)
 	var uniqueName = fileName;
 	for (var i = 1; i <= 100; ++i) {
 		var handle = File(uniqueName + ext);
-		if (handle.exists) {
+		if (handle.exists && !prefs.overwrite) {
 			uniqueName = fileName + "-" + padder(i, 3);
 		}
 		else {
@@ -874,6 +876,10 @@ function showDialog()
 		}
 	};
 
+	dlg.funcArea.buttons.cbOverwrite.onClick = function() {
+		prefs.overwrite = this.value;
+	};
+
 	// layer subset selection
 	dlg.funcArea.content.grpLayers.radioLayersAll.onClick = function() {
 		prefs.exportLayerTarget = ExportLayerTarget.ALL_LAYERS;
@@ -1031,7 +1037,12 @@ function showDialog()
 	// warning message
 	dlg.warning.message.text = formatString(dlg.warning.message.text, layerCount, visibleLayerCount, selectedLayerCount);
 
-	applySettings(dlg, formatOpts);
+	try {
+		applySettings(dlg, formatOpts);
+	}
+	catch (err) {
+		alert("Failed to restore previous settings. Default settings applied.\n\n(Error: " + err.toString() + ")", "Settings not restored", true);
+	}
 
 	dlg.center();
 	return dlg.show();
@@ -1052,8 +1063,10 @@ function applySettings(dlg, formatOpts)
 		// Common settings
 
 		var destFolder = new Folder(settings.destination);
-		grpDest.txtDest.text = destFolder.fsName;
-		prefs.filePath = destFolder;
+		if (destFolder.exists) {
+			grpDest.txtDest.text = destFolder.fsName;
+			prefs.filePath = destFolder;
+		}
 
 		switch (settings.exportLayerTarget) {
 
@@ -1075,6 +1088,10 @@ function applySettings(dlg, formatOpts)
 
 		if (grpNaming.cbNaming.value != settings.allowSpaces) {
 			grpNaming.cbNaming.notify();
+		}
+
+		if (dlg.funcArea.buttons.cbOverwrite.value != settings.overwrite) {
+			dlg.funcArea.buttons.cbOverwrite.notify();
 		}
 
 		var drdLetterCaseIdx = LetterCase.getIndex(settings.letterCase);
@@ -1135,6 +1152,7 @@ function saveSettings(dlg, formatOpts)
 		desc.putBoolean(DEFAULT_SETTINGS.topGroupAsLayer, cbLayerGroup.cbTopGroupAsLayer.value);
 		desc.putBoolean(DEFAULT_SETTINGS.topGroupFolder, cbLayerGroup.cbTopGroupFolder.value);
 		desc.putString(DEFAULT_SETTINGS.destination, grpDest.txtDest.text);
+		desc.putBoolean(DEFAULT_SETTINGS.overwrite, dlg.funcArea.buttons.cbOverwrite.value);
 		desc.putInteger(DEFAULT_SETTINGS.exportLayerTarget, exportLayerTarget);
 		desc.putInteger(DEFAULT_SETTINGS.nameFiles, FileNameType.forIndex(grpNaming.drdNaming.selection.index));
 		desc.putBoolean(DEFAULT_SETTINGS.allowSpaces, grpNaming.cbNaming.value);
@@ -1177,6 +1195,7 @@ function getSettings(formatOpts)
 			topGroupAsLayer: desc.getBoolean(DEFAULT_SETTINGS.topGroupAsLayer),
 			topGroupFolder: desc.getBoolean(DEFAULT_SETTINGS.topGroupFolder),
 			destination: desc.getString(DEFAULT_SETTINGS.destination),
+			overwrite:  desc.getBoolean(DEFAULT_SETTINGS.overwrite),
 			exportLayerTarget: desc.getInteger(DEFAULT_SETTINGS.exportLayerTarget),
 			nameFiles: desc.getInteger(DEFAULT_SETTINGS.nameFiles),
 			allowSpaces: desc.getBoolean(DEFAULT_SETTINGS.allowSpaces),
