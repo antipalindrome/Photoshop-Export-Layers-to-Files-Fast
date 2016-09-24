@@ -72,7 +72,9 @@ dialog {
 			btnRun: Button {text: "Run"},
 			btnCancel: Button {text: "Cancel"},
 			txtSpace: StaticText {},
-			btnSettings: Button {text: "Save and Cancel", helpTip: "Save current settings and cancel."}
+			btnSettings: Button {text: "Save and Cancel", helpTip: "Save current settings and cancel."},
+			txtSpace: StaticText {},
+			cbOverwrite: Checkbox {text: "Overwrite files", helpTip: "Overwrite existing files"}
 		}
 	},
 	warning: Panel {
