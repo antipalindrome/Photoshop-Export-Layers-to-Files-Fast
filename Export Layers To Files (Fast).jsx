@@ -910,14 +910,14 @@ function showDialog()
 	};
 
 	// file name suffix
-	dlg.funcArea.content.grpSuffix.editSuffix.onChange = function() {
+	dlg.funcArea.content.grpPrefix.editSuffix.onChange = function() {
 		this.text = makeValidFileName(this.text, prefs.replaceSpaces);
 	};
 
-	dlg.funcArea.content.grpPrefix.cbFolderTree.onClick = function()
+	dlg.funcArea.content.grpFolderTree.cbFolderTree.onClick = function()
 	{
 		dlg.funcArea.content.grpPrefix.editPrefix.enabled = !this.value;
-		dlg.funcArea.content.grpSuffix.editSuffix.enabled = !this.value;
+		dlg.funcArea.content.grpPrefix.editSuffix.enabled = !this.value;
 	};
 
 	// file naming options
@@ -953,12 +953,12 @@ function showDialog()
 			prefs.outputPrefix += " ";
 		}
 
-		prefs.outputSuffix = dlg.funcArea.content.grpSuffix.editSuffix.text;
+		prefs.outputSuffix = dlg.funcArea.content.grpPrefix.editSuffix.text;
 		if (prefs.outputSuffix.length > 0) {
-			prefs.outputSuffix += " ";
+			prefs.outputSuffix = " " + prefs.outputSuffix;
 		}
 
-		prefs.groupsAsFolders = dlg.funcArea.content.grpPrefix.cbFolderTree.value;
+		prefs.groupsAsFolders = dlg.funcArea.content.grpFolderTree.cbFolderTree.value;
 
 		prefs.naming = FileNameType.forIndex(dlg.funcArea.content.grpNaming.drdNaming.selection.index);
 		prefs.namingLetterCase = LetterCase.forIndex(dlg.funcArea.content.grpLetterCase.drdLetterCase.selection.index);
@@ -1049,12 +1049,12 @@ function applySettings(dlg, formatOpts)
 
 		grpPrefix.editPrefix.text = settings.outputPrefix;
 		grpPrefix.editPrefix.notify("onChange");
-		if (grpPrefix.cbFolderTree.value != settings.groupsAsFolders) {
-			grpPrefix.cbFolderTree.notify();
+		if (grpFolderTree.cbFolderTree.value != settings.groupsAsFolders) {
+			grpFolderTree.cbFolderTree.notify();
 		}
 
-		grpSuffix.editSuffix.text = settings.outputSuffix;
-		grpSuffix.editSuffix.notify("onChange");
+		grpPrefix.editSuffix.text = settings.outputSuffix;
+		grpPrefix.editSuffix.notify("onChange");
 
 		var drdTrimIdx = TrimPrefType.getIndex(settings.trim);
 		grpTrim.drdTrim.selection = (drdTrimIdx >= 0) ? drdTrimIdx : 0;
@@ -1101,14 +1101,14 @@ function saveSettings(dlg, formatOpts)
 		}
 
 		desc.putString(DEFAULT_SETTINGS.destination, grpDest.txtDest.text);
-	desc.putBoolean(DEFAULT_SETTINGS.overwrite, dlg.funcArea.buttons.cbOverwrite.value);
+		desc.putBoolean(DEFAULT_SETTINGS.overwrite, dlg.funcArea.buttons.cbOverwrite.value);
 		desc.putInteger(DEFAULT_SETTINGS.exportLayerTarget, exportLayerTarget);
 		desc.putInteger(DEFAULT_SETTINGS.nameFiles, FileNameType.forIndex(grpNaming.drdNaming.selection.index));
 		desc.putBoolean(DEFAULT_SETTINGS.allowSpaces, grpNaming.cbNaming.value);
 		desc.putInteger(DEFAULT_SETTINGS.letterCase, LetterCase.forIndex(grpLetterCase.drdLetterCase.selection.index));
 		desc.putString(DEFAULT_SETTINGS.outputPrefix, grpPrefix.editPrefix.text);
-		desc.putBoolean(DEFAULT_SETTINGS.groupsAsFolders, grpPrefix.cbFolderTree.value);
-		desc.putString(DEFAULT_SETTINGS.outputSuffix, grpSuffix.editSuffix.text);
+		desc.putBoolean(DEFAULT_SETTINGS.groupsAsFolders, grpFolderTree.cbFolderTree.value);
+		desc.putString(DEFAULT_SETTINGS.outputSuffix, grpPrefix.editSuffix.text);
 		desc.putInteger(DEFAULT_SETTINGS.trim, TrimPrefType.forIndex(grpTrim.drdTrim.selection.index));
 		desc.putBoolean(DEFAULT_SETTINGS.exportBackground, cbBgLayer.value);
 		desc.putString(DEFAULT_SETTINGS.fileType, formatOpts[grpFileType.drdFileType.selection.index].opt.type);
