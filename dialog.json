@@ -43,6 +43,12 @@ dialog {
 				editPrefix: EditText {preferredSize: [140, 20]},
 				cbFolderTree: Checkbox {text: "Groups as folders", helpTip: "Exports groups as a folder tree."}
 			},
+			grpSuffix: Group {
+				orientation: "row",
+				alignChildren: "left",
+				txtSuffix: StaticText {text: "Output suffix:", preferredSize: [80, 20]},
+				editSuffix: EditText {preferredSize: [140, 20]}
+			},
 			grpTrim: Group {
 				orientation: "row",
 				txtTrim: StaticText {text: "Trim:", preferredSize: [80, 20]},
