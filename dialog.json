@@ -39,15 +39,15 @@ dialog {
 			grpPrefix: Group {
 				orientation: "row",
 				alignChildren: "left",
-				txtPrefix: StaticText {text: "Output prefix:", preferredSize: [80, 20]},
+				txtPrefix: StaticText {text: "Prefix/suffix:", preferredSize: [80, 20], helpTip: "Prefix and/or suffix that will be added to the exported file names. A space is added automatically after/before."},
 				editPrefix: EditText {preferredSize: [140, 20]},
-				cbFolderTree: Checkbox {text: "Groups as folders", helpTip: "Exports groups as a folder tree."}
+				txtSep: StaticText {text: "- ... -"},
+				editSuffix: EditText {preferredSize: [140, 20]}
 			},
-			grpSuffix: Group {
+			grpFolderTree: Group {
 				orientation: "row",
 				alignChildren: "left",
-				txtSuffix: StaticText {text: "Output suffix:", preferredSize: [80, 20]},
-				editSuffix: EditText {preferredSize: [140, 20]}
+				cbFolderTree: Checkbox {text: "Groups as folders", helpTip: "Exports groups as a folder tree."}
 			},
 			grpTrim: Group {
 				orientation: "row",
