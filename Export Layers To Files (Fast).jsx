@@ -2417,7 +2417,7 @@ function makeValidFileName(fileName, replaceSpaces)
 	var validName = fileName.replace(/^\s+|\s+$/gm, '');	// trim spaces
 	validName = validName.replace(/[\\\*\/\?:"\|<>]/g, ''); // remove characters not allowed in a file name
 	if (replaceSpaces) {
-		validName = validName.replace(/[ ]/g, prefs.delimiter);	// replace spaces with underscores, since some programs still may have troubles with them
+		validName = validName.replace(/[ ]/g, prefs.delimiter);	// replace spaces with chosen delimiter, since some programs still may have troubles with them
 	}
 	return validName;
 }
