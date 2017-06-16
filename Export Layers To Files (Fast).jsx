@@ -193,6 +193,7 @@ function main()
 	prefs.naming = FileNameType.AS_LAYERS_NO_EXT;
 	prefs.namingLetterCase = LetterCase.KEEP;
 	prefs.replaceSpaces = true;
+	prefs.delimiter = '_';
 	prefs.bgLayer = false;
 	prefs.trim = TrimPrefType.DONT_TRIM;
 	prefs.forceTrimMethod = false;
@@ -926,6 +927,21 @@ function showDialog()
 
 	dlg.funcArea.content.grpNaming.cbNaming.onClick = function() {
 		prefs.replaceSpaces = ! this.value;
+		if(prefs.replaceSpaces) {
+			dlg.funcArea.content.grpNaming.radioUnderscore.show();
+			dlg.funcArea.content.grpNaming.radioHyphen.show();
+		} else {
+			dlg.funcArea.content.grpNaming.radioUnderscore.hide();
+			dlg.funcArea.content.grpNaming.radioHyphen.hide();
+		}
+	};
+	
+	dlg.funcArea.content.grpNaming.radioUnderscore.onClick = function() {
+		prefs.delimiter = '_';
+	};
+	
+	dlg.funcArea.content.grpNaming.radioHyphen.onClick = function() {
+		prefs.delimiter = '-';
 	};
 
 	// trimming
@@ -2401,7 +2417,7 @@ function makeValidFileName(fileName, replaceSpaces)
 	var validName = fileName.replace(/^\s+|\s+$/gm, '');	// trim spaces
 	validName = validName.replace(/[\\\*\/\?:"\|<>]/g, ''); // remove characters not allowed in a file name
 	if (replaceSpaces) {
-		validName = validName.replace(/[ ]/g, '_');			// replace spaces with underscores, since some programs still may have troubles with them
+		validName = validName.replace(/[ ]/g, prefs.delimiter);	// replace spaces with underscores, since some programs still may have troubles with them
 	}
 	return validName;
 }
