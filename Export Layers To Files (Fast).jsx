@@ -140,6 +140,7 @@ var DEFAULT_SETTINGS = {
 	allowSpaces: app.stringIDToTypeID("allowSpaces"),
 	letterCase:	app.stringIDToTypeID("letterCase"),
 	outputPrefix: app.stringIDToTypeID("outputPrefix"),
+	outputSuffix: app.stringIDToTypeID("outputSuffix"),
 	trim: app.stringIDToTypeID("trim"),
 	exportBackground: app.stringIDToTypeID("exportBackground"),
 	fileType: app.stringIDToTypeID("fileType"),
@@ -190,9 +191,11 @@ function main()
 	prefs.formatArgs = null;
 	prefs.exportLayerTarget = ExportLayerTarget.ALL_LAYERS;
 	prefs.outputPrefix = "";
+	prefs.outputSuffix = "";
 	prefs.naming = FileNameType.AS_LAYERS_NO_EXT;
 	prefs.namingLetterCase = LetterCase.KEEP;
 	prefs.replaceSpaces = true;
+	prefs.delimiter = '_';
 	prefs.bgLayer = false;
 	prefs.trim = TrimPrefType.DONT_TRIM;
 	prefs.forceTrimMethod = false;
@@ -626,11 +629,12 @@ function makeFileNameFromLayerName(layer, stripExt)
 function getUniqueFileName(fileName, layer)
 {
 	var ext = prefs.fileExtension;
-	// makeValidFileName() here basically just converts the space between the prefix and the core file name,
+	// makeValidFileName() here basically just converts the space between the prefix, the core file name and suffix,
 	// but it's a good idea to keep file naming conventions in one place, i.e. inside makeValidFileName(),
 	// and rely on them exclusively.
 	var outputPrefix = prefs.groupsAsFolders ? "" : prefs.outputPrefix;
-	fileName = makeValidFileName(outputPrefix + fileName, prefs.replaceSpaces);
+	var outputSuffix = prefs.groupsAsFolders ? "" : prefs.outputSuffix;
+	fileName = makeValidFileName(outputPrefix + fileName + outputSuffix, prefs.replaceSpaces);
 	if (prefs.namingLetterCase == LetterCase.LOWERCASE) {
 		fileName = fileName.toLowerCase();
 		ext = ext.toLowerCase();
@@ -944,9 +948,15 @@ function showDialog()
 		this.text = makeValidFileName(this.text, prefs.replaceSpaces);
 	};
 
-	dlg.funcArea.content.grpPrefix.cbFolderTree.onClick = function()
+	// file name suffix
+	dlg.funcArea.content.grpPrefix.editSuffix.onChange = function() {
+		this.text = makeValidFileName(this.text, prefs.replaceSpaces);
+	};
+
+	dlg.funcArea.content.grpFolderTree.cbFolderTree.onClick = function()
 	{
 		dlg.funcArea.content.grpPrefix.editPrefix.enabled = !this.value;
+		dlg.funcArea.content.grpPrefix.editSuffix.enabled = !this.value;
 
 		var cbTopGroupAsLayer = dlg.funcArea.content.cbLayerGroup.cbTopGroupAsLayer;
 		var cbTopGroupFolder = dlg.funcArea.content.cbLayerGroup.cbTopGroupFolder;
@@ -960,7 +970,12 @@ function showDialog()
 	};
 
 	dlg.funcArea.content.cbLayerGroup.cbTopGroupAsLayer.onClick = function() {
+		dlg.funcArea.content.grpFolderTree.cbFolderTree.enabled = !this.value;
 		dlg.funcArea.content.cbLayerGroup.cbTopGroupFolder.enabled = !this.value;
+	};
+	dlg.funcArea.content.cbLayerGroup.cbTopGroupFolder.onClick = function() {
+		dlg.funcArea.content.grpFolderTree.cbFolderTree.enabled = !this.value;
+		dlg.funcArea.content.cbLayerGroup.cbTopGroupAsLayer.enabled = !this.value;
 	};
 
 	// file naming options
@@ -969,6 +984,21 @@ function showDialog()
 
 	dlg.funcArea.content.grpNaming.cbNaming.onClick = function() {
 		prefs.replaceSpaces = ! this.value;
+		if(prefs.replaceSpaces) {
+			dlg.funcArea.content.grpNaming.radioUnderscore.show();
+			dlg.funcArea.content.grpNaming.radioHyphen.show();
+		} else {
+			dlg.funcArea.content.grpNaming.radioUnderscore.hide();
+			dlg.funcArea.content.grpNaming.radioHyphen.hide();
+		}
+	};
+
+	dlg.funcArea.content.grpNaming.radioUnderscore.onClick = function() {
+		prefs.delimiter = '_';
+	};
+
+	dlg.funcArea.content.grpNaming.radioHyphen.onClick = function() {
+		prefs.delimiter = '-';
 	};
 
 	// trimming
@@ -996,7 +1026,12 @@ function showDialog()
 			prefs.outputPrefix += " ";
 		}
 
-		prefs.groupsAsFolders = dlg.funcArea.content.grpPrefix.cbFolderTree.value;
+		prefs.outputSuffix = dlg.funcArea.content.grpPrefix.editSuffix.text;
+		if (prefs.outputSuffix.length > 0) {
+			prefs.outputSuffix = " " + prefs.outputSuffix;
+		}
+
+		prefs.groupsAsFolders = dlg.funcArea.content.grpFolderTree.cbFolderTree.value;
 
 		prefs.naming = FileNameType.forIndex(dlg.funcArea.content.grpNaming.drdNaming.selection.index);
 		prefs.namingLetterCase = LetterCase.forIndex(dlg.funcArea.content.grpLetterCase.drdLetterCase.selection.index);
@@ -1099,9 +1134,12 @@ function applySettings(dlg, formatOpts)
 
 		grpPrefix.editPrefix.text = settings.outputPrefix;
 		grpPrefix.editPrefix.notify("onChange");
-		if (grpPrefix.cbFolderTree.value != settings.groupsAsFolders) {
-			grpPrefix.cbFolderTree.notify();
+		if (grpFolderTree.cbFolderTree.value != settings.groupsAsFolders) {
+			grpFolderTree.cbFolderTree.notify();
 		}
+
+		grpPrefix.editSuffix.text = settings.outputSuffix;
+		grpPrefix.editSuffix.notify("onChange");
 
 		var drdTrimIdx = TrimPrefType.getIndex(settings.trim);
 		grpTrim.drdTrim.selection = (drdTrimIdx >= 0) ? drdTrimIdx : 0;
@@ -1158,7 +1196,8 @@ function saveSettings(dlg, formatOpts)
 		desc.putBoolean(DEFAULT_SETTINGS.allowSpaces, grpNaming.cbNaming.value);
 		desc.putInteger(DEFAULT_SETTINGS.letterCase, LetterCase.forIndex(grpLetterCase.drdLetterCase.selection.index));
 		desc.putString(DEFAULT_SETTINGS.outputPrefix, grpPrefix.editPrefix.text);
-		desc.putBoolean(DEFAULT_SETTINGS.groupsAsFolders, grpPrefix.cbFolderTree.value);
+		desc.putBoolean(DEFAULT_SETTINGS.groupsAsFolders, grpFolderTree.cbFolderTree.value);
+		desc.putString(DEFAULT_SETTINGS.outputSuffix, grpPrefix.editSuffix.text);
 		desc.putInteger(DEFAULT_SETTINGS.trim, TrimPrefType.forIndex(grpTrim.drdTrim.selection.index));
 		desc.putBoolean(DEFAULT_SETTINGS.exportBackground, cbBgLayer.value);
 		desc.putString(DEFAULT_SETTINGS.fileType, formatOpts[grpFileType.drdFileType.selection.index].opt.type);
@@ -1202,6 +1241,7 @@ function getSettings(formatOpts)
 			letterCase: desc.getInteger(DEFAULT_SETTINGS.letterCase),
 			outputPrefix: desc.getString(DEFAULT_SETTINGS.outputPrefix),
 			groupsAsFolders: desc.getBoolean(DEFAULT_SETTINGS.groupsAsFolders),
+			outputSuffix: desc.getString(DEFAULT_SETTINGS.outputSuffix),
 			trim: desc.getInteger(DEFAULT_SETTINGS.trim),
 			exportBackground: desc.getBoolean(DEFAULT_SETTINGS.exportBackground),
 			fileType: desc.getString(DEFAULT_SETTINGS.fileType),
@@ -2452,7 +2492,7 @@ function makeValidFileName(fileName, replaceSpaces)
 	var validName = fileName.replace(/^\s+|\s+$/gm, '');	// trim spaces
 	validName = validName.replace(/[\\\*\/\?:"\|<>]/g, ''); // remove characters not allowed in a file name
 	if (replaceSpaces) {
-		validName = validName.replace(/[ ]/g, '_');			// replace spaces with underscores, since some programs still may have troubles with them
+		validName = validName.replace(/[ ]/g, prefs.delimiter);	// replace spaces with chosen delimiter, since some programs still may have troubles with them
 	}
 	return validName;
 }
