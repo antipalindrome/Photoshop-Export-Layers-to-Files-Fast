@@ -29,7 +29,9 @@ dialog {
 				orientation: "row",
 				txtNaming: StaticText {text: "Name files:", preferredSize: [80, 20]},
 				drdNaming: DropDownList {preferredSize: [140, 20], properties: {items: ["As layers, strip extension", "As layers", "By index from top", "By index from bottom"]}},
-				cbNaming: Checkbox {text: "Allow spaces"}
+				cbNaming: Checkbox {text: "Allow spaces"},
+				radioUnderscore: RadioButton {text: "Use Underscore", preferredSize: [120, 20], value: true},
+				radioHyphen: RadioButton {text: "Use Hyphen", preferredSize: [120, 20]},
 			},
 			grpLetterCase: Group {
 				orientation: "row",
@@ -39,8 +41,14 @@ dialog {
 			grpPrefix: Group {
 				orientation: "row",
 				alignChildren: "left",
-				txtPrefix: StaticText {text: "Output prefix:", preferredSize: [80, 20]},
+				txtPrefix: StaticText {text: "Prefix/suffix:", preferredSize: [80, 20], helpTip: "Prefix and/or suffix that will be added to the exported file names. A space is added automatically after/before."},
 				editPrefix: EditText {preferredSize: [140, 20]},
+				txtSep: StaticText {text: "- ... -"},
+				editSuffix: EditText {preferredSize: [140, 20]}
+			},
+			grpFolderTree: Group {
+				orientation: "row",
+				alignChildren: "left",
 				cbFolderTree: Checkbox {text: "Groups as folders", helpTip: "Exports groups as a folder tree."}
 			},
 			grpTrim: Group {
