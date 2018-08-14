@@ -132,7 +132,7 @@ var USER_SETTINGS_ID = "exportLayersToFilesCustomDefaultSettings";
 var DEFAULT_SETTINGS = {
 	// common
 	topGroupAsLayer: app.stringIDToTypeID("topGroupAsLayer"),
-	topGroupFolder: app.stringIDToTypeID("topGroupFolder"),
+	topGroupAsFolder: app.stringIDToTypeID("topGroupAsFolder"),
 	destination: app.stringIDToTypeID("destFolder"),
 	overwrite: app.stringIDToTypeID("overwrite"),
 	exportLayerTarget: app.stringIDToTypeID("exportLayerTarget"),
@@ -651,15 +651,16 @@ function getUniqueFileName(fileName, layer)
 			localFolders = makeValidFileName(parent.layer.name, prefs.replaceSpaces) + "/" + localFolders;
 			parent = parent.parent;
 		}
-	}else if (prefs.topGroupFolder){
+	} else if (prefs.topGroupAsFolder){
 		var topGroup = null;
-		var _layer = layer.parent;
-		while (_layer){
-			if (_layer.typename == "LayerSet" && _layer.parent == activeDocument){
-				topGroup = _layer;
+		var parent = layer.parent;
+
+		while (parent){
+			if (parent.layer && parent.layer.typename == "LayerSet" && parent.layer.parent == activeDocument){
+				topGroup = parent.layer;
 				break;
 			}
-			_layer = _layer.parent;
+			parent = parent.parent;
 		}
 		if (topGroup){
 			var filePath = prefs.filePath + "/" + topGroup.name;
@@ -708,7 +709,7 @@ function forEachLayer(inCollection, doFunc, result, traverseInvisibleSets)
 	var length = inCollection.length;
 	for (var i = 0; i < length; ++i) {
 		var layer = inCollection[i];
-		if (layer.typename == "LayerSet") {
+		if (layer.layer && layer.layer.typename == "LayerSet") {
 			if (traverseInvisibleSets || layer.visible) {
 				result = forEachLayer(layer.layers, doFunc, result, traverseInvisibleSets);
 			}
@@ -958,24 +959,27 @@ function showDialog()
 		dlg.funcArea.content.grpPrefix.editPrefix.enabled = !this.value;
 		dlg.funcArea.content.grpPrefix.editSuffix.enabled = !this.value;
 
-		var cbTopGroupAsLayer = dlg.funcArea.content.cbLayerGroup.cbTopGroupAsLayer;
-		var cbTopGroupFolder = dlg.funcArea.content.cbLayerGroup.cbTopGroupFolder;
+		var cbTopGroupAsFolder = dlg.funcArea.content.grpFolderTree.cbTopGroupAsFolder;
+		var cbTopGroupAsLayer = dlg.funcArea.content.grpFolderTree.cbTopGroupAsLayer;
 
-		if (cbTopGroupAsLayer.value){
-			cbTopGroupFolder.enabled = false;
-		}else{
-			cbTopGroupFolder.enabled = !this.value;
-		}
+		cbTopGroupAsFolder.enabled = !this.value;
 		cbTopGroupAsLayer.enabled = !this.value;
 	};
 
-	dlg.funcArea.content.cbLayerGroup.cbTopGroupAsLayer.onClick = function() {
+	dlg.funcArea.content.grpFolderTree.cbTopGroupAsFolder.onClick = function() {
+		dlg.funcArea.content.grpPrefix.editPrefix.enabled = !this.value;
+		dlg.funcArea.content.grpPrefix.editSuffix.enabled = !this.value;
+
 		dlg.funcArea.content.grpFolderTree.cbFolderTree.enabled = !this.value;
-		dlg.funcArea.content.cbLayerGroup.cbTopGroupFolder.enabled = !this.value;
+		dlg.funcArea.content.grpFolderTree.cbTopGroupAsLayer.enabled = !this.value;
 	};
-	dlg.funcArea.content.cbLayerGroup.cbTopGroupFolder.onClick = function() {
+
+	dlg.funcArea.content.grpFolderTree.cbTopGroupAsLayer.onClick = function() {
+		dlg.funcArea.content.grpPrefix.editPrefix.enabled = !this.value;
+		dlg.funcArea.content.grpPrefix.editSuffix.enabled = !this.value;
+
 		dlg.funcArea.content.grpFolderTree.cbFolderTree.enabled = !this.value;
-		dlg.funcArea.content.cbLayerGroup.cbTopGroupAsLayer.enabled = !this.value;
+		dlg.funcArea.content.grpFolderTree.cbTopGroupAsFolder.enabled = !this.value;
 	};
 
 	// file naming options
@@ -1040,11 +1044,11 @@ function showDialog()
 		var cbBgLayer = dlg.funcArea.content.cbBgLayer;
 		prefs.bgLayer = (cbBgLayer.value && cbBgLayer.enabled);
 
-		var cbTopGroupAsLayer = dlg.funcArea.content.cbLayerGroup.cbTopGroupAsLayer;
+		var cbTopGroupAsLayer = dlg.funcArea.content.grpFolderTree.cbTopGroupAsLayer;
 		prefs.topGroupAsLayer = (cbTopGroupAsLayer.value && cbTopGroupAsLayer.enabled);
 
-		var cbTopGroupFolder = dlg.funcArea.content.cbLayerGroup.cbTopGroupFolder;
-		prefs.topGroupFolder = (cbTopGroupFolder.value && cbTopGroupFolder.enabled);
+		var cbTopGroupAsFolder = dlg.funcArea.content.grpFolderTree.cbTopGroupAsFolder;
+		prefs.topGroupAsFolder = (cbTopGroupAsFolder.value && cbTopGroupAsFolder.enabled);
 
 		prefs.filePath = dlg.funcArea.content.grpDest.txtDest.text;
 		var destFolder = new Folder(prefs.filePath);
@@ -1137,6 +1141,12 @@ function applySettings(dlg, formatOpts)
 		if (grpFolderTree.cbFolderTree.value != settings.groupsAsFolders) {
 			grpFolderTree.cbFolderTree.notify();
 		}
+		if (grpFolderTree.cbTopGroupAsFolder.value != settings.topGroupAsFolder) {
+			grpFolderTree.cbTopGroupAsFolder.notify();
+		}
+		if (grpFolderTree.cbTopGroupAsLayer.value != settings.topGroupAsLayer) {
+			grpFolderTree.cbTopGroupAsLayer.notify();
+		}
 
 		grpPrefix.editSuffix.text = settings.outputSuffix;
 		grpPrefix.editSuffix.notify("onChange");
@@ -1147,8 +1157,8 @@ function applySettings(dlg, formatOpts)
 
 		cbBgLayer.value = settings.exportBackground;
 
-		cbLayerGroup.cbTopGroupAsLayer.value = settings.topGroupAsLayer;
-		cbLayerGroup.cbTopGroupFolder.value = settings.topGroupFolder;
+		grpFolderTree.cbTopGroupAsFolder.value = settings.topGroupAsFolder;
+		grpFolderTree.cbTopGroupAsLayer.value = settings.topGroupAsLayer;
 		var drdFileTypeIdx = 0;
 		for (var i = 0; i < formatOpts.length; ++i) {
 			if (formatOpts[i].opt.type == settings.fileType) {
@@ -1187,8 +1197,6 @@ function saveSettings(dlg, formatOpts)
 			exportLayerTarget = ExportLayerTarget.SELECTED_LAYERS;
 		}
 
-		desc.putBoolean(DEFAULT_SETTINGS.topGroupAsLayer, cbLayerGroup.cbTopGroupAsLayer.value);
-		desc.putBoolean(DEFAULT_SETTINGS.topGroupFolder, cbLayerGroup.cbTopGroupFolder.value);
 		desc.putString(DEFAULT_SETTINGS.destination, grpDest.txtDest.text);
 		desc.putBoolean(DEFAULT_SETTINGS.overwrite, dlg.funcArea.buttons.cbOverwrite.value);
 		desc.putInteger(DEFAULT_SETTINGS.exportLayerTarget, exportLayerTarget);
@@ -1197,6 +1205,8 @@ function saveSettings(dlg, formatOpts)
 		desc.putInteger(DEFAULT_SETTINGS.letterCase, LetterCase.forIndex(grpLetterCase.drdLetterCase.selection.index));
 		desc.putString(DEFAULT_SETTINGS.outputPrefix, grpPrefix.editPrefix.text);
 		desc.putBoolean(DEFAULT_SETTINGS.groupsAsFolders, grpFolderTree.cbFolderTree.value);
+		desc.putBoolean(DEFAULT_SETTINGS.topGroupAsFolder, grpFolderTree.cbTopGroupAsFolder.value);
+		desc.putBoolean(DEFAULT_SETTINGS.topGroupAsLayer, grpFolderTree.cbTopGroupAsLayer.value);
 		desc.putString(DEFAULT_SETTINGS.outputSuffix, grpPrefix.editSuffix.text);
 		desc.putInteger(DEFAULT_SETTINGS.trim, TrimPrefType.forIndex(grpTrim.drdTrim.selection.index));
 		desc.putBoolean(DEFAULT_SETTINGS.exportBackground, cbBgLayer.value);
@@ -1232,7 +1242,7 @@ function getSettings(formatOpts)
 		result = {
 			// common
 			topGroupAsLayer: desc.getBoolean(DEFAULT_SETTINGS.topGroupAsLayer),
-			topGroupFolder: desc.getBoolean(DEFAULT_SETTINGS.topGroupFolder),
+			topGroupAsFolder: desc.getBoolean(DEFAULT_SETTINGS.topGroupAsFolder),
 			destination: desc.getString(DEFAULT_SETTINGS.destination),
 			overwrite:  desc.getBoolean(DEFAULT_SETTINGS.overwrite),
 			exportLayerTarget: desc.getInteger(DEFAULT_SETTINGS.exportLayerTarget),
