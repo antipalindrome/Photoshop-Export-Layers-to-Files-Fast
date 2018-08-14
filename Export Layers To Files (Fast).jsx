@@ -784,7 +784,7 @@ function isAdjustmentLayer(layer)
 function createProgressBar()
 {
 	// read progress bar resource
-	var rsrcFile = new File(env.scriptFileDirectory + "/progress_bar.json");
+	var rsrcFile = new File(env.scriptFileDirectory + "/" + encodeURI("Export Layers To Files (Fast)-progress_bar.json"));
 	var rsrcString = loadResource(rsrcFile);
 	if (! rsrcString) {
 		return false;
@@ -855,7 +855,7 @@ function repaintProgressBar(win, force /* = false*/)
 function showDialog()
 {
 	// read dialog resource
-	var rsrcFile = new File(env.scriptFileDirectory + "/dialog.json");
+	var rsrcFile = new File(env.scriptFileDirectory + "/" + encodeURI("Export Layers To Files (Fast)-dialog.json"));
 	var rsrcString = loadResource(rsrcFile);
 	if (! rsrcString) {
 		return false;
