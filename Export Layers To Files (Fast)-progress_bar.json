@@ -1,0 +1,29 @@
+palette {
+	text: "Please wait...",
+	preferredSize: [350, 60],
+	orientation: "column",
+	alignChildren: "fill",
+	barRow: Group {
+		orientation: "row",
+		bar: Progressbar {
+			preferredSize: [300, 16]
+		},
+		cancelBtn: Button {
+			text: "Cancel"
+		}
+	},
+	lblMessage: StaticText {
+		alignment: "left",
+		text: ""
+	},
+	warning: Panel {
+		orientation: "column",
+		alignChildren: "fill",
+		message: StaticText {
+			text: "Don't make changes to the current document while the script is running!",
+			properties: {
+				multiline: true
+			}
+		}
+	}
+}
