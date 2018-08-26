@@ -385,6 +385,9 @@ function exportLayers(exportLayerTarget, progressBarWindow)
 		for (var i = 0; i < count; ++i) {
 			var layer = layersToExport[i].layer;
 
+			// Ignore layers that have a bang in front, ie: "not".
+			if (layer.name.indexOf('!') === 0) continue;
+
 			var fileName;
 			switch (prefs.naming) {
 
