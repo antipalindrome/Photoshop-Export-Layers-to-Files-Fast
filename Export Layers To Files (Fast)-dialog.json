@@ -45,14 +45,6 @@ dialog {
 				editPrefix: EditText {preferredSize: [140, 20]},
 				txtSep: StaticText {text: "- ... -"},
 				editSuffix: EditText {preferredSize: [140, 20]}
-<<<<<<< HEAD:dialog.json
-			},
-			grpFolderTree: Group {
-				orientation: "row",
-				alignChildren: "left",
-				cbFolderTree: Checkbox {text: "Groups as folders", helpTip: "Exports groups as a folder tree."}
-=======
->>>>>>> 6c59e11ea8420d3b327ad26129cab417272cb7df:Export Layers To Files (Fast)-dialog.json
 			},
 			grpFolderTree: Group {
 				orientation: "row",
