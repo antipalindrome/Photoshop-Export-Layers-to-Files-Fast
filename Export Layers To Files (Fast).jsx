@@ -143,7 +143,9 @@ var DEFAULT_SETTINGS = {
 	exportBackground: app.stringIDToTypeID("exportBackground"),
 	fileType: app.stringIDToTypeID("fileType"),
 	forceTrimMethod: app.stringIDToTypeID("forceTrimMethod"),
-	groupsAsFolders: app.stringIDToTypeID("groupsAsFolders")
+	groupsAsFolders: app.stringIDToTypeID("groupsAsFolders"),
+	padding: app.stringIDToTypeID("padding"),
+	paddingValue: app.stringIDToTypeID("paddingValue")
 };
 
 //
@@ -199,6 +201,8 @@ function main()
 	prefs.forceTrimMethod = false;
 	prefs.groupsAsFolders = true;
 	prefs.overwrite = false;
+	prefs.padding = false;
+	prefs.paddingValue = 0;
 
 	userCancelled = false;
 
@@ -957,7 +961,23 @@ function showDialog()
 
 	dlg.funcArea.content.grpTrim.drdTrim.selection = 0;
 
-	// background layer setting
+	//Padding setting
+    dlg.funcArea.content.grpPadding.cbPadding.value = prefs.padding;
+
+    dlg.funcArea.content.grpPadding.editPadding.enabled = prefs.padding;
+    dlg.funcArea.content.grpPadding.editPadding.text = prefs.paddingValue;
+
+    dlg.funcArea.content.grpPadding.cbPadding.onClick = function (){
+        prefs.padding = this.value;
+        dlg.funcArea.content.grpPadding.editPadding.enabled = this.value;
+    };
+
+    dlg.funcArea.content.grpPadding.editPadding.onChanging = function (){
+    	prefs.paddingValue = this.text;
+    };
+
+
+        // background layer setting
 	dlg.funcArea.content.cbBgLayer.enabled = (layerCount > 1);
 
 	// buttons
@@ -1005,7 +1025,7 @@ function showDialog()
 
 	try {
 		applySettings(dlg, formatOpts);
-	}
+    }
 	catch (err) {
 		alert("Failed to restore previous settings. Default settings applied.\n\n(Error: " + err.toString() + ")", "Settings not restored", true);
 	}
@@ -1076,6 +1096,12 @@ function applySettings(dlg, formatOpts)
 		grpTrim.drdTrim.selection = (drdTrimIdx >= 0) ? drdTrimIdx : 0;
 		grpTrim.cbTrim.value = settings.forceTrimMethod;
 
+		//Padding
+
+		grpPadding.cbPadding.value = settings.padding;
+        grpPadding.editPadding.enabled = settings.padding;
+		grpPadding.editPadding.text = settings.paddingValue;
+
 		cbBgLayer.value = settings.exportBackground;
 
 		var drdFileTypeIdx = 0;
@@ -1126,6 +1152,10 @@ function saveSettings(dlg, formatOpts)
 		desc.putBoolean(DEFAULT_SETTINGS.groupsAsFolders, grpFolderTree.cbFolderTree.value);
 		desc.putString(DEFAULT_SETTINGS.outputSuffix, grpPrefix.editSuffix.text);
 		desc.putInteger(DEFAULT_SETTINGS.trim, TrimPrefType.forIndex(grpTrim.drdTrim.selection.index));
+
+		desc.putBoolean(DEFAULT_SETTINGS.padding, grpPadding.cbPadding.value);
+		desc.putString(DEFAULT_SETTINGS.paddingValue, grpPadding.editPadding.text);
+
 		desc.putBoolean(DEFAULT_SETTINGS.exportBackground, cbBgLayer.value);
 		desc.putString(DEFAULT_SETTINGS.fileType, formatOpts[grpFileType.drdFileType.selection.index].opt.type);
 		desc.putBoolean(DEFAULT_SETTINGS.forceTrimMethod, grpTrim.cbTrim.value);
@@ -1168,6 +1198,8 @@ function getSettings(formatOpts)
 			groupsAsFolders: desc.getBoolean(DEFAULT_SETTINGS.groupsAsFolders),
 			outputSuffix: desc.getString(DEFAULT_SETTINGS.outputSuffix),
 			trim: desc.getInteger(DEFAULT_SETTINGS.trim),
+			padding : desc.getBoolean(DEFAULT_SETTINGS.padding),
+			paddingValue: desc.getString(DEFAULT_SETTINGS.paddingValue),
 			exportBackground: desc.getBoolean(DEFAULT_SETTINGS.exportBackground),
 			fileType: desc.getString(DEFAULT_SETTINGS.fileType),
 			forceTrimMethod: desc.getBoolean(DEFAULT_SETTINGS.forceTrimMethod)
