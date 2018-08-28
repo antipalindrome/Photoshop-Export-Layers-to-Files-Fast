@@ -57,6 +57,13 @@ dialog {
 				drdTrim: DropDownList {preferredSize: [140, 20], properties: {items: ["No", "Each layer", "Combined"]}},
 				cbTrim: Checkbox {text: "Use trim()", helpTip: "Won't trim if a background layer is on, but may behave better on Mac."}
 			},
+            grpPadding: Group {
+                orientation: "row",
+                txtPadding: StaticText {text: "Padding:", preferredSize: [80, 20]},
+                cbPadding: Checkbox {text: "Add padding", helpTip: "Add x pixels of transparency"},
+                editPadding: EditText {preferredSize: [50, 20], properties: {readonly: false}},
+                txtPaddingPx: StaticText {text: "px", preferredSize: [20, 20]},
+            },
 			cbBgLayer: Checkbox {text: "Lowest layer is background", helpTip: "Leaves the bottommost layer on while exporting every other layer one by one. It will act as background."},
 			grpFileType: Group {
 				orientation: "row",
