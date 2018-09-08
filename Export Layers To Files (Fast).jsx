@@ -18,6 +18,7 @@
 
 // enable double-clicking from Finder/Explorer (CS2 and higher)
 #target photoshop
+
 app.bringToFront();
 
 //
@@ -139,6 +140,8 @@ var DEFAULT_SETTINGS = {
     groupsAsFolders: app.stringIDToTypeID("groupsAsFolders"),
     ignoreLayersString: app.stringIDToTypeID('ignoreLayersString'),
     ignoreLayers: app.stringIDToTypeID('ignoreLayers')
+    padding: app.stringIDToTypeID("padding"),
+    paddingValue: app.stringIDToTypeID("paddingValue")
 };
 
 //
@@ -196,6 +199,8 @@ function main() {
     prefs.forceTrimMethod = false;
     prefs.groupsAsFolders = true;
     prefs.overwrite = false;
+    prefs.padding = false;
+    prefs.paddingValue = 1;
     prefs.ignoreLayersString = "!";
     prefs.ignoreLayers = false;
 
@@ -333,6 +338,9 @@ function exportLayers(exportLayerTarget, progressBarWindow) {
         if (prefs.scale)
             scaleImage();
 
+        if (prefs.padding)
+        addPadding();
+
         if (saveImage(layers[0].layer.name)) {
             ++retVal.count;
         }
@@ -340,7 +348,8 @@ function exportLayers(exportLayerTarget, progressBarWindow) {
             retVal.error = true;
         }
 
-		restoreHistory();
+        restoreHistory();
+
     }
     else {
         // Single trim of all layers combined.
@@ -452,16 +461,21 @@ function exportLayers(exportLayerTarget, progressBarWindow) {
                     }
 
                     if (folderSafe) {
-					    storeHistory();
+
+                        storeHistory();
 
                         if (prefs.scale)
                             scaleImage();
+
+                        if (prefs.padding)
+                            addPadding();
 
                         saveImage(fileName);
 
                         restoreHistory();
 
                         ++retVal.count;
+
                     }
 
                     if (prefs.trim == TrimPrefType.INDIVIDUAL) {
@@ -497,6 +511,16 @@ function exportLayers(exportLayerTarget, progressBarWindow) {
 function scaleImage() {
     var width = app.activeDocument.width.as("px") * (prefs.scaleValue/100);
     app.activeDocument.resizeImage(UnitValue(width, "px"), null, null, ResampleMethod.BICUBICSHARPER);
+}
+function addPadding() {
+    oldH = app.activeDocument.height.as("px");
+    oldW = app.activeDocument.width.as("px");
+
+
+    var width = (app.activeDocument.width.as("px")) + (prefs.paddingValue * 2);
+    var height = (app.activeDocument.height.as("px")) + (prefs.paddingValue * 2);
+
+    app.activeDocument.resizeCanvas(width, height, AnchorPosition.MIDDLECENTER);
 }
 
 function createFolder(folder) {
@@ -722,8 +746,7 @@ function mergeTopGroups(doc){
 	}
 }
 
-function forEachLayer(inCollection, doFunc, result, traverseInvisibleSets)
-{
+function forEachLayer(inCollection, doFunc, result, traverseInvisibleSets) {
     var length = inCollection.length;
     for (var i = 0; i < length; ++i) {
         var layer = inCollection[i];
@@ -768,8 +791,7 @@ function makeInvisible(layer) {
     }
 }
 
-function makeVisible(layer)
-{
+function makeVisible(layer) {
     layer.layer.visible = true;
 
     var current = layer.parent;
@@ -1067,6 +1089,22 @@ function showDialog() {
 
     dlg.funcArea.content.grpTrim.drdTrim.selection = 0;
 
+    //Padding setting
+    dlg.funcArea.content.grpPadding.cbPadding.value = prefs.padding;
+
+    dlg.funcArea.content.grpPadding.editPadding.enabled = prefs.padding;
+    dlg.funcArea.content.grpPadding.editPadding.text = prefs.paddingValue;
+
+    dlg.funcArea.content.grpPadding.cbPadding.onClick = function () {
+        prefs.padding = this.value;
+        dlg.funcArea.content.grpPadding.editPadding.enabled = this.value;
+    };
+
+    dlg.funcArea.content.grpPadding.editPadding.onChanging = function () {
+        prefs.paddingValue = parseInt(this.text);
+    };
+
+
     // background layer setting
     dlg.funcArea.content.cbBgLayer.enabled = (layerCount > 1);
 	dlg.funcArea.content.cbFgLayer.enabled = (layerCount > 1);
@@ -1217,6 +1255,12 @@ function applySettings(dlg, formatOpts) {
         grpTrim.drdTrim.selection = (drdTrimIdx >= 0) ? drdTrimIdx : 0;
         grpTrim.cbTrim.value = settings.forceTrimMethod;
 
+        //Padding
+
+        grpPadding.cbPadding.value = settings.padding;
+        grpPadding.editPadding.enabled = settings.padding;
+        grpPadding.editPadding.text = settings.paddingValue + "";
+
 
 		//scale settigns:
 
@@ -1280,6 +1324,10 @@ function saveSettings(dlg, formatOpts) {
 		desc.putBoolean(DEFAULT_SETTINGS.topGroupAsLayer, grpFolderTree.cbTopGroupAsLayer.value);
         desc.putString(DEFAULT_SETTINGS.outputSuffix, grpPrefix.editSuffix.text);
         desc.putInteger(DEFAULT_SETTINGS.trim, TrimPrefType.forIndex(grpTrim.drdTrim.selection.index));
+
+        desc.putBoolean(DEFAULT_SETTINGS.padding, grpPadding.cbPadding.value);
+        desc.putInteger(DEFAULT_SETTINGS.paddingValue, parseInt(grpPadding.editPadding.text));
+
 		desc.putInteger(DEFAULT_SETTINGS.scaleValue, parseFloat(grpScale.editScale.text));
 		desc.putBoolean(DEFAULT_SETTINGS.scale, grpScale.cbScale.value);
         desc.putBoolean(DEFAULT_SETTINGS.exportBackground, cbBgLayer.value);
@@ -1328,6 +1376,8 @@ function getSettings(formatOpts) {
             trim: desc.getInteger(DEFAULT_SETTINGS.trim),
             scale : desc.getBoolean(DEFAULT_SETTINGS.scale),
             scaleValue : desc.getInteger(DEFAULT_SETTINGS.scaleValue),
+            padding: desc.getBoolean(DEFAULT_SETTINGS.padding),
+            paddingValue: desc.getInteger(DEFAULT_SETTINGS.paddingValue),
             exportBackground: desc.getBoolean(DEFAULT_SETTINGS.exportBackground),
 			exportForeground: desc.getBoolean(DEFAULT_SETTINGS.exportForeground),
             fileType: desc.getString(DEFAULT_SETTINGS.fileType),
@@ -2576,8 +2626,7 @@ function restoreHistory() {
     app.activeDocument.activeHistoryState = history;
 }
 
-function indexOf(array, element)
-{
+function indexOf(array, element) {
     var index = -1;
     for (var i = 0; i < array.length; ++i) {
         if (array[i] === element) {
@@ -2611,6 +2660,7 @@ function loadResource(file) {
 
     return rsrcString;
 }
+
 
 function Profiler(enabled) {
     this.enabled = enabled;
