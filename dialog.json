@@ -58,6 +58,7 @@ dialog {
 				cbTrim: Checkbox {text: "Use trim()", helpTip: "Won't trim if a background layer is on, but may behave better on Mac."}
 			},
 			cbBgLayer: Checkbox {text: "Lowest layer is background", helpTip: "Leaves the bottommost layer on while exporting every other layer one by one. It will act as background."},
+			cbFgLayer: Checkbox {text: "Highest layer is foreground", helpTip: "Leaves the topmost layer on while exporting every other layer one by one. It will act as foreground"},
 			grpFileType: Group {
 				orientation: "row",
 				txtFileType: StaticText {text: "File type:", preferredSize: [80, 20]},
