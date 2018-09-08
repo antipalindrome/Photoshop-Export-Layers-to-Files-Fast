@@ -68,6 +68,13 @@ dialog {
 				editScale: EditText {preferredSize: [50, 20], properties: {readonly: false}},
 				txtScalePercent: StaticText {text: "% ", preferredSize: [20, 20]},
 			},
+            grpPadding: Group {
+                orientation: "row",
+                txtPadding: StaticText {text: "Padding:", preferredSize: [80, 20]},
+                cbPadding: Checkbox {text: "Add padding", helpTip: "Add x pixels of transparency"},
+                editPadding: EditText {preferredSize: [50, 20], properties: {readonly: false}},
+                txtPaddingPx: StaticText {text: "px", preferredSize: [20, 20]},
+            },
 			cbBgLayer: Checkbox {text: "Lowest layer is background", helpTip: "Leaves the bottommost layer on while exporting every other layer one by one. It will act as background."},
 			cbFgLayer: Checkbox {text: "Highest layer is foreground", helpTip: "Leaves the topmost layer on while exporting every other layer one by one. It will act as foreground"},
 			grpFileType: Group {
