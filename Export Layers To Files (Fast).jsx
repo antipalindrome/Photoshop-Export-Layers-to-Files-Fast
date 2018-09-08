@@ -131,6 +131,7 @@ var DEFAULT_SETTINGS = {
     outputSuffix: app.stringIDToTypeID("outputSuffix"),
     trim: app.stringIDToTypeID("trim"),
     exportBackground: app.stringIDToTypeID("exportBackground"),
+	exportForeground: app.stringIDToTypeID("exportForeground"),
     fileType: app.stringIDToTypeID("fileType"),
     forceTrimMethod: app.stringIDToTypeID("forceTrimMethod"),
     groupsAsFolders: app.stringIDToTypeID("groupsAsFolders"),
@@ -186,6 +187,7 @@ function main() {
     prefs.replaceSpaces = true;
     prefs.delimiter = '_';
     prefs.bgLayer = false;
+	prefs.fgLayer = false;
     prefs.trim = TrimPrefType.DONT_TRIM;
     prefs.forceTrimMethod = false;
     prefs.groupsAsFolders = true;
@@ -288,8 +290,9 @@ function exportLayers(exportLayerTarget, progressBarWindow) {
 
     var layerCount = layers.length;
     var layersToExport;
-    switch (exportLayerTarget) {
 
+
+    switch (exportLayerTarget) {
         case ExportLayerTarget.ALL_LAYERS:
             layersToExport = layers;
             break;
@@ -302,6 +305,7 @@ function exportLayers(exportLayerTarget, progressBarWindow) {
             layersToExport = selectedLayers;
             // Bg layer is redundant since everything else outside the selection is essentially a background/foreground.
             prefs.bgLayer = false;
+            prefs.fgLayer = false;
             break;
 
         default:
@@ -317,7 +321,7 @@ function exportLayers(exportLayerTarget, progressBarWindow) {
 
     // Export.
 
-    if ((layerCount == 1) && layers[0].layer.isBackgroundLayer) {
+	if ((layerCount == 1) && (layers[0].layer.isBackgroundLayer || prefs.fgLayer)) {
         // Flattened images don't support LayerComps or visibility toggling, so export it directly.
         if (saveImage(layers[0].layer.name)) {
             ++retVal.count;
@@ -351,10 +355,6 @@ function exportLayers(exportLayerTarget, progressBarWindow) {
                 }
             }
 
-            if (prefs.bgLayer) {
-                layersToExport[count].layer.visible = false;
-            }
-
             doc.trim(TrimType.TRANSPARENT);
         }
 
@@ -365,10 +365,15 @@ function exportLayers(exportLayerTarget, progressBarWindow) {
         // Turn off all layers when exporting all layers - even seemingly invisible ones.
         // When visibility is switched, the parent group becomes visible and a previously invisible child may become visible by accident.
         for (var i = 0; i < count; ++i) {
-            layersToExport[i].layer.visible = false;
+			makeInvisible(layersToExport[i]);
+			//layersToExport[i].layer.visible = false;
         }
         if (prefs.bgLayer) {
             makeVisible(layersToExport[count]);
+        }
+
+		if (prefs.fgLayer){
+            makeVisible(layersToExport[0]);
         }
 
         var countDigits = 0;
@@ -377,7 +382,7 @@ function exportLayers(exportLayerTarget, progressBarWindow) {
         }
 
         // export layers
-        for (var i = 0; i < count; ++i) {
+		for (var i = (prefs.fgLayer? 1 : 0); i < count; ++i) {
             var layer = layersToExport[i].layer;
 
             // Ignore layers that have a bang in front, ie: "not".
@@ -405,6 +410,9 @@ function exportLayers(exportLayerTarget, progressBarWindow) {
 
             if (fileName) {
                 if ((prefs.trim != TrimPrefType.INDIVIDUAL) || ((layer.bounds[0] < layer.bounds[2]) && ((layer.bounds[1] < layer.bounds[3])))) { // skip empty layers when trimming
+
+					storeHistory();
+
                     makeVisible(layersToExport[i]);
 
                     if (prefs.trim == TrimPrefType.INDIVIDUAL) {
@@ -437,7 +445,8 @@ function exportLayers(exportLayerTarget, progressBarWindow) {
                     }
 
                     if (prefs.trim == TrimPrefType.INDIVIDUAL) {
-                        undo(doc);
+						//undo(doc);
+						restoreHistory()
                     }
 
                     layer.visible = false;
@@ -721,7 +730,20 @@ function undo(doc) {
     doc.activeHistoryState = doc.historyStates[doc.historyStates.length - 2];
 }
 
-function makeVisible(layer) {
+function makeInvisible(layer) {
+    layer.layer.visible = false;
+
+    var current = layer.parent;
+    while (current) {
+        if (! current.layer.visible) {
+            current.layer.visible = false;
+        }
+        current = current.parent;
+    }
+}
+
+function makeVisible(layer)
+{
     layer.layer.visible = true;
 
     var current = layer.parent;
@@ -862,15 +884,19 @@ function showDialog() {
     dlg.funcArea.content.grpLayers.radioLayersAll.onClick = function () {
         prefs.exportLayerTarget = ExportLayerTarget.ALL_LAYERS;
         dlg.funcArea.content.cbBgLayer.enabled = (layerCount > 1);
+		dlg.funcArea.content.cbFgLayer.enabled = (layerCount > 1);
     };
     dlg.funcArea.content.grpLayers.radioLayersVis.onClick = function () {
         prefs.exportLayerTarget = ExportLayerTarget.VISIBLE_LAYERS;
         dlg.funcArea.content.cbBgLayer.enabled = (visibleLayerCount > 1);
+		dlg.funcArea.content.cbFgLayer.enabled = (visibleLayerCount > 1);
     };
     dlg.funcArea.content.grpLayers.radioLayersSel.onClick = function () {
         prefs.exportLayerTarget = ExportLayerTarget.SELECTED_LAYERS;
         dlg.funcArea.content.cbBgLayer.enabled = false;
+		dlg.funcArea.content.cbFgLayer.enabled = false;
         dlg.funcArea.content.cbBgLayer.value = false;
+		dlg.funcArea.content.cbFgLayer.value = false;
     };
     dlg.funcArea.content.grpLayers.radioLayersVis.enabled = (visibleLayerCount > 0);
     dlg.funcArea.content.grpLayers.radioLayersSel.enabled = (selectedLayerCount > 0);
@@ -1004,6 +1030,7 @@ function showDialog() {
 
     // background layer setting
     dlg.funcArea.content.cbBgLayer.enabled = (layerCount > 1);
+	dlg.funcArea.content.cbFgLayer.enabled = (layerCount > 1);
 
     // buttons
     dlg.funcArea.buttons.btnRun.onClick = function () {
@@ -1026,7 +1053,9 @@ function showDialog() {
         prefs.trim = TrimPrefType.forIndex(dlg.funcArea.content.grpTrim.drdTrim.selection.index);
         prefs.forceTrimMethod = dlg.funcArea.content.grpTrim.cbTrim.value;
         var cbBgLayer = dlg.funcArea.content.cbBgLayer;
+		var cbFgLayer = dlg.funcArea.content.cbFgLayer;
         prefs.bgLayer = (cbBgLayer.value && cbBgLayer.enabled);
+		prefs.fgLayer = (cbFgLayer.value && cbFgLayer.enabled);
 
 		var cbTopGroupAsLayer = dlg.funcArea.content.grpFolderTree.cbTopGroupAsLayer;
 		prefs.topGroupAsLayer = (cbTopGroupAsLayer.value && cbTopGroupAsLayer.enabled);
@@ -1144,6 +1173,7 @@ function applySettings(dlg, formatOpts) {
         grpTrim.cbTrim.value = settings.forceTrimMethod;
 
         cbBgLayer.value = settings.exportBackground;
+		cbFgLayer.value = settings.exportForeground;
 
 		grpFolderTree.cbTopGroupAsFolder.value = settings.topGroupAsFolder;
 		grpFolderTree.cbTopGroupAsLayer.value = settings.topGroupAsLayer;
@@ -1198,6 +1228,7 @@ function saveSettings(dlg, formatOpts) {
         desc.putString(DEFAULT_SETTINGS.outputSuffix, grpPrefix.editSuffix.text);
         desc.putInteger(DEFAULT_SETTINGS.trim, TrimPrefType.forIndex(grpTrim.drdTrim.selection.index));
         desc.putBoolean(DEFAULT_SETTINGS.exportBackground, cbBgLayer.value);
+		desc.putBoolean(DEFAULT_SETTINGS.exportForeground, cbFgLayer.value);
         desc.putString(DEFAULT_SETTINGS.fileType, formatOpts[grpFileType.drdFileType.selection.index].opt.type);
         desc.putBoolean(DEFAULT_SETTINGS.forceTrimMethod, grpTrim.cbTrim.value);
 
@@ -1241,6 +1272,7 @@ function getSettings(formatOpts) {
             outputSuffix: desc.getString(DEFAULT_SETTINGS.outputSuffix),
             trim: desc.getInteger(DEFAULT_SETTINGS.trim),
             exportBackground: desc.getBoolean(DEFAULT_SETTINGS.exportBackground),
+			exportForeground: desc.getBoolean(DEFAULT_SETTINGS.exportForeground),
             fileType: desc.getString(DEFAULT_SETTINGS.fileType),
             forceTrimMethod: desc.getBoolean(DEFAULT_SETTINGS.forceTrimMethod),
             ignoreLayersString: desc.getString(DEFAULT_SETTINGS.ignoreLayersString)
@@ -2477,7 +2509,18 @@ function formatString(text) {
     });
 }
 
-function indexOf(array, element) {
+var history;
+
+function storeHistory() {
+    history = app.activeDocument.activeHistoryState;
+}
+
+function restoreHistory() {
+    app.activeDocument.activeHistoryState = history;
+}
+
+function indexOf(array, element)
+{
     var index = -1;
     for (var i = 0; i < array.length; ++i) {
         if (array[i] === element) {
