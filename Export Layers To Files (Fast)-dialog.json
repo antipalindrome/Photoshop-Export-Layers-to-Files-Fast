@@ -55,13 +55,14 @@ dialog {
 				cbTopGroupAsFolder: Checkbox {text: "Top Groups as folders", helpTip: "Let All top groups be sub folders."},
 				cbTopGroupAsLayer: Checkbox {text: "Top Groups as layers", helpTip: "Merge Top Groups first."},
 			},
-			cbBgLayer: Checkbox {text: "Lowest layer is background", helpTip: "Leaves the bottommost layer on while exporting every other layer one by one. It will act as background."},
 			grpTrim: Group {
 				orientation: "row",
 				txtTrim: StaticText {text: "Trim:", preferredSize: [80, 20]},
 				drdTrim: DropDownList {preferredSize: [140, 20], properties: {items: ["No", "Each layer", "Combined"]}},
 				cbTrim: Checkbox {text: "Use trim()", helpTip: "Won't trim if a background layer is on, but may behave better on Mac."}
 			},
+			cbBgLayer: Checkbox {text: "Lowest layer is background", helpTip: "Leaves the bottommost layer on while exporting every other layer one by one. It will act as background."},
+			cbFgLayer: Checkbox {text: "Highest layer is foreground", helpTip: "Leaves the topmost layer on while exporting every other layer one by one. It will act as foreground"},
 			grpFileType: Group {
 				orientation: "row",
 				txtFileType: StaticText {text: "File type:", preferredSize: [80, 20]},
