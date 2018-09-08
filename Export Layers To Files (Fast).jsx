@@ -140,6 +140,8 @@ var DEFAULT_SETTINGS = {
 	outputPrefix: app.stringIDToTypeID("outputPrefix"),
 	outputSuffix: app.stringIDToTypeID("outputSuffix"),
 	trim: app.stringIDToTypeID("trim"),
+    scale : app.stringIDToTypeID("scale"),
+    scaleValue : app.stringIDToTypeID("scaleValue"),
 	exportBackground: app.stringIDToTypeID("exportBackground"),
 	fileType: app.stringIDToTypeID("fileType"),
 	forceTrimMethod: app.stringIDToTypeID("forceTrimMethod"),
@@ -196,6 +198,8 @@ function main()
 	prefs.delimiter = '_';
 	prefs.bgLayer = false;
 	prefs.trim = TrimPrefType.DONT_TRIM;
+	prefs.scale = false;
+	prefs.scaleValue = 100;
 	prefs.forceTrimMethod = false;
 	prefs.groupsAsFolders = true;
 	prefs.overwrite = false;
@@ -324,12 +328,20 @@ function exportLayers(exportLayerTarget, progressBarWindow)
 
 	if ((layerCount == 1) && layers[0].layer.isBackgroundLayer) {
 		// Flattened images don't support LayerComps or visibility toggling, so export it directly.
+
+        storeHistory();
+
+        if (prefs.scale)
+            scaleImage();
+
 		if (saveImage(layers[0].layer.name)) {
 			++retVal.count;
 		}
 		else {
 			retVal.error = true;
 		}
+
+		restoreHistory();
 	}
 	else {
 		// Single trim of all layers combined.
@@ -434,8 +446,16 @@ function exportLayers(exportLayerTarget, progressBarWindow)
 					}
 
 					if (folderSafe) {
-						saveImage(fileName);
-						++retVal.count;
+					    storeHistory();
+
+                        if (prefs.scale)
+                            scaleImage();
+
+                        saveImage(fileName);
+
+                        restoreHistory();
+
+                        ++retVal.count;
 					}
 
 					if (prefs.trim == TrimPrefType.INDIVIDUAL) {
@@ -464,6 +484,12 @@ function exportLayers(exportLayerTarget, progressBarWindow)
 	}
 
 	return retVal;
+}
+
+
+function scaleImage() {
+    var width = app.activeDocument.width.as("px") * (prefs.scaleValue/100);
+    app.activeDocument.resizeImage(UnitValue(width, "px"), null, null, ResampleMethod.BICUBICSHARPER);
 }
 
 function createFolder(folder)
@@ -846,6 +872,19 @@ function showDialog()
 		prefs.overwrite = this.value;
 	};
 
+	//Scale section
+    dlg.funcArea.content.grpScale.cbScale.value = prefs.scale;
+    dlg.funcArea.content.grpScale.editScale.enabled = prefs.scale;
+    dlg.funcArea.content.grpScale.editScale.text = prefs.scaleValue;
+    dlg.funcArea.content.grpScale.cbScale.onClick = function () {
+        prefs.scale = this.value;
+        dlg.funcArea.content.grpScale.editScale.enabled = this.value;
+    };
+
+    dlg.funcArea.content.grpScale.editScale.onChanging = function () {
+        prefs.scaleValue = parseInt(this.text);
+    };
+
 	// layer subset selection
 	dlg.funcArea.content.grpLayers.radioLayersAll.onClick = function() {
 		prefs.exportLayerTarget = ExportLayerTarget.ALL_LAYERS;
@@ -979,6 +1018,12 @@ function showDialog()
 		prefs.naming = FileNameType.forIndex(dlg.funcArea.content.grpNaming.drdNaming.selection.index);
 		prefs.namingLetterCase = LetterCase.forIndex(dlg.funcArea.content.grpLetterCase.drdLetterCase.selection.index);
 		prefs.trim = TrimPrefType.forIndex(dlg.funcArea.content.grpTrim.drdTrim.selection.index);
+
+		var cbScale= dlg.funcArea.content.grpScale.cbScale;
+		prefs.scale = (cbScale.value && cbScale.enabled);
+
+		prefs.scaleValue = parseInt(dlg.funcArea.content.grpScale.editScale.text);
+
 		prefs.forceTrimMethod = dlg.funcArea.content.grpTrim.cbTrim.value;
 		var cbBgLayer = dlg.funcArea.content.cbBgLayer;
 		prefs.bgLayer = (cbBgLayer.value && cbBgLayer.enabled);
@@ -1076,6 +1121,14 @@ function applySettings(dlg, formatOpts)
 		grpTrim.drdTrim.selection = (drdTrimIdx >= 0) ? drdTrimIdx : 0;
 		grpTrim.cbTrim.value = settings.forceTrimMethod;
 
+
+		//scale settigns:
+
+        grpScale.cbScale.value = settings.scale;
+        grpScale.editScale.enabled = settings.scale;
+        grpScale.editScale.text = settings.scaleValue;
+
+
 		cbBgLayer.value = settings.exportBackground;
 
 		var drdFileTypeIdx = 0;
@@ -1126,6 +1179,8 @@ function saveSettings(dlg, formatOpts)
 		desc.putBoolean(DEFAULT_SETTINGS.groupsAsFolders, grpFolderTree.cbFolderTree.value);
 		desc.putString(DEFAULT_SETTINGS.outputSuffix, grpPrefix.editSuffix.text);
 		desc.putInteger(DEFAULT_SETTINGS.trim, TrimPrefType.forIndex(grpTrim.drdTrim.selection.index));
+		desc.putInteger(DEFAULT_SETTINGS.scaleValue, parseFloat(grpScale.editScale.text));
+		desc.putBoolean(DEFAULT_SETTINGS.scale, grpScale.cbScale.value);
 		desc.putBoolean(DEFAULT_SETTINGS.exportBackground, cbBgLayer.value);
 		desc.putString(DEFAULT_SETTINGS.fileType, formatOpts[grpFileType.drdFileType.selection.index].opt.type);
 		desc.putBoolean(DEFAULT_SETTINGS.forceTrimMethod, grpTrim.cbTrim.value);
@@ -1168,6 +1223,8 @@ function getSettings(formatOpts)
 			groupsAsFolders: desc.getBoolean(DEFAULT_SETTINGS.groupsAsFolders),
 			outputSuffix: desc.getString(DEFAULT_SETTINGS.outputSuffix),
 			trim: desc.getInteger(DEFAULT_SETTINGS.trim),
+            scale : desc.getBoolean(DEFAULT_SETTINGS.scale),
+            scaleValue : desc.getInteger(DEFAULT_SETTINGS.scaleValue),
 			exportBackground: desc.getBoolean(DEFAULT_SETTINGS.exportBackground),
 			fileType: desc.getString(DEFAULT_SETTINGS.fileType),
 			forceTrimMethod: desc.getBoolean(DEFAULT_SETTINGS.forceTrimMethod)
@@ -2429,6 +2486,17 @@ function formatString(text)
 		return (typeof args[number] != 'undefined') ? args[number] : match;
 	});
 }
+
+var history;
+
+function storeHistory() {
+    history = app.activeDocument.activeHistoryState;
+}
+
+function restoreHistory() {
+    app.activeDocument.activeHistoryState = history;
+}
+
 
 function indexOf(array, element)
 {

@@ -57,6 +57,13 @@ dialog {
 				drdTrim: DropDownList {preferredSize: [140, 20], properties: {items: ["No", "Each layer", "Combined"]}},
 				cbTrim: Checkbox {text: "Use trim()", helpTip: "Won't trim if a background layer is on, but may behave better on Mac."}
 			},
+			grpScale: Group {
+				orientation: "row",
+				txtScale: StaticText {text: "Scale:", preferredSize: [80, 20]},
+				cbScale: Checkbox {text: "Scale", helpTip: "Scale layer by x percents"},
+				editScale: EditText {preferredSize: [50, 20], properties: {readonly: false}},
+				txtScalePercent: StaticText {text: "% ", preferredSize: [20, 20]},
+			},
 			cbBgLayer: Checkbox {text: "Lowest layer is background", helpTip: "Leaves the bottommost layer on while exporting every other layer one by one. It will act as background."},
 			grpFileType: Group {
 				orientation: "row",
