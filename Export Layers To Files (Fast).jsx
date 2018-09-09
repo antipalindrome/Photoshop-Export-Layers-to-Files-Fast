@@ -139,7 +139,7 @@ var DEFAULT_SETTINGS = {
     forceTrimMethod: app.stringIDToTypeID("forceTrimMethod"),
     groupsAsFolders: app.stringIDToTypeID("groupsAsFolders"),
     ignoreLayersString: app.stringIDToTypeID('ignoreLayersString'),
-    ignoreLayers: app.stringIDToTypeID('ignoreLayers')
+    ignoreLayers: app.stringIDToTypeID('ignoreLayers'),
     padding: app.stringIDToTypeID("padding"),
     paddingValue: app.stringIDToTypeID("paddingValue")
 };
