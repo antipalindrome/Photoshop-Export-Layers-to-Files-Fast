@@ -740,9 +740,12 @@ function mergeTopGroups(doc){
 	}
 	for (var i = 0; i < layerSetList.length; i++){
 		var layerSet = layerSetList[i];
-		var visible = layerSet.visible;
-		var layer = layerSet.merge();
-		layer.visible = visible;
+		var layers = layerSet.layers;
+		if (layers.length > 0) {
+			var visible = layerSet.visible;
+			var layer = layerSet.merge();
+			layer.visible = visible;
+		}
 	}
 }
 
