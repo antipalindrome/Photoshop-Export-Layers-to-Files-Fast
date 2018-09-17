@@ -15,7 +15,7 @@ dialog {
 			grpDest: Group {
 				orientation: "row",
 				alignChildren: "left",
-				txtDest: EditText {preferredSize: [310, 20], properties: {readonly: true}},
+				txtDest: EditText {preferredSize: [310, 20], properties: {readonly: false}},
 				btnDest: Button {text: "Browse..."}
 			},
 			grpLayers: Group {
@@ -23,8 +23,10 @@ dialog {
 				txtLayers: StaticText {text: "Export:", preferredSize: [80, 20]},
 				radioLayersAll: RadioButton {text: "All layers", preferredSize: [80, 20], value: true},
 				radioLayersVis: RadioButton {text: "Visible only", preferredSize: [100, 20]},
-				radioLayersSel: RadioButton {text: "Selected group", preferredSize: [120, 20]}
-			},
+				radioLayersSel: RadioButton {text: "Selected group", preferredSize: [120, 20]},
+				cbIgnoreLayers: Checkbox {text: "Ignore layers starting with :"},
+				EditIgnoreLayers : EditText {preferredSize: [50, 20]}
+},
 			grpNaming: Group {
 				orientation: "row",
 				txtNaming: StaticText {text: "Name files:", preferredSize: [80, 20]},
@@ -49,7 +51,9 @@ dialog {
 			grpFolderTree: Group {
 				orientation: "row",
 				alignChildren: "left",
-				cbFolderTree: Checkbox {text: "Groups as folders", helpTip: "Exports groups as a folder tree."}
+				cbFolderTree: Checkbox {text: "Groups as folders", helpTip: "Exports groups as a folder tree."},
+				cbTopGroupAsFolder: Checkbox {text: "Top Groups as folders", helpTip: "Let All top groups be sub folders."},
+				cbTopGroupAsLayer: Checkbox {text: "Top Groups as layers", helpTip: "Merge Top Groups first."},
 			},
 			grpTrim: Group {
 				orientation: "row",
@@ -57,7 +61,22 @@ dialog {
 				drdTrim: DropDownList {preferredSize: [140, 20], properties: {items: ["No", "Each layer", "Combined"]}},
 				cbTrim: Checkbox {text: "Use trim()", helpTip: "Won't trim if a background layer is on, but may behave better on Mac."}
 			},
+			grpScale: Group {
+				orientation: "row",
+				txtScale: StaticText {text: "Scale:", preferredSize: [80, 20]},
+				cbScale: Checkbox {text: "Scale", helpTip: "Scale layer by x percents"},
+				editScale: EditText {preferredSize: [50, 20], properties: {readonly: false}},
+				txtScalePercent: StaticText {text: "% ", preferredSize: [20, 20]},
+			},
+            grpPadding: Group {
+                orientation: "row",
+                txtPadding: StaticText {text: "Padding:", preferredSize: [80, 20]},
+                cbPadding: Checkbox {text: "Add padding", helpTip: "Add x pixels of transparency"},
+                editPadding: EditText {preferredSize: [50, 20], properties: {readonly: false}},
+                txtPaddingPx: StaticText {text: "px", preferredSize: [20, 20]},
+            },
 			cbBgLayer: Checkbox {text: "Lowest layer is background", helpTip: "Leaves the bottommost layer on while exporting every other layer one by one. It will act as background."},
+			cbFgLayer: Checkbox {text: "Highest layer is foreground", helpTip: "Leaves the topmost layer on while exporting every other layer one by one. It will act as foreground"},
 			grpFileType: Group {
 				orientation: "row",
 				txtFileType: StaticText {text: "File type:", preferredSize: [80, 20]},
