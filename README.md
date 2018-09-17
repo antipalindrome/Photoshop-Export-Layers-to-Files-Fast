@@ -3,8 +3,6 @@ Photoshop-Export-Layers-to-Files-Fast
 
 <b>This script allows you to export layers in your Photoshop document as individual files</b> at a speed much faster than the built-in script from Adobe. So far it does not feature all the formats that the built-in version does, but more can be added easily upon request. Feel free to contribute to it and make it even more powerful!
 
-[We accept donations.](https://github.com/jwa107/Photoshop-Export-Layers-to-Files-Fast/wiki)
-
 Please, consider donating a modest sum if you enjoy using our script regularly and would like to see more features implemented sooner.
 
 This script was originally built as a response to a [question](http://graphicdesign.stackexchange.com/questions/1961/export-photoshop-layers-to-individual-png-files-batch-process) on [graphicdesign.stackexchange.com](http://graphicdesign.stackexchange.com/).
@@ -54,6 +52,15 @@ Mac: /Applications/Adobe Photoshop VERSION/Presets/Scripts/
 
 Version History:
 -------------------------------
+<b>17 Sept 2018</b> by [willena](https://github.com/Willena), [finscn](https://github.com/finscn), [jgod](https://github.com/jgod)
+
+* Ability to ignore layer starting with an "exclude string" (implemented by @jgod, improved by me; Related subbranch : https://github.com/Willena/Photoshop-Export-Layers-to-Files-Fast/tree/jgod-ignore-layers-starting-with-bang)
+* Similar to the background feature, it is now possible to keep the highest layer on top of all other layer when exporting. (Related issues : #108, #96, #42; Related subbranch : https://github.com/Willena/Photoshop-Export-Layers-to-Files-Fast/tree/first-layer-as-foreground)
+* Groups can now be exported as a single image/layer. (implemented by @finscn, updated to be mergeable by me) ( related issues : #79 #70 #69 #21 #108 ; Related subbranch : https://github.com/Willena/Photoshop-Export-Layers-to-Files-Fast/tree/finscn-groups-to-layers)
+* Add Transparent padding pixels before export (Related issue : #64 ; Related subbranch : https://github.com/Willena/Photoshop-Export-Layers-to-Files-Fast/tree/transparent-padding-pixels)
+* Scale image before export (Related subbranch : https://github.com/Willena/Photoshop-Export-Layers-to-Files-Fast/tree/scale-before-export)
+
+
 <b>29 April 2016</b> by [Skjorn](https://github.com/skjorn)
 
 * The option "Groups as folders" exports layers in a folder tree (same as groups) instead of a flat list.
