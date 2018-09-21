@@ -1,18 +1,18 @@
 // NAME:
-// 	Export Layers To Files
+//  Export Layers To Files
 
 // DESCRIPTION:
 //  Improved version of the built-in "Export Layers To Files" script:
 //  * Supports PNG and possibly other formats in the future.
 //  * Does not create multiple document duplicates, so it's much faster.
-//	Saves each layer in the active document to a file in a preferred format named after the layer. Supported formats:
+//  Saves each layer in the active document to a file in a preferred format named after the layer. Supported formats:
 //  * PNG
 //  * JPEG
 //  * Targa
 //  * BMP
 
 // REQUIRES:
-// 	Adobe Photoshop CS2 or higher
+//  Adobe Photoshop CS2 or higher
 
 // Most current version always available at: https://github.com/jwa107/Photoshop-Export-Layers-as-Images
 
@@ -31,15 +31,15 @@ var FileNameType = {
     INDEX_DESC: 3,
     AS_LAYERS_NO_EXT: 4,
 
-    values: function () {
+    values: function() {
         return [this.AS_LAYERS_NO_EXT, this.AS_LAYERS, this.INDEX_DESC, this.INDEX_ASC];
     },
 
-    forIndex: function (index) {
+    forIndex: function(index) {
         return this.values()[index];
     },
 
-    getIndex: function (value) {
+    getIndex: function(value) {
         return indexOf(this.values(), value);
     }
 };
@@ -49,19 +49,19 @@ var LetterCase = {
     LOWERCASE: 2,
     UPPERCASE: 3,
 
-    values: function () {
+    values: function() {
         return [this.KEEP, this.LOWERCASE, this.UPPERCASE];
     },
 
-    forIndex: function (index) {
+    forIndex: function(index) {
         return this.values()[index];
     },
 
-    getIndex: function (value) {
+    getIndex: function(value) {
         return indexOf(this.values(), value);
     },
 
-    toExtensionType: function (value) {
+    toExtensionType: function(value) {
         switch (value) {
 
             case this.KEEP:
@@ -84,15 +84,15 @@ var TrimPrefType = {
     INDIVIDUAL: 2,
     COMBINED: 3,
 
-    values: function () {
+    values: function() {
         return [this.DONT_TRIM, this.INDIVIDUAL, this.COMBINED];
     },
 
-    forIndex: function (index) {
+    forIndex: function(index) {
         return this.values()[index];
     },
 
-    getIndex: function (value) {
+    getIndex: function(value) {
         return indexOf(this.values(), value);
     }
 };
@@ -100,17 +100,17 @@ var TrimPrefType = {
 var ExportLayerTarget = {
     ALL_LAYERS: 1,
     VISIBLE_LAYERS: 2,
-    SELECTED_LAYERS: 3,		// Export selection, leave the rest as is, visibility for parent groups will be forced.
+    SELECTED_LAYERS: 3, // Export selection, leave the rest as is, visibility for parent groups will be forced.
 
-    values: function () {
+    values: function() {
         return [this.ALL_LAYERS, this.VISIBLE_LAYERS, this.SELECTED_LAYERS];
     },
 
-    forIndex: function (index) {
+    forIndex: function(index) {
         return this.values()[index];
     },
 
-    getIndex: function (value) {
+    getIndex: function(value) {
         return indexOf(this.values(), value);
     }
 };
@@ -120,8 +120,8 @@ var ExportLayerTarget = {
 var USER_SETTINGS_ID = "exportLayersToFilesCustomDefaultSettings";
 var DEFAULT_SETTINGS = {
     // common
-	topGroupAsLayer: app.stringIDToTypeID("topGroupAsLayer"),
-	topGroupAsFolder: app.stringIDToTypeID("topGroupAsFolder"),
+    topGroupAsLayer: app.stringIDToTypeID("topGroupAsLayer"),
+    topGroupAsFolder: app.stringIDToTypeID("topGroupAsFolder"),
     destination: app.stringIDToTypeID("destFolder"),
     overwrite: app.stringIDToTypeID("overwrite"),
     exportLayerTarget: app.stringIDToTypeID("exportLayerTarget"),
@@ -131,10 +131,10 @@ var DEFAULT_SETTINGS = {
     outputPrefix: app.stringIDToTypeID("outputPrefix"),
     outputSuffix: app.stringIDToTypeID("outputSuffix"),
     trim: app.stringIDToTypeID("trim"),
-    scale : app.stringIDToTypeID("scale"),
-    scaleValue : app.stringIDToTypeID("scaleValue"),
+    scale: app.stringIDToTypeID("scale"),
+    scaleValue: app.stringIDToTypeID("scaleValue"),
     exportBackground: app.stringIDToTypeID("exportBackground"),
-	exportForeground: app.stringIDToTypeID("exportForeground"),
+    exportForeground: app.stringIDToTypeID("exportForeground"),
     fileType: app.stringIDToTypeID("fileType"),
     forceTrimMethod: app.stringIDToTypeID("forceTrimMethod"),
     groupsAsFolders: app.stringIDToTypeID("groupsAsFolders"),
@@ -179,8 +179,7 @@ function main() {
     prefs.fileExtension = "";
     try {
         prefs.filePath = app.activeDocument.path;
-    }
-    catch (e) {
+    } catch (e) {
         prefs.filePath = Folder.myDocuments;
     }
     prefs.formatArgs = null;
@@ -192,10 +191,10 @@ function main() {
     prefs.replaceSpaces = true;
     prefs.delimiter = '_';
     prefs.bgLayer = false;
-	prefs.fgLayer = false;
+    prefs.fgLayer = false;
     prefs.trim = TrimPrefType.DONT_TRIM;
-	prefs.scale = false;
-	prefs.scaleValue = 100;
+    prefs.scale = false;
+    prefs.scaleValue = 100;
     prefs.forceTrimMethod = false;
     prefs.groupsAsFolders = true;
     prefs.overwrite = false;
@@ -232,9 +231,9 @@ function main() {
 
         // collect layers
         profiler.resetLastTime();
-		if (prefs.topGroupAsLayer){
-			mergeTopGroups(app.activeDocument);
-		}
+        if (prefs.topGroupAsLayer) {
+            mergeTopGroups(app.activeDocument);
+        }
         var collected = collectLayers(progressBarWindow);
         if (userCancelled) {
             alert("Export cancelled! No files saved.", "Finished", false);
@@ -282,8 +281,7 @@ function main() {
 
         app.activeDocument.close(SaveOptions.DONOTSAVECHANGES);
         env.documentCopy = null;
-    }
-    else {
+    } else {
         return "cancel";
     }
 }
@@ -330,7 +328,7 @@ function exportLayers(exportLayerTarget, progressBarWindow) {
 
     // Export.
 
-	if ((layerCount == 1) && (layers[0].layer.isBackgroundLayer || prefs.fgLayer)) {
+    if ((layerCount == 1) && (layers[0].layer.isBackgroundLayer || prefs.fgLayer)) {
         // Flattened images don't support LayerComps or visibility toggling, so export it directly.
 
         storeHistory();
@@ -339,19 +337,17 @@ function exportLayers(exportLayerTarget, progressBarWindow) {
             scaleImage();
 
         if (prefs.padding)
-        addPadding();
+            addPadding();
 
         if (saveImage(layers[0].layer.name)) {
             ++retVal.count;
-        }
-        else {
+        } else {
             retVal.error = true;
         }
 
         restoreHistory();
 
-    }
-    else {
+    } else {
         // Single trim of all layers combined.
         if (prefs.trim == TrimPrefType.COMBINED) {
             var UPDATE_NUM = 20;
@@ -386,14 +382,14 @@ function exportLayers(exportLayerTarget, progressBarWindow) {
         // Turn off all layers when exporting all layers - even seemingly invisible ones.
         // When visibility is switched, the parent group becomes visible and a previously invisible child may become visible by accident.
         for (var i = 0; i < count; ++i) {
-			makeInvisible(layersToExport[i]);
-			//layersToExport[i].layer.visible = false;
+            makeInvisible(layersToExport[i]);
+            //layersToExport[i].layer.visible = false;
         }
         if (prefs.bgLayer) {
             makeVisible(layersToExport[count]);
         }
 
-		if (prefs.fgLayer){
+        if (prefs.fgLayer) {
             makeVisible(layersToExport[0]);
         }
 
@@ -403,7 +399,7 @@ function exportLayers(exportLayerTarget, progressBarWindow) {
         }
 
         // export layers
-		for (var i = (prefs.fgLayer? 1 : 0); i < count; ++i) {
+        for (var i = (prefs.fgLayer ? 1 : 0); i < count; ++i) {
             var layer = layersToExport[i].layer;
 
             // Ignore layers that have a bang in front, ie: "not".
@@ -432,7 +428,7 @@ function exportLayers(exportLayerTarget, progressBarWindow) {
             if (fileName) {
                 if ((prefs.trim != TrimPrefType.INDIVIDUAL) || ((layer.bounds[0] < layer.bounds[2]) && ((layer.bounds[1] < layer.bounds[3])))) { // skip empty layers when trimming
 
-					storeHistory();
+                    storeHistory();
 
                     makeVisible(layersToExport[i]);
 
@@ -442,8 +438,7 @@ function exportLayers(exportLayerTarget, progressBarWindow) {
                         if (!useTrim) {
                             try {
                                 doc.crop(layer.bounds);
-                            }
-                            catch (e) {
+                            } catch (e) {
                                 useTrim = true;
                             }
                         }
@@ -479,14 +474,13 @@ function exportLayers(exportLayerTarget, progressBarWindow) {
                     }
 
                     if (prefs.trim == TrimPrefType.INDIVIDUAL) {
-						//undo(doc);
-						restoreHistory()
+                        //undo(doc);
+                        restoreHistory()
                     }
 
                     layer.visible = false;
                 }
-            }
-            else {
+            } else {
                 retVal.error = true;
             }
 
@@ -509,9 +503,10 @@ function exportLayers(exportLayerTarget, progressBarWindow) {
 
 
 function scaleImage() {
-    var width = app.activeDocument.width.as("px") * (prefs.scaleValue/100);
+    var width = app.activeDocument.width.as("px") * (prefs.scaleValue / 100);
     app.activeDocument.resizeImage(UnitValue(width, "px"), null, null, ResampleMethod.BICUBICSHARPER);
 }
+
 function addPadding() {
     oldH = app.activeDocument.height.as("px");
     oldW = app.activeDocument.width.as("px");
@@ -543,8 +538,7 @@ function createFolder(folder) {
                 break;
             }
         }
-    }
-    catch (e) {
+    } catch (e) {
         result = false;
     }
 
@@ -557,19 +551,19 @@ function createUniqueFolders(exportLayerTarget) {
     switch (exportLayerTarget) {
 
         case ExportLayerTarget.VISIBLE_LAYERS:
-            isTargetGroup = function (group) {
+            isTargetGroup = function(group) {
                 return group.visible;
             };
             break;
 
         case ExportLayerTarget.SELECTED_LAYERS:
-            isTargetGroup = function (group) {
+            isTargetGroup = function(group) {
                 return group.selected;
             };
             break;
 
         default:
-            isTargetGroup = function (group) {
+            isTargetGroup = function(group) {
                 return true;
             };
             break;
@@ -587,9 +581,7 @@ function createUniqueFolders(exportLayerTarget) {
                     if (!handle.exists) {
                         try {
                             renamed = folder.rename(handle.name);
-                        }
-                        catch (e) {
-                        }
+                        } catch (e) {}
                         break;
                     }
                 }
@@ -604,8 +596,7 @@ function createUniqueFolders(exportLayerTarget) {
                 if (!folder.create()) {
                     throw new Error();
                 }
-            }
-            catch (e) {
+            } catch (e) {
                 return "Failed to create directory '" + folder.name + "'.";
             }
         }
@@ -632,8 +623,7 @@ function saveImage(fileName) {
                 app.activeDocument.exportDocument(fileName, ExportType.SAVEFORWEB, prefs.formatArgs);
                 break;
         }
-    }
-    else {
+    } else {
         app.activeDocument.saveAs(fileName, prefs.formatArgs, true, LetterCase.toExtensionType(prefs.namingLetterCase));
     }
 
@@ -681,8 +671,7 @@ function getUniqueFileName(fileName, layer) {
     if (prefs.namingLetterCase == LetterCase.LOWERCASE) {
         fileName = fileName.toLowerCase();
         ext = ext.toLowerCase();
-    }
-    else if (prefs.namingLetterCase == LetterCase.UPPERCASE) {
+    } else if (prefs.namingLetterCase == LetterCase.UPPERCASE) {
         fileName = fileName.toUpperCase();
         ext = ext.toUpperCase();
     }
@@ -694,25 +683,25 @@ function getUniqueFileName(fileName, layer) {
             localFolders = makeValidFileName(parent.layer.name, prefs.replaceSpaces) + "/" + localFolders;
             parent = parent.parent;
         }
-	} else if (prefs.topGroupAsFolder){
-		var topGroup = null;
-		var parent = layer.parent;
+    } else if (prefs.topGroupAsFolder) {
+        var topGroup = null;
+        var parent = layer.parent;
 
-		while (parent){
-			if (parent.layer && parent.layer.typename == "LayerSet" && parent.layer.parent == activeDocument){
-				topGroup = parent.layer;
-				break;
-			}
-			parent = parent.parent;
-		}
-		if (topGroup){
-			var filePath = prefs.filePath + "/" + topGroup.name;
-			var subFolder = new Folder(filePath);
-			if (!subFolder.exists){
-				subFolder.create();
-			}
-			localFolders = topGroup.name + "/";
-		}
+        while (parent) {
+            if (parent.layer && parent.layer.typename == "LayerSet" && parent.layer.parent == activeDocument) {
+                topGroup = parent.layer;
+                break;
+            }
+            parent = parent.parent;
+        }
+        if (topGroup) {
+            var filePath = prefs.filePath + "/" + topGroup.name;
+            var subFolder = new Folder(filePath);
+            if (!subFolder.exists) {
+                subFolder.create();
+            }
+            localFolders = topGroup.name + "/";
+        }
     }
 
     fileName = prefs.filePath + "/" + localFolders + fileName;
@@ -723,8 +712,7 @@ function getUniqueFileName(fileName, layer) {
         var handle = File(uniqueName + ext);
         if (handle.exists && !prefs.overwrite) {
             uniqueName = fileName + "-" + padder(i, 3);
-        }
-        else {
+        } else {
             return handle;
         }
     }
@@ -732,33 +720,32 @@ function getUniqueFileName(fileName, layer) {
     return false;
 }
 
-function mergeTopGroups(doc){
-	var layerSets = doc.layerSets;
-	var layerSetList=[];
-	for (var i = 0; i < layerSets.length; i++){
-		layerSetList.push(layerSets[i]);
-	}
-	for (var i = 0; i < layerSetList.length; i++){
-		var layerSet = layerSetList[i];
-		var layers = layerSet.layers;
-		if (layers.length > 0) {
-			var visible = layerSet.visible;
-			var layer = layerSet.merge();
-			layer.visible = visible;
-		}
-	}
+function mergeTopGroups(doc) {
+    var layerSets = doc.layerSets;
+    var layerSetList = [];
+    for (var i = 0; i < layerSets.length; i++) {
+        layerSetList.push(layerSets[i]);
+    }
+    for (var i = 0; i < layerSetList.length; i++) {
+        var layerSet = layerSetList[i];
+        var layers = layerSet.layers;
+        if (layers.length > 0) {
+            var visible = layerSet.visible;
+            var layer = layerSet.merge();
+            layer.visible = visible;
+        }
+    }
 }
 
 function forEachLayer(inCollection, doFunc, result, traverseInvisibleSets) {
     var length = inCollection.length;
     for (var i = 0; i < length; ++i) {
         var layer = inCollection[i];
-		if (layer.layer && layer.layer.typename == "LayerSet") {
+        if (layer.layer && layer.layer.typename == "LayerSet") {
             if (traverseInvisibleSets || layer.visible) {
                 result = forEachLayer(layer.layers, doFunc, result, traverseInvisibleSets);
             }
-        }
-        else {
+        } else {
             result = doFunc(layer, result);
         }
     }
@@ -787,7 +774,7 @@ function makeInvisible(layer) {
 
     var current = layer.parent;
     while (current) {
-        if (! current.layer.visible) {
+        if (!current.layer.visible) {
             current.layer.visible = false;
         }
         current = current.parent;
@@ -834,7 +821,7 @@ function isAdjustmentLayer(layer) {
 
 function createProgressBar() {
     // read progress bar resource
-	var rsrcFile = new File(env.scriptFileDirectory + "/" + encodeURI("Export Layers To Files (Fast)-progress_bar.json"));
+    var rsrcFile = new File(env.scriptFileDirectory + "/" + encodeURI("Export Layers To Files (Fast)-progress_bar.json"));
     var rsrcString = loadResource(rsrcFile);
     if (!rsrcString) {
         return false;
@@ -844,21 +831,20 @@ function createProgressBar() {
     var win;
     try {
         win = new Window(rsrcString);
-    }
-    catch (e) {
+    } catch (e) {
         alert("Progress bar resource is corrupt! Please, redownload the script with all files.", "Error", true);
         return false;
     }
 
-    win.barRow.cancelBtn.onClick = function () {
+    win.barRow.cancelBtn.onClick = function() {
         userCancelled = true;
     };
 
-    win.onResizing = win.onResize = function () {
+    win.onResizing = win.onResize = function() {
         this.layout.resize();
     }
 
-    win.onClose = function () {
+    win.onClose = function() {
         userCancelled = true;
         return false;
     };
@@ -882,16 +868,14 @@ function updateProgressBar(win, message) {
     }
 }
 
-function repaintProgressBar(win, force /* = false*/) {
-    if (env.version >= 11) {	// CS4 added support for UI updates; the previous method became unbearably slow, as is app.refresh()
+function repaintProgressBar(win, force /* = false*/ ) {
+    if (env.version >= 11) { // CS4 added support for UI updates; the previous method became unbearably slow, as is app.refresh()
         if (force) {
             app.refresh();
-        }
-        else {
+        } else {
             win.update();
         }
-    }
-    else {
+    } else {
         // CS3 and below
         var d = new ActionDescriptor();
         d.putEnumerated(app.stringIDToTypeID('state'), app.stringIDToTypeID('state'), app.stringIDToTypeID('redrawComplete'));
@@ -901,7 +885,7 @@ function repaintProgressBar(win, force /* = false*/) {
 
 function showDialog() {
     // read dialog resource
-	var rsrcFile = new File(env.scriptFileDirectory + "/" + encodeURI("Export Layers To Files (Fast)-dialog.json"));
+    var rsrcFile = new File(env.scriptFileDirectory + "/" + encodeURI("Export Layers To Files (Fast)-dialog.json"));
     var rsrcString = loadResource(rsrcFile);
     if (!rsrcString) {
         return false;
@@ -911,15 +895,14 @@ function showDialog() {
     var dlg;
     try {
         dlg = new Window(rsrcString);
-    }
-    catch (e) {
+    } catch (e) {
         alert("Dialog resource is corrupt! Please, redownload the script with all files.", "Error", true);
         return false;
     }
 
     // destination path
     dlg.funcArea.content.grpDest.txtDest.text = prefs.filePath.fsName;
-    dlg.funcArea.content.grpDest.btnDest.onClick = function () {
+    dlg.funcArea.content.grpDest.btnDest.onClick = function() {
         var newFilePath = Folder.selectDialog("Select destination folder", prefs.filePath);
         if (newFilePath) {
             prefs.filePath = newFilePath;
@@ -927,40 +910,40 @@ function showDialog() {
         }
     };
 
-    dlg.funcArea.buttons.cbOverwrite.onClick = function () {
+    dlg.funcArea.buttons.cbOverwrite.onClick = function() {
         prefs.overwrite = this.value;
     };
 
-	//Scale section
+    //Scale section
     dlg.funcArea.content.grpScale.cbScale.value = prefs.scale;
     dlg.funcArea.content.grpScale.editScale.enabled = prefs.scale;
     dlg.funcArea.content.grpScale.editScale.text = prefs.scaleValue;
-    dlg.funcArea.content.grpScale.cbScale.onClick = function () {
+    dlg.funcArea.content.grpScale.cbScale.onClick = function() {
         prefs.scale = this.value;
         dlg.funcArea.content.grpScale.editScale.enabled = this.value;
     };
 
-    dlg.funcArea.content.grpScale.editScale.onChanging = function () {
+    dlg.funcArea.content.grpScale.editScale.onChanging = function() {
         prefs.scaleValue = parseInt(this.text);
     };
 
     // layer subset selection
-    dlg.funcArea.content.grpLayers.radioLayersAll.onClick = function () {
+    dlg.funcArea.content.grpLayers.radioLayersAll.onClick = function() {
         prefs.exportLayerTarget = ExportLayerTarget.ALL_LAYERS;
-        dlg.funcArea.content.cbBgLayer.enabled = (layerCount > 1);
-		dlg.funcArea.content.cbFgLayer.enabled = (layerCount > 1);
+        dlg.funcArea.content.grpBgFgLayer.cbBgLayer.enabled = (layerCount > 1);
+        dlg.funcArea.content.grpBgFgLayer.cbFgLayer.enabled = (layerCount > 1);
     };
-    dlg.funcArea.content.grpLayers.radioLayersVis.onClick = function () {
+    dlg.funcArea.content.grpLayers.radioLayersVis.onClick = function() {
         prefs.exportLayerTarget = ExportLayerTarget.VISIBLE_LAYERS;
-        dlg.funcArea.content.cbBgLayer.enabled = (visibleLayerCount > 1);
-		dlg.funcArea.content.cbFgLayer.enabled = (visibleLayerCount > 1);
+        dlg.funcArea.content.grpBgFgLayer.cbBgLayer.enabled = (visibleLayerCount > 1);
+        dlg.funcArea.content.grpBgFgLayer.cbFgLayer.enabled = (visibleLayerCount > 1);
     };
-    dlg.funcArea.content.grpLayers.radioLayersSel.onClick = function () {
+    dlg.funcArea.content.grpLayers.radioLayersSel.onClick = function() {
         prefs.exportLayerTarget = ExportLayerTarget.SELECTED_LAYERS;
-        dlg.funcArea.content.cbBgLayer.enabled = false;
-		dlg.funcArea.content.cbFgLayer.enabled = false;
-        dlg.funcArea.content.cbBgLayer.value = false;
-		dlg.funcArea.content.cbFgLayer.value = false;
+        dlg.funcArea.content.grpBgFgLayer.cbBgLayer.enabled = false;
+        dlg.funcArea.content.grpBgFgLayer.cbFgLayer.enabled = false;
+        dlg.funcArea.content.grpBgFgLayer.cbBgLayer.value = false;
+        dlg.funcArea.content.grpBgFgLayer.cbFgLayer.value = false;
     };
     dlg.funcArea.content.grpLayers.radioLayersVis.enabled = (visibleLayerCount > 0);
     dlg.funcArea.content.grpLayers.radioLayersSel.enabled = (selectedLayerCount > 0);
@@ -969,12 +952,12 @@ function showDialog() {
     dlg.funcArea.content.grpLayers.EditIgnoreLayers.enabled = prefs.ignoreLayers;
 
     dlg.funcArea.content.grpLayers.EditIgnoreLayers.text = prefs.ignoreLayersString;
-    dlg.funcArea.content.grpLayers.cbIgnoreLayers.onClick = function () {
+    dlg.funcArea.content.grpLayers.cbIgnoreLayers.onClick = function() {
         dlg.funcArea.content.grpLayers.EditIgnoreLayers.enabled = this.value;
         prefs.ignoreLayers = !this.value;
     };
 
-    dlg.funcArea.content.grpLayers.EditIgnoreLayers.onChange = function () {
+    dlg.funcArea.content.grpLayers.EditIgnoreLayers.onChange = function() {
         prefs.ignoreLayersString = this.text;
     };
 
@@ -990,11 +973,11 @@ function showDialog() {
         getFormatOptsBMP
     ];
     var formatOpts = [
-        {opt: null, controlRoot: null},
-        {opt: null, controlRoot: null},
-        {opt: null, controlRoot: null},
-        {opt: null, controlRoot: null},
-        {opt: null, controlRoot: null}
+        { opt: null, controlRoot: null },
+        { opt: null, controlRoot: null },
+        { opt: null, controlRoot: null },
+        { opt: null, controlRoot: null },
+        { opt: null, controlRoot: null }
     ];
     for (var i = 0, len = formatFuncs.length; i < len; ++i) {
         var optionsRoot = optionsPanel.add("group");
@@ -1009,7 +992,7 @@ function showDialog() {
     }
 
     // show proper file type options
-    formatDropDown.onChange = function () {
+    formatDropDown.onChange = function() {
         // Note: There's a bug in CS5 and CC where ListItem.selected doesn't report correct value in onChange().
         // A workaround is to rely on DropDownList.selection instead.
         for (var i = formatOpts.length - 1; i >= 0; --i) {
@@ -1021,71 +1004,70 @@ function showDialog() {
     formatDropDown.selection = 0;
 
     // file name prefix
-    dlg.funcArea.content.grpPrefix.editPrefix.onChange = function () {
+    dlg.funcArea.content.grpPrefix.editPrefix.onChange = function() {
         this.text = makeValidFileName(this.text, prefs.replaceSpaces);
     };
 
     // file name suffix
-    dlg.funcArea.content.grpPrefix.editSuffix.onChange = function () {
+    dlg.funcArea.content.grpPrefix.editSuffix.onChange = function() {
         this.text = makeValidFileName(this.text, prefs.replaceSpaces);
     };
 
-    dlg.funcArea.content.grpFolderTree.cbFolderTree.onClick = function () {
+    dlg.funcArea.content.grpFolderTree.cbFolderTree.onClick = function() {
         dlg.funcArea.content.grpPrefix.editPrefix.enabled = !this.value;
         dlg.funcArea.content.grpPrefix.editSuffix.enabled = !this.value;
 
-		var cbTopGroupAsFolder = dlg.funcArea.content.grpFolderTree.cbTopGroupAsFolder;
-		var cbTopGroupAsLayer = dlg.funcArea.content.grpFolderTree.cbTopGroupAsLayer;
+        var cbTopGroupAsFolder = dlg.funcArea.content.grpFolderTree.cbTopGroupAsFolder;
+        var cbTopGroupAsLayer = dlg.funcArea.content.grpFolderTree.cbTopGroupAsLayer;
 
-		cbTopGroupAsFolder.enabled = !this.value;
-		cbTopGroupAsLayer.enabled = !this.value;
-	};
+        cbTopGroupAsFolder.enabled = !this.value;
+        cbTopGroupAsLayer.enabled = !this.value;
+    };
 
-	dlg.funcArea.content.grpFolderTree.cbTopGroupAsFolder.onClick = function() {
-		dlg.funcArea.content.grpPrefix.editPrefix.enabled = !this.value;
-		dlg.funcArea.content.grpPrefix.editSuffix.enabled = !this.value;
+    dlg.funcArea.content.grpFolderTree.cbTopGroupAsFolder.onClick = function() {
+        dlg.funcArea.content.grpPrefix.editPrefix.enabled = !this.value;
+        dlg.funcArea.content.grpPrefix.editSuffix.enabled = !this.value;
 
-		dlg.funcArea.content.grpFolderTree.cbFolderTree.enabled = !this.value;
-		dlg.funcArea.content.grpFolderTree.cbTopGroupAsLayer.enabled = !this.value;
-	};
+        dlg.funcArea.content.grpFolderTree.cbFolderTree.enabled = !this.value;
+        dlg.funcArea.content.grpFolderTree.cbTopGroupAsLayer.enabled = !this.value;
+    };
 
-	dlg.funcArea.content.grpFolderTree.cbTopGroupAsLayer.onClick = function() {
-		dlg.funcArea.content.grpPrefix.editPrefix.enabled = !this.value;
-		dlg.funcArea.content.grpPrefix.editSuffix.enabled = !this.value;
+    dlg.funcArea.content.grpFolderTree.cbTopGroupAsLayer.onClick = function() {
+        dlg.funcArea.content.grpPrefix.editPrefix.enabled = !this.value;
+        dlg.funcArea.content.grpPrefix.editSuffix.enabled = !this.value;
 
-		dlg.funcArea.content.grpFolderTree.cbFolderTree.enabled = !this.value;
-		dlg.funcArea.content.grpFolderTree.cbTopGroupAsFolder.enabled = !this.value;
+        dlg.funcArea.content.grpFolderTree.cbFolderTree.enabled = !this.value;
+        dlg.funcArea.content.grpFolderTree.cbTopGroupAsFolder.enabled = !this.value;
     };
 
     // file naming options
     dlg.funcArea.content.grpNaming.drdNaming.selection = 0;
     dlg.funcArea.content.grpLetterCase.drdLetterCase.selection = 0;
 
-	dlg.funcArea.content.grpNaming.cbNaming.onClick = function() {
-		prefs.replaceSpaces = ! this.value;
-		if(prefs.replaceSpaces) {
-			dlg.funcArea.content.grpNaming.radioUnderscore.show();
-			dlg.funcArea.content.grpNaming.radioHyphen.show();
-		} else {
-			dlg.funcArea.content.grpNaming.radioUnderscore.hide();
-			dlg.funcArea.content.grpNaming.radioHyphen.hide();
-		}
-	};
+    dlg.funcArea.content.grpNaming.cbNaming.onClick = function() {
+        prefs.replaceSpaces = !this.value;
+        if (prefs.replaceSpaces) {
+            dlg.funcArea.content.grpNaming.radioUnderscore.show();
+            dlg.funcArea.content.grpNaming.radioHyphen.show();
+        } else {
+            dlg.funcArea.content.grpNaming.radioUnderscore.hide();
+            dlg.funcArea.content.grpNaming.radioHyphen.hide();
+        }
+    };
 
-	dlg.funcArea.content.grpNaming.radioUnderscore.onClick = function() {
-		prefs.delimiter = '_';
-	};
+    dlg.funcArea.content.grpNaming.radioUnderscore.onClick = function() {
+        prefs.delimiter = '_';
+    };
 
-	dlg.funcArea.content.grpNaming.radioHyphen.onClick = function() {
-		prefs.delimiter = '-';
-	};
+    dlg.funcArea.content.grpNaming.radioHyphen.onClick = function() {
+        prefs.delimiter = '-';
+    };
 
     // trimming
-    dlg.funcArea.content.grpTrim.drdTrim.onChange = function () {
+    dlg.funcArea.content.grpTrim.drdTrim.onChange = function() {
         if (TrimPrefType.forIndex(this.selection.index) == TrimPrefType.INDIVIDUAL) {
             dlg.funcArea.content.grpTrim.cbTrim.show();
-        }
-        else {
+        } else {
             dlg.funcArea.content.grpTrim.cbTrim.hide();
         }
     }
@@ -1098,22 +1080,22 @@ function showDialog() {
     dlg.funcArea.content.grpPadding.editPadding.enabled = prefs.padding;
     dlg.funcArea.content.grpPadding.editPadding.text = prefs.paddingValue;
 
-    dlg.funcArea.content.grpPadding.cbPadding.onClick = function () {
+    dlg.funcArea.content.grpPadding.cbPadding.onClick = function() {
         prefs.padding = this.value;
         dlg.funcArea.content.grpPadding.editPadding.enabled = this.value;
     };
 
-    dlg.funcArea.content.grpPadding.editPadding.onChanging = function () {
+    dlg.funcArea.content.grpPadding.editPadding.onChanging = function() {
         prefs.paddingValue = parseInt(this.text);
     };
 
 
     // background layer setting
-    dlg.funcArea.content.cbBgLayer.enabled = (layerCount > 1);
-	dlg.funcArea.content.cbFgLayer.enabled = (layerCount > 1);
+    dlg.funcArea.content.grpBgFgLayer.cbBgLayer.enabled = (layerCount > 1);
+    dlg.funcArea.content.grpBgFgLayer.cbFgLayer.enabled = (layerCount > 1);
 
     // buttons
-    dlg.funcArea.buttons.btnRun.onClick = function () {
+    dlg.funcArea.buttons.btnRun.onClick = function() {
         // collect arguments for saving and proceed
 
         prefs.outputPrefix = dlg.funcArea.content.grpPrefix.editPrefix.text;
@@ -1132,28 +1114,28 @@ function showDialog() {
         prefs.namingLetterCase = LetterCase.forIndex(dlg.funcArea.content.grpLetterCase.drdLetterCase.selection.index);
         prefs.trim = TrimPrefType.forIndex(dlg.funcArea.content.grpTrim.drdTrim.selection.index);
 
-		var cbScale= dlg.funcArea.content.grpScale.cbScale;
-		prefs.scale = (cbScale.value && cbScale.enabled);
+        var cbScale = dlg.funcArea.content.grpScale.cbScale;
+        prefs.scale = (cbScale.value && cbScale.enabled);
 
-		prefs.scaleValue = parseInt(dlg.funcArea.content.grpScale.editScale.text);
+        prefs.scaleValue = parseInt(dlg.funcArea.content.grpScale.editScale.text);
 
         prefs.forceTrimMethod = dlg.funcArea.content.grpTrim.cbTrim.value;
-        var cbBgLayer = dlg.funcArea.content.cbBgLayer;
-		var cbFgLayer = dlg.funcArea.content.cbFgLayer;
+        var cbBgLayer = dlg.funcArea.content.grpBgFgLayer.cbBgLayer;
+        var cbFgLayer = dlg.funcArea.content.grpBgFgLayer.cbFgLayer;
         prefs.bgLayer = (cbBgLayer.value && cbBgLayer.enabled);
-		prefs.fgLayer = (cbFgLayer.value && cbFgLayer.enabled);
+        prefs.fgLayer = (cbFgLayer.value && cbFgLayer.enabled);
 
-		var cbTopGroupAsLayer = dlg.funcArea.content.grpFolderTree.cbTopGroupAsLayer;
-		prefs.topGroupAsLayer = (cbTopGroupAsLayer.value && cbTopGroupAsLayer.enabled);
+        var cbTopGroupAsLayer = dlg.funcArea.content.grpFolderTree.cbTopGroupAsLayer;
+        prefs.topGroupAsLayer = (cbTopGroupAsLayer.value && cbTopGroupAsLayer.enabled);
 
-		var cbTopGroupAsFolder = dlg.funcArea.content.grpFolderTree.cbTopGroupAsFolder;
-		prefs.topGroupAsFolder = (cbTopGroupAsFolder.value && cbTopGroupAsFolder.enabled);
+        var cbTopGroupAsFolder = dlg.funcArea.content.grpFolderTree.cbTopGroupAsFolder;
+        prefs.topGroupAsFolder = (cbTopGroupAsFolder.value && cbTopGroupAsFolder.enabled);
 
-		prefs.filePath = dlg.funcArea.content.grpDest.txtDest.text;
-		var destFolder = new Folder(prefs.filePath);
-		if (!destFolder.exists){
-			destFolder.create();
-		}
+        prefs.filePath = dlg.funcArea.content.grpDest.txtDest.text;
+        var destFolder = new Folder(prefs.filePath);
+        if (!destFolder.exists) {
+            destFolder.create();
+        }
 
         var selIdx = formatDropDown.selection.index;
         formatOpts[selIdx].opt.onDialogSelect(formatOpts[selIdx].controlRoot);
@@ -1162,12 +1144,12 @@ function showDialog() {
 
         dlg.close(1);
     };
-    dlg.funcArea.buttons.btnCancel.onClick = function () {
+    dlg.funcArea.buttons.btnCancel.onClick = function() {
         dlg.close(0);
     };
 
     dlg.funcArea.buttons.btnSettings.enabled = env.cs3OrHigher;
-    dlg.funcArea.buttons.btnSettings.onClick = function () {
+    dlg.funcArea.buttons.btnSettings.onClick = function() {
         saveSettings(dlg, formatOpts);
         dlg.close(0);
     };
@@ -1177,8 +1159,7 @@ function showDialog() {
 
     try {
         applySettings(dlg, formatOpts);
-    }
-    catch (err) {
+    } catch (err) {
         alert("Failed to restore previous settings. Default settings applied.\n\n(Error: " + err.toString() + ")", "Settings not restored", true);
     }
 
@@ -1196,7 +1177,7 @@ function applySettings(dlg, formatOpts) {
         return;
     }
 
-    with (dlg.funcArea.content) {
+    with(dlg.funcArea.content) {
         // Common settings
 
         var destFolder = new Folder(settings.destination);
@@ -1244,12 +1225,12 @@ function applySettings(dlg, formatOpts) {
         if (grpFolderTree.cbFolderTree.value != settings.groupsAsFolders) {
             grpFolderTree.cbFolderTree.notify();
         }
-		if (grpFolderTree.cbTopGroupAsFolder.value != settings.topGroupAsFolder) {
-			grpFolderTree.cbTopGroupAsFolder.notify();
-		}
-		if (grpFolderTree.cbTopGroupAsLayer.value != settings.topGroupAsLayer) {
-			grpFolderTree.cbTopGroupAsLayer.notify();
-		}
+        if (grpFolderTree.cbTopGroupAsFolder.value != settings.topGroupAsFolder) {
+            grpFolderTree.cbTopGroupAsFolder.notify();
+        }
+        if (grpFolderTree.cbTopGroupAsLayer.value != settings.topGroupAsLayer) {
+            grpFolderTree.cbTopGroupAsLayer.notify();
+        }
 
         grpPrefix.editSuffix.text = settings.outputSuffix;
         grpPrefix.editSuffix.notify("onChange");
@@ -1265,7 +1246,7 @@ function applySettings(dlg, formatOpts) {
         grpPadding.editPadding.text = settings.paddingValue + "";
 
 
-		//scale settigns:
+        //scale settigns:
 
         grpScale.cbScale.value = settings.scale;
         grpScale.editScale.enabled = settings.scale;
@@ -1273,10 +1254,10 @@ function applySettings(dlg, formatOpts) {
 
 
         cbBgLayer.value = settings.exportBackground;
-		cbFgLayer.value = settings.exportForeground;
+        cbFgLayer.value = settings.exportForeground;
 
-		grpFolderTree.cbTopGroupAsFolder.value = settings.topGroupAsFolder;
-		grpFolderTree.cbTopGroupAsLayer.value = settings.topGroupAsLayer;
+        grpFolderTree.cbTopGroupAsFolder.value = settings.topGroupAsFolder;
+        grpFolderTree.cbTopGroupAsLayer.value = settings.topGroupAsLayer;
         var drdFileTypeIdx = 0;
         for (var i = 0; i < formatOpts.length; ++i) {
             if (formatOpts[i].opt.type == settings.fileType) {
@@ -1303,14 +1284,13 @@ function saveSettings(dlg, formatOpts) {
 
     var desc = new ActionDescriptor();
 
-    with (dlg.funcArea.content) {
+    with(dlg.funcArea.content) {
         // common
 
         var exportLayerTarget = ExportLayerTarget.ALL_LAYERS;
         if (grpLayers.radioLayersVis.value) {
             exportLayerTarget = ExportLayerTarget.VISIBLE_LAYERS;
-        }
-        else if (grpLayers.radioLayersSel.value) {
+        } else if (grpLayers.radioLayersSel.value) {
             exportLayerTarget = ExportLayerTarget.SELECTED_LAYERS;
         }
 
@@ -1323,18 +1303,18 @@ function saveSettings(dlg, formatOpts) {
         desc.putInteger(DEFAULT_SETTINGS.letterCase, LetterCase.forIndex(grpLetterCase.drdLetterCase.selection.index));
         desc.putString(DEFAULT_SETTINGS.outputPrefix, grpPrefix.editPrefix.text);
         desc.putBoolean(DEFAULT_SETTINGS.groupsAsFolders, grpFolderTree.cbFolderTree.value);
-		desc.putBoolean(DEFAULT_SETTINGS.topGroupAsFolder, grpFolderTree.cbTopGroupAsFolder.value);
-		desc.putBoolean(DEFAULT_SETTINGS.topGroupAsLayer, grpFolderTree.cbTopGroupAsLayer.value);
+        desc.putBoolean(DEFAULT_SETTINGS.topGroupAsFolder, grpFolderTree.cbTopGroupAsFolder.value);
+        desc.putBoolean(DEFAULT_SETTINGS.topGroupAsLayer, grpFolderTree.cbTopGroupAsLayer.value);
         desc.putString(DEFAULT_SETTINGS.outputSuffix, grpPrefix.editSuffix.text);
         desc.putInteger(DEFAULT_SETTINGS.trim, TrimPrefType.forIndex(grpTrim.drdTrim.selection.index));
 
         desc.putBoolean(DEFAULT_SETTINGS.padding, grpPadding.cbPadding.value);
         desc.putInteger(DEFAULT_SETTINGS.paddingValue, parseInt(grpPadding.editPadding.text));
 
-		desc.putInteger(DEFAULT_SETTINGS.scaleValue, parseFloat(grpScale.editScale.text));
-		desc.putBoolean(DEFAULT_SETTINGS.scale, grpScale.cbScale.value);
+        desc.putInteger(DEFAULT_SETTINGS.scaleValue, parseFloat(grpScale.editScale.text));
+        desc.putBoolean(DEFAULT_SETTINGS.scale, grpScale.cbScale.value);
         desc.putBoolean(DEFAULT_SETTINGS.exportBackground, cbBgLayer.value);
-		desc.putBoolean(DEFAULT_SETTINGS.exportForeground, cbFgLayer.value);
+        desc.putBoolean(DEFAULT_SETTINGS.exportForeground, cbFgLayer.value);
         desc.putString(DEFAULT_SETTINGS.fileType, formatOpts[grpFileType.drdFileType.selection.index].opt.type);
         desc.putBoolean(DEFAULT_SETTINGS.forceTrimMethod, grpTrim.cbTrim.value);
 
@@ -1365,8 +1345,8 @@ function getSettings(formatOpts) {
         // might throw if format changed or got corrupt
         result = {
             // common
-			topGroupAsLayer: desc.getBoolean(DEFAULT_SETTINGS.topGroupAsLayer),
-			topGroupAsFolder: desc.getBoolean(DEFAULT_SETTINGS.topGroupAsFolder),
+            topGroupAsLayer: desc.getBoolean(DEFAULT_SETTINGS.topGroupAsLayer),
+            topGroupAsFolder: desc.getBoolean(DEFAULT_SETTINGS.topGroupAsFolder),
             destination: desc.getString(DEFAULT_SETTINGS.destination),
             overwrite: desc.getBoolean(DEFAULT_SETTINGS.overwrite),
             exportLayerTarget: desc.getInteger(DEFAULT_SETTINGS.exportLayerTarget),
@@ -1377,12 +1357,12 @@ function getSettings(formatOpts) {
             groupsAsFolders: desc.getBoolean(DEFAULT_SETTINGS.groupsAsFolders),
             outputSuffix: desc.getString(DEFAULT_SETTINGS.outputSuffix),
             trim: desc.getInteger(DEFAULT_SETTINGS.trim),
-            scale : desc.getBoolean(DEFAULT_SETTINGS.scale),
-            scaleValue : desc.getInteger(DEFAULT_SETTINGS.scaleValue),
+            scale: desc.getBoolean(DEFAULT_SETTINGS.scale),
+            scaleValue: desc.getInteger(DEFAULT_SETTINGS.scaleValue),
             padding: desc.getBoolean(DEFAULT_SETTINGS.padding),
             paddingValue: desc.getInteger(DEFAULT_SETTINGS.paddingValue),
             exportBackground: desc.getBoolean(DEFAULT_SETTINGS.exportBackground),
-			exportForeground: desc.getBoolean(DEFAULT_SETTINGS.exportForeground),
+            exportForeground: desc.getBoolean(DEFAULT_SETTINGS.exportForeground),
             fileType: desc.getString(DEFAULT_SETTINGS.fileType),
             forceTrimMethod: desc.getBoolean(DEFAULT_SETTINGS.forceTrimMethod),
             ignoreLayersString: desc.getString(DEFAULT_SETTINGS.ignoreLayersString)
@@ -1396,8 +1376,7 @@ function getSettings(formatOpts) {
         for (var i = 0; i < formatOpts.length; ++i) {
             result.format[formatOpts[i].opt.type] = formatOpts[i].opt.unpackSettings(desc);
         }
-    }
-    catch (e) {
+    } catch (e) {
         return null;
     }
 
@@ -1412,7 +1391,7 @@ function getFormatOptsTarga() {
         type: "TGA",
 
         // Dialog GUI
-        dialogParams: function (parent) {
+        dialogParams: function(parent) {
             var depth = parent.add("group");
             depth.add("statictext", undefined, "Depth:");
             var bitsPerPixelLabels = ["16 bit", "24 bit", "32 bit"];
@@ -1427,7 +1406,7 @@ function getFormatOptsTarga() {
         },
 
         // Reaction to dialog confirmation
-        onDialogSelect: function (parent) {
+        onDialogSelect: function(parent) {
             prefs.format = "TGA";
             prefs.fileExtension = ".tga";
             prefs.formatArgs = new TargaSaveOptions();
@@ -1437,22 +1416,21 @@ function getFormatOptsTarga() {
             prefs.formatArgs.resolution = resolution_enum[parent.bitsPerPixel.selection.index];
         },
 
-        settingsKeys:
-            {
-                depth: app.stringIDToTypeID("tgaDepth"),
-                alpha: app.stringIDToTypeID("tgaAlpha"),
-                rle: app.stringIDToTypeID("tgaRle")
-            },
+        settingsKeys: {
+            depth: app.stringIDToTypeID("tgaDepth"),
+            alpha: app.stringIDToTypeID("tgaAlpha"),
+            rle: app.stringIDToTypeID("tgaRle")
+        },
 
         // Save settings into an ActionDescriptor
-        packSettings: function (desc, formatOptRoot) {
+        packSettings: function(desc, formatOptRoot) {
             desc.putInteger(this.settingsKeys.depth, formatOptRoot.bitsPerPixel.selection.index);
             desc.putBoolean(this.settingsKeys.alpha, formatOptRoot.alpha.value);
             desc.putBoolean(this.settingsKeys.rle, formatOptRoot.rle.value);
         },
 
         // Get settings from an ActionDescriptor
-        unpackSettings: function (desc) {
+        unpackSettings: function(desc) {
             return {
                 depth: desc.getInteger(this.settingsKeys.depth),
                 alpha: desc.getBoolean(this.settingsKeys.alpha),
@@ -1461,7 +1439,7 @@ function getFormatOptsTarga() {
         },
 
         // Apply settings to dialog GUI
-        applySettings: function (settings, formatOptRoot) {
+        applySettings: function(settings, formatOptRoot) {
             formatOptRoot.alpha.value = settings.format[this.type].alpha;
             formatOptRoot.bitsPerPixel.selection = settings.format[this.type].depth;
             formatOptRoot.rle.value = settings.format[this.type].rle;
@@ -1474,7 +1452,7 @@ function getFormatOptsJPEG() {
         type: "JPG",
 
         // Dialog GUI
-        dialogParams: function (parent) {
+        dialogParams: function(parent) {
             var ROW_HEIGHT = 16;
 
             // quality
@@ -1486,7 +1464,7 @@ function getFormatOptsJPEG() {
             var qualityValue = row.add("statictext", undefined, "12");
             qualityValue.preferredSize = [30, ROW_HEIGHT];
 
-            parent.quality.onChanging = function () {
+            parent.quality.onChanging = function() {
                 this.value = Math.round(this.value);
                 qualityValue.text = this.value;
             };
@@ -1507,45 +1485,42 @@ function getFormatOptsJPEG() {
 
             // progressive
             parent.progressive = parent.add("checkbox", undefined, "Progressive");
-            parent.progressive.onClick = function () {
+            parent.progressive.onClick = function() {
                 parent.optimised.enabled = !this.value;
             };
         },
 
         // Reaction to dialog confirmation
-        onDialogSelect: function (parent) {
+        onDialogSelect: function(parent) {
             prefs.format = "JPG";
             prefs.fileExtension = ".jpg";
             prefs.formatArgs = new JPEGSaveOptions();
             var matteValue = [MatteType.WHITE, MatteType.BLACK, MatteType.SEMIGRAY, MatteType.NONE, MatteType.BACKGROUND, MatteType.FOREGROUND];
-            with (prefs.formatArgs) {
+            with(prefs.formatArgs) {
                 quality = parent.quality.value;
                 matte = matteValue[parent.matte.selection.index];
                 embedColorProfile = parent.icc.value;
                 if (parent.progressive.value) {
                     formatOptions = FormatOptions.PROGRESSIVE;
                     scans = 3;
-                }
-                else if (parent.optimised.value) {
+                } else if (parent.optimised.value) {
                     formatOptions = FormatOptions.OPTIMIZEDBASELINE;
-                }
-                else {
+                } else {
                     formatOptions = FormatOptions.STANDARDBASELINE;
                 }
             }
         },
 
-        settingsKeys:
-            {
-                quality: app.stringIDToTypeID("jpgQuality"),
-                matte: app.stringIDToTypeID("jpgMatte"),
-                icc: app.stringIDToTypeID("jpgIcc"),
-                optimized: app.stringIDToTypeID("jpgOptimized"),
-                progressive: app.stringIDToTypeID("jpgProgressive")
-            },
+        settingsKeys: {
+            quality: app.stringIDToTypeID("jpgQuality"),
+            matte: app.stringIDToTypeID("jpgMatte"),
+            icc: app.stringIDToTypeID("jpgIcc"),
+            optimized: app.stringIDToTypeID("jpgOptimized"),
+            progressive: app.stringIDToTypeID("jpgProgressive")
+        },
 
         // Save settings into an ActionDescriptor
-        packSettings: function (desc, formatOptRoot) {
+        packSettings: function(desc, formatOptRoot) {
             desc.putInteger(this.settingsKeys.quality, formatOptRoot.quality.value);
             desc.putInteger(this.settingsKeys.matte, formatOptRoot.matte.selection.index);
             desc.putBoolean(this.settingsKeys.icc, formatOptRoot.icc.value);
@@ -1554,7 +1529,7 @@ function getFormatOptsJPEG() {
         },
 
         // Get settings from an ActionDescriptor
-        unpackSettings: function (desc) {
+        unpackSettings: function(desc) {
             return {
                 quality: desc.getInteger(this.settingsKeys.quality),
                 matte: desc.getInteger(this.settingsKeys.matte),
@@ -1565,7 +1540,7 @@ function getFormatOptsJPEG() {
         },
 
         // Apply settings to dialog GUI
-        applySettings: function (settings, formatOptRoot) {
+        applySettings: function(settings, formatOptRoot) {
             var formatSettings = settings.format[this.type];
             formatOptRoot.quality.value = formatSettings.quality;
             formatOptRoot.matte.selection = formatSettings.matte;
@@ -1585,7 +1560,7 @@ function getFormatOptsPNG24() {
         type: "PNG-24",
 
         // Dialog GUI
-        dialogParams: function (parent) {
+        dialogParams: function(parent) {
             var ROW_HEIGHT = 16;
 
             // matte
@@ -1601,7 +1576,7 @@ function getFormatOptsPNG24() {
             parent.transparency.preferredSize = [120, ROW_HEIGHT];
             parent.transparency.value = true;
 
-            parent.transparency.onClick = function () {
+            parent.transparency.onClick = function() {
                 parent.matte.enabled = !this.value;
             };
 
@@ -1611,7 +1586,7 @@ function getFormatOptsPNG24() {
         },
 
         // Reaction to dialog confirmation
-        onDialogSelect: function (parent) {
+        onDialogSelect: function(parent) {
             prefs.format = "PNG-24";
             prefs.fileExtension = ".png";
 
@@ -1631,7 +1606,7 @@ function getFormatOptsPNG24() {
             var matteColors = [WHITE, BLACK, GRAY, BLACK, app.backgroundColor.rgb, app.foregroundColor.rgb];
 
             prefs.formatArgs = new ExportOptionsSaveForWeb();
-            with (prefs.formatArgs) {
+            with(prefs.formatArgs) {
                 format = SaveDocumentType.PNG;
                 PNG8 = false;
                 interlaced = parent.interlaced.value;
@@ -1640,22 +1615,21 @@ function getFormatOptsPNG24() {
             }
         },
 
-        settingsKeys:
-            {
-                matte: app.stringIDToTypeID("png24Matte"),
-                transparency: app.stringIDToTypeID("png24Transparency"),
-                interlaced: app.stringIDToTypeID("png24Interlaced")
-            },
+        settingsKeys: {
+            matte: app.stringIDToTypeID("png24Matte"),
+            transparency: app.stringIDToTypeID("png24Transparency"),
+            interlaced: app.stringIDToTypeID("png24Interlaced")
+        },
 
         // Save settings into an ActionDescriptor
-        packSettings: function (desc, formatOptRoot) {
+        packSettings: function(desc, formatOptRoot) {
             desc.putInteger(this.settingsKeys.matte, formatOptRoot.matte.selection.index);
             desc.putBoolean(this.settingsKeys.transparency, formatOptRoot.transparency.value);
             desc.putBoolean(this.settingsKeys.interlaced, formatOptRoot.interlaced.value);
         },
 
         // Get settings from an ActionDescriptor
-        unpackSettings: function (desc) {
+        unpackSettings: function(desc) {
             return {
                 matte: desc.getInteger(this.settingsKeys.matte),
                 transparency: desc.getBoolean(this.settingsKeys.transparency),
@@ -1664,7 +1638,7 @@ function getFormatOptsPNG24() {
         },
 
         // Apply settings to dialog GUI
-        applySettings: function (settings, formatOptRoot) {
+        applySettings: function(settings, formatOptRoot) {
             var formatSettings = settings.format[this.type];
             formatOptRoot.matte.selection = formatSettings.matte;
             formatOptRoot.matte.enabled = !formatSettings.transparency;
@@ -1682,7 +1656,7 @@ function getFormatOptsPNG8() {
         type: "PNG-8",
 
         // Dialog GUI
-        dialogParams: function (parent) {
+        dialogParams: function(parent) {
             var ROW_HEIGHT = 16;
             var LABEL_WIDTH = 105;
 
@@ -1711,15 +1685,13 @@ function getFormatOptsPNG8() {
             parent.colors.preferredSize = [70, 18];
             parent.colorsLast = 256;
 
-            parent.colors.onChange = function () {
+            parent.colors.onChange = function() {
                 var colorNum = parseInt(this.text, 10);
                 if (isNaN(colorNum)) {
                     colorNum = parent.colorsLast;
-                }
-                else if (colorNum < 2) {
+                } else if (colorNum < 2) {
                     colorNum = 2;
-                }
-                else if (colorNum > 256) {
+                } else if (colorNum > 256) {
                     colorNum = 256;
                 }
                 this.text = colorNum;
@@ -1744,12 +1716,12 @@ function getFormatOptsPNG8() {
             var ditherAmountValue = ditherAmountGroup.add("statictext", undefined, "100%");
             ditherAmountGroup.enabled = false;
 
-            parent.ditherAmount.onChanging = function () {
+            parent.ditherAmount.onChanging = function() {
                 this.value = Math.round(this.value);
                 ditherAmountValue.text = "" + this.value + "%";
             };
 
-            parent.dither.onChange = function () {
+            parent.dither.onChange = function() {
                 ditherAmountGroup.enabled = (this.selection == 1);
                 parent.ditherAmount.notify("onChanging");
             };
@@ -1764,7 +1736,7 @@ function getFormatOptsPNG8() {
             parent.transparency = transparencyPanel.add("checkbox", undefined, "Enabled");
             parent.transparency.value = true;
 
-            parent.transparency.onClick = function () {
+            parent.transparency.onClick = function() {
                 matteRow.enabled = !this.value;
                 tdRow.enabled = this.value;
             };
@@ -1789,7 +1761,7 @@ function getFormatOptsPNG8() {
             ]);
             parent.transparencyDither.selection = 0;
 
-            parent.transparencyDither.onChange = function () {
+            parent.transparencyDither.onChange = function() {
                 transDitherAmountGroup.enabled = (this.selection == 1);
                 parent.transparencyDitherAmount.notify("onChanging");
             };
@@ -1800,14 +1772,14 @@ function getFormatOptsPNG8() {
             var transDitherAmountValue = transDitherAmountGroup.add("statictext", undefined, "100%");
             transDitherAmountGroup.enabled = false;
 
-            parent.transparencyDitherAmount.onChanging = function () {
+            parent.transparencyDitherAmount.onChanging = function() {
                 this.value = Math.round(this.value);
                 transDitherAmountValue.text = "" + this.value + "%";
             };
         },
 
         // Reaction to dialog confirmation
-        onDialogSelect: function (parent) {
+        onDialogSelect: function(parent) {
             prefs.format = "PNG-8";
             prefs.fileExtension = ".png";
 
@@ -1843,7 +1815,7 @@ function getFormatOptsPNG8() {
             var matteColors = [WHITE, BLACK, GRAY, BLACK, app.backgroundColor.rgb, app.foregroundColor.rgb];
 
             prefs.formatArgs = new ExportOptionsSaveForWeb();
-            with (prefs.formatArgs) {
+            with(prefs.formatArgs) {
                 format = SaveDocumentType.PNG;
                 PNG8 = true;
                 colorReduction = colorReductionType[parent.colorReduction.selection.index];
@@ -1864,21 +1836,20 @@ function getFormatOptsPNG8() {
             }
         },
 
-        settingsKeys:
-            {
-                colorReduction: app.stringIDToTypeID("png8ColorReduction"),
-                numberOfColors: app.stringIDToTypeID("png8NumberOfColors"),
-                dither: app.stringIDToTypeID("png8Dither"),
-                ditherAmount: app.stringIDToTypeID("png8DitherAmount"),
-                interlaced: app.stringIDToTypeID("png8Interlaced"),
-                transparency: app.stringIDToTypeID("png8Transparency"),
-                matte: app.stringIDToTypeID("png8Matte"),
-                transparencyDither: app.stringIDToTypeID("png8TransparencyDither"),
-                transparencyDitherAmount: app.stringIDToTypeID("png8TransparencyDitherAmount")
-            },
+        settingsKeys: {
+            colorReduction: app.stringIDToTypeID("png8ColorReduction"),
+            numberOfColors: app.stringIDToTypeID("png8NumberOfColors"),
+            dither: app.stringIDToTypeID("png8Dither"),
+            ditherAmount: app.stringIDToTypeID("png8DitherAmount"),
+            interlaced: app.stringIDToTypeID("png8Interlaced"),
+            transparency: app.stringIDToTypeID("png8Transparency"),
+            matte: app.stringIDToTypeID("png8Matte"),
+            transparencyDither: app.stringIDToTypeID("png8TransparencyDither"),
+            transparencyDitherAmount: app.stringIDToTypeID("png8TransparencyDitherAmount")
+        },
 
         // Save settings into an ActionDescriptor
-        packSettings: function (desc, formatOptRoot) {
+        packSettings: function(desc, formatOptRoot) {
             desc.putInteger(this.settingsKeys.colorReduction, formatOptRoot.colorReduction.selection.index);
             desc.putString(this.settingsKeys.numberOfColors, formatOptRoot.colors.text);
             desc.putInteger(this.settingsKeys.dither, formatOptRoot.dither.selection.index);
@@ -1891,7 +1862,7 @@ function getFormatOptsPNG8() {
         },
 
         // Get settings from an ActionDescriptor
-        unpackSettings: function (desc) {
+        unpackSettings: function(desc) {
             return {
                 colorReduction: desc.getInteger(this.settingsKeys.colorReduction),
                 numberOfColors: desc.getString(this.settingsKeys.numberOfColors),
@@ -1906,7 +1877,7 @@ function getFormatOptsPNG8() {
         },
 
         // Apply settings to dialog GUI
-        applySettings: function (settings, formatOptRoot) {
+        applySettings: function(settings, formatOptRoot) {
             var formatSettings = settings.format[this.type];
             formatOptRoot.colorReduction.selection = formatSettings.colorReduction;
             formatOptRoot.colors.text = formatSettings.numberOfColors;
@@ -1934,7 +1905,7 @@ function getFormatOptsBMP() {
         type: "BMP",
 
         // Dialog GUI
-        dialogParams: function (parent) {
+        dialogParams: function(parent) {
             // bit depth
             var depth = parent.add("group");
             depth.add("statictext", undefined, "Depth:");
@@ -1962,7 +1933,7 @@ function getFormatOptsBMP() {
         },
 
         // Reaction to dialog confirmation
-        onDialogSelect: function (parent) {
+        onDialogSelect: function(parent) {
             prefs.format = "BMP";
             prefs.fileExtension = ".bmp";
             prefs.formatArgs = new BMPSaveOptions();
@@ -1980,16 +1951,15 @@ function getFormatOptsBMP() {
             prefs.formatArgs.depth = resolution_enum[parent.depth.selection.index];
         },
 
-        settingsKeys:
-            {
-                depth: app.stringIDToTypeID("bmpDepth"),
-                alpha: app.stringIDToTypeID("bmpAlpha"),
-                rle: app.stringIDToTypeID("bmpRle"),
-                flipRow: app.stringIDToTypeID("bmpFlipRow")
-            },
+        settingsKeys: {
+            depth: app.stringIDToTypeID("bmpDepth"),
+            alpha: app.stringIDToTypeID("bmpAlpha"),
+            rle: app.stringIDToTypeID("bmpRle"),
+            flipRow: app.stringIDToTypeID("bmpFlipRow")
+        },
 
         // Save settings into an ActionDescriptor
-        packSettings: function (desc, formatOptRoot) {
+        packSettings: function(desc, formatOptRoot) {
             desc.putBoolean(this.settingsKeys.alpha, formatOptRoot.alpha.value);
             desc.putInteger(this.settingsKeys.depth, formatOptRoot.depth.selection.index);
             desc.putBoolean(this.settingsKeys.rle, formatOptRoot.rle.value);
@@ -1997,7 +1967,7 @@ function getFormatOptsBMP() {
         },
 
         // Get settings from an ActionDescriptor
-        unpackSettings: function (desc) {
+        unpackSettings: function(desc) {
             return {
                 depth: desc.getInteger(this.settingsKeys.depth),
                 alpha: desc.getBoolean(this.settingsKeys.alpha),
@@ -2007,7 +1977,7 @@ function getFormatOptsBMP() {
         },
 
         // Apply settings to dialog GUI
-        applySettings: function (settings, formatOptRoot) {
+        applySettings: function(settings, formatOptRoot) {
             var formatSettings = settings.format[this.type];
             formatOptRoot.alpha.value = formatSettings.alpha;
             formatOptRoot.depth.selection = formatSettings.depth;
@@ -2032,12 +2002,11 @@ function bootstrap() {
 
     // check if there's a document open
     try {
-        var doc = app.activeDocument;		// this actually triggers the exception
-        if (!doc) {					// this is just for sure if it ever behaves differently in other versions
+        var doc = app.activeDocument; // this actually triggers the exception
+        if (!doc) { // this is just for sure if it ever behaves differently in other versions
             throw new Error();
         }
-    }
-    catch (e) {
+    } catch (e) {
         alert("No document is open! Nothing to export.", "Error", true);
         return "cancel";
     }
@@ -2059,13 +2028,11 @@ function bootstrap() {
         // get script's file name
         if (env.cs3OrHigher) {
             env.scriptFileName = $.fileName;
-        }
-        else {
+        } else {
             try {
-                //throw new Error();		// doesn't provide the file name, at least in CS2
+                //throw new Error();        // doesn't provide the file name, at least in CS2
                 var illegal = RUNTIME_ERROR;
-            }
-            catch (e) {
+            } catch (e) {
                 env.scriptFileName = e.fileName;
             }
         }
@@ -2076,16 +2043,14 @@ function bootstrap() {
         if (env.cs3OrHigher) {
             // suspend history for CS3 or higher
             app.activeDocument.suspendHistory('Export Layers To Files', 'main()');
-        }
-        else {
+        } else {
             main();
         }
 
         if (env.documentCopy) {
             env.documentCopy.close(SaveOptions.DONOTSAVECHANGES);
         }
-    }
-    catch (e) {
+    } catch (e) {
         // report errors unless the user cancelled
         if (e.number != 8007) showError(e);
         if (env.documentCopy) {
@@ -2100,7 +2065,7 @@ function bootstrap() {
 //
 
 // Faster layer collection:
-// 	https://forums.adobe.com/message/2666611
+//  https://forums.adobe.com/message/2666611
 
 function collectLayersAM(progressBarWindow) {
     var layers = [],
@@ -2123,11 +2088,10 @@ function collectLayersAM(progressBarWindow) {
     if (layerCount == 0) {
         // This is a flattened image that contains only the background (which is always visible).
         var bg = app.activeDocument.backgroundLayer;
-        var layer = {layer: bg, parent: null};
+        var layer = { layer: bg, parent: null };
         layers.push(layer);
         visibleLayers.push(layer);
-    }
-    else {
+    } else {
         // There are more layers that may or may not contain a background. The background is always at 0;
         // other layers are indexed from 1.
 
@@ -2171,8 +2135,8 @@ function collectLayersAM(progressBarWindow) {
                 desc = app.executeActionGet(ref);
                 layerVisible = desc.getBoolean(idVsbl);
                 layerSection = app.typeIDToStringID(desc.getEnumerationValue(idLayerSection));
-                if ((layerSection == "layerSectionContent")
-                    || (layerSection == "layerSectionStart")) {
+                if ((layerSection == "layerSectionContent") ||
+                    (layerSection == "layerSectionStart")) {
                     // select the layer and then retrieve it via Document.activeLayer
                     desc.clear();
                     desc.putReference(idNull, ref);
@@ -2183,7 +2147,7 @@ function collectLayersAM(progressBarWindow) {
 
                     if (layerSection == "layerSectionContent") {
                         if (!isAdjustmentLayer(activeLayer)) {
-                            var layer = {layer: activeLayer, parent: currentGroup};
+                            var layer = { layer: activeLayer, parent: currentGroup };
                             layers.push(layer);
                             if (layerVisible && visibleInGroup[visibleInGroup.length - 1]) {
                                 visibleLayers.push(layer);
@@ -2195,14 +2159,12 @@ function collectLayersAM(progressBarWindow) {
                                 currentGroup.children.push(layer);
                             }
                         }
-                    }
-                    else {
-                        var group = {layer: activeLayer, parent: currentGroup, children: []};
+                    } else {
+                        var group = { layer: activeLayer, parent: currentGroup, children: [] };
                         group.visible = (layerVisible && visibleInGroup[visibleInGroup.length - 1]);
                         if (group.parent == null) {
                             groups.push(group);
-                        }
-                        else {
+                        } else {
                             group.parent.children.push(group);
                         }
                         currentGroup = group;
@@ -2214,8 +2176,7 @@ function collectLayersAM(progressBarWindow) {
                             group.selected = true;
                         }
                     }
-                }
-                else if (layerSection == "layerSectionEnd") {
+                } else if (layerSection == "layerSectionEnd") {
                     currentGroup = currentGroup.parent;
                     visibleInGroup.pop();
                     if (selected > 0) {
@@ -2238,7 +2199,7 @@ function collectLayersAM(progressBarWindow) {
             try {
                 desc = app.executeActionGet(ref);
                 var bg = app.activeDocument.backgroundLayer;
-                var layer = {layer: bg, parent: null};
+                var layer = { layer: bg, parent: null };
                 layers.push(layer);
                 if (bg.visible) {
                     visibleLayers.push(layer);
@@ -2248,12 +2209,10 @@ function collectLayersAM(progressBarWindow) {
                     updateProgressBar(progressBarWindow);
                     repaintProgressBar(progressBarWindow);
                 }
-            }
-            catch (e) {
+            } catch (e) {
                 // no background, move on
             }
-        }
-        catch (e) {
+        } catch (e) {
             if (e.message != "cancel") throw e;
         }
 
@@ -2271,7 +2230,7 @@ function collectLayersAM(progressBarWindow) {
         }
     }
 
-    return {layers: layers, visibleLayers: visibleLayers, selectedLayers: selectedLayers, groups: groups};
+    return { layers: layers, visibleLayers: visibleLayers, selectedLayers: selectedLayers, groups: groups };
 }
 
 function countLayersAM(progressBarWindow) {
@@ -2303,8 +2262,7 @@ function countLayersAM(progressBarWindow) {
         // This is a flattened image that contains only the background (which is always visible).
         preciseLayerCount = 1;
         visLayerCount = 1;
-    }
-    else {
+    } else {
         // There are more layers that may or may not contain a background. The background is always at 0;
         // other layers are indexed from 1.
 
@@ -2348,16 +2306,14 @@ function countLayersAM(progressBarWindow) {
                     if (selected > 0) {
                         selLayerCount++;
                     }
-                }
-                else if (layerSection == "layerSectionStart") {
+                } else if (layerSection == "layerSectionStart") {
                     visibleInGroup.push(layerVisible && visibleInGroup[visibleInGroup.length - 1]);
                     // Only check for selected groups. In CS2, 1 and only 1 layer/group is always selected (active).
                     // It is useless to export just 1 art layer, so only layer groups (sets) are supported.
                     if ((selectionIdx == i) || (selected > 0)) {
                         selected++;
                     }
-                }
-                else if (layerSection == "layerSectionEnd") {
+                } else if (layerSection == "layerSectionEnd") {
                     visibleInGroup.pop();
                     if (selected > 0) {
                         selected--;
@@ -2385,12 +2341,10 @@ function countLayersAM(progressBarWindow) {
                     updateProgressBar(progressBarWindow);
                     repaintProgressBar(progressBarWindow);
                 }
-            }
-            catch (e) {
+            } catch (e) {
                 // no background, move on
             }
-        }
-        catch (e) {
+        } catch (e) {
             if (e.message != "cancel") throw e;
         }
 
@@ -2399,7 +2353,7 @@ function countLayersAM(progressBarWindow) {
         }
     }
 
-    return {layerCount: preciseLayerCount, visibleLayerCount: visLayerCount, selectedLayerCount: selLayerCount};
+    return { layerCount: preciseLayerCount, visibleLayerCount: visLayerCount, selectedLayerCount: selLayerCount };
 }
 
 function exportPng24AM(fileName, options) {
@@ -2460,7 +2414,7 @@ function exportPng8AM(fileName, options) {
             id16 = app.charIDToTypeID("Web ");
             break;
 
-        // CUSTOM not supported
+            // CUSTOM not supported
 
         case ColorReductionType.BLACKWHITE:
         case ColorReductionType.GRAYSCALE:
@@ -2568,7 +2522,7 @@ function exportPng8AM(fileName, options) {
     var id34 = app.charIDToTypeID("Trns"); //Transparency
     desc4.putBoolean(id34, options.transparency);
     var id35 = app.charIDToTypeID("Mtt ");
-    desc4.putBoolean(id35, true);		 //matte
+    desc4.putBoolean(id35, true); //matte
     var id36 = app.charIDToTypeID("MttR"); //matte color
     desc4.putInteger(id36, options.matteColor.red);
     var id37 = app.charIDToTypeID("MttG");
@@ -2604,17 +2558,17 @@ function padder(input, padLength) {
 }
 
 function makeValidFileName(fileName, replaceSpaces) {
-    var validName = fileName.replace(/^\s+|\s+$/gm, '');	// trim spaces
+    var validName = fileName.replace(/^\s+|\s+$/gm, ''); // trim spaces
     validName = validName.replace(/[\\\*\/\?:"\|<>]/g, ''); // remove characters not allowed in a file name
     if (replaceSpaces) {
-        validName = validName.replace(/[ ]/g, prefs.delimiter);	// replace spaces with chosen delimiter, since some programs still may have troubles with them
+        validName = validName.replace(/[ ]/g, prefs.delimiter); // replace spaces with chosen delimiter, since some programs still may have troubles with them
     }
     return validName;
 }
 
 function formatString(text) {
     var args = Array.prototype.slice.call(arguments, 1);
-    return text.replace(/\{(\d+)\}/g, function (match, number) {
+    return text.replace(/\{(\d+)\}/g, function(match, number) {
         return (typeof args[number] != 'undefined') ? args[number] : match;
     });
 }
@@ -2655,8 +2609,7 @@ function loadResource(file) {
         if (!file.close()) {
             throw file.error;
         }
-    }
-    catch (error) {
+    } catch (error) {
         alert("Failed to read the resource file '" + file.name + "'!\n\nReason: " + error + "\n\nPlease, check it's available for reading and redownload it in case it became corrupted.", "Error", true);
         return false;
     }
@@ -2674,7 +2627,7 @@ function Profiler(enabled) {
 }
 
 function defineProfilerMethods() {
-    Profiler.prototype.getDuration = function (rememberAsLastCall, sinceLastCall) {
+    Profiler.prototype.getDuration = function(rememberAsLastCall, sinceLastCall) {
         if (this.enabled) {
             var currentTime = new Date();
             var lastTime = sinceLastCall ? this.lastTime : this.startTime;
@@ -2685,11 +2638,11 @@ function defineProfilerMethods() {
         }
     }
 
-    Profiler.prototype.resetLastTime = function () {
+    Profiler.prototype.resetLastTime = function() {
         this.lastTime = new Date();
     };
 
-    Profiler.prototype.format = function (duration) {
+    Profiler.prototype.format = function(duration) {
         var output = padder(duration.getUTCHours(), 2) + ":";
         output += padder(duration.getUTCMinutes(), 2) + ":";
         output += padder(duration.getUTCSeconds(), 2) + ".";
