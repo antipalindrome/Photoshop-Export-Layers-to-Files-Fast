@@ -1253,8 +1253,8 @@ function applySettings(dlg, formatOpts) {
         grpScale.editScale.text = settings.scaleValue;
 
 
-        cbBgLayer.value = settings.exportBackground;
-        cbFgLayer.value = settings.exportForeground;
+        grpBgFgLayer.cbBgLayer.value = settings.exportBackground;
+        grpBgFgLayer.cbFgLayer.value = settings.exportForeground;
 
         grpFolderTree.cbTopGroupAsFolder.value = settings.topGroupAsFolder;
         grpFolderTree.cbTopGroupAsLayer.value = settings.topGroupAsLayer;
@@ -1313,8 +1313,8 @@ function saveSettings(dlg, formatOpts) {
 
         desc.putInteger(DEFAULT_SETTINGS.scaleValue, parseFloat(grpScale.editScale.text));
         desc.putBoolean(DEFAULT_SETTINGS.scale, grpScale.cbScale.value);
-        desc.putBoolean(DEFAULT_SETTINGS.exportBackground, cbBgLayer.value);
-        desc.putBoolean(DEFAULT_SETTINGS.exportForeground, cbFgLayer.value);
+        desc.putBoolean(DEFAULT_SETTINGS.exportBackground, grpBgFgLayer.cbBgLayer.value);
+        desc.putBoolean(DEFAULT_SETTINGS.exportForeground, grpBgFgLayer.cbFgLayer.value);
         desc.putString(DEFAULT_SETTINGS.fileType, formatOpts[grpFileType.drdFileType.selection.index].opt.type);
         desc.putBoolean(DEFAULT_SETTINGS.forceTrimMethod, grpTrim.cbTrim.value);
 
