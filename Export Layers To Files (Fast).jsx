@@ -457,8 +457,6 @@ function exportLayers(exportLayerTarget, progressBarWindow) {
 
                     if (folderSafe) {
 
-                        storeHistory();
-
                         if (prefs.scale)
                             scaleImage();
 
@@ -466,15 +464,10 @@ function exportLayers(exportLayerTarget, progressBarWindow) {
                             addPadding();
 
                         saveImage(fileName);
-
-                        restoreHistory();
-
                         ++retVal.count;
-
                     }
 
-                    if (prefs.trim == TrimPrefType.INDIVIDUAL) {
-                        //undo(doc);
+                    if (prefs.trim == TrimPrefType.INDIVIDUAL || folderSafe) {
                         restoreHistory()
                     }
 
