@@ -504,11 +504,12 @@ function addPadding() {
     oldH = app.activeDocument.height.as("px");
     oldW = app.activeDocument.width.as("px");
 
-
     var width = (app.activeDocument.width.as("px")) + (prefs.paddingValue * 2);
     var height = (app.activeDocument.height.as("px")) + (prefs.paddingValue * 2);
+    var widthUnit = new UnitValue(width + " pixels");
+    var heightUnit = new UnitValue(height + " pixels");
 
-    app.activeDocument.resizeCanvas(width, height, AnchorPosition.MIDDLECENTER);
+    app.activeDocument.resizeCanvas(widthUnit, heightUnit, AnchorPosition.MIDDLECENTER);
 }
 
 function createFolder(folder) {
