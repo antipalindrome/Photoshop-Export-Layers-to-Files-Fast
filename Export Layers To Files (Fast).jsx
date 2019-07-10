@@ -918,7 +918,7 @@ function showDialog() {
     };
 
     dlg.funcArea.content.grpScale.editScale.onChanging = function() {
-        prefs.scaleValue = parseInt(this.text);
+        prefs.scaleValue = parseFloat(this.text);
     };
 
     // layer subset selection
@@ -1111,7 +1111,7 @@ function showDialog() {
         var cbScale = dlg.funcArea.content.grpScale.cbScale;
         prefs.scale = (cbScale.value && cbScale.enabled);
 
-        prefs.scaleValue = parseInt(dlg.funcArea.content.grpScale.editScale.text);
+        prefs.scaleValue = parseFloat(dlg.funcArea.content.grpScale.editScale.text);
 
         prefs.forceTrimMethod = dlg.funcArea.content.grpTrim.cbTrim.value;
         var cbBgLayer = dlg.funcArea.content.grpBgFgLayer.cbBgLayer;
@@ -1305,7 +1305,7 @@ function saveSettings(dlg, formatOpts) {
         desc.putBoolean(DEFAULT_SETTINGS.padding, grpPadding.cbPadding.value);
         desc.putInteger(DEFAULT_SETTINGS.paddingValue, parseInt(grpPadding.editPadding.text));
 
-        desc.putInteger(DEFAULT_SETTINGS.scaleValue, parseFloat(grpScale.editScale.text));
+        desc.putString(DEFAULT_SETTINGS.scaleValue, grpScale.editScale.text);
         desc.putBoolean(DEFAULT_SETTINGS.scale, grpScale.cbScale.value);
         desc.putBoolean(DEFAULT_SETTINGS.exportBackground, grpBgFgLayer.cbBgLayer.value);
         desc.putBoolean(DEFAULT_SETTINGS.exportForeground, grpBgFgLayer.cbFgLayer.value);
@@ -1352,7 +1352,7 @@ function getSettings(formatOpts) {
             outputSuffix: desc.getString(DEFAULT_SETTINGS.outputSuffix),
             trim: desc.getInteger(DEFAULT_SETTINGS.trim),
             scale: desc.getBoolean(DEFAULT_SETTINGS.scale),
-            scaleValue: desc.getInteger(DEFAULT_SETTINGS.scaleValue),
+            scaleValue: parseFloat(desc.getString(DEFAULT_SETTINGS.scaleValue)),
             padding: desc.getBoolean(DEFAULT_SETTINGS.padding),
             paddingValue: desc.getInteger(DEFAULT_SETTINGS.paddingValue),
             exportBackground: desc.getBoolean(DEFAULT_SETTINGS.exportBackground),
