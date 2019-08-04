@@ -30,10 +30,10 @@ var FileNameType = {
     INDEX_ASC: 2,
     INDEX_DESC: 3,
     AS_LAYERS_NO_EXT: 4,
-	INDEX_ASC_PLUS_NAME: 5,
-	INDEX_DESC_PLUS_NAME: 6,
+    INDEX_ASC_PLUS_NAME: 5,
+    INDEX_DESC_PLUS_NAME: 6,
     
-	values: function() {
+    values: function() {
         return [this.AS_LAYERS_NO_EXT, this.AS_LAYERS, this.INDEX_DESC, this.INDEX_ASC, this.INDEX_ASC_PLUS_NAME, this.INDEX_DESC_PLUS_NAME];
     },
 
@@ -425,14 +425,14 @@ function exportLayers(exportLayerTarget, progressBarWindow) {
                 case FileNameType.INDEX_DESC:
                     fileName = makeFileNameFromIndex(i + 1, countDigits, layersToExport[i]);
                     break;
-					
-				case FileNameType.INDEX_ASC_PLUS_NAME:
-					fileName = makeFileNameFromLayerNameWithIndex(count - i, countDigits, layersToExport[i]);
-					break;
-					
-				case FileNameType.INDEX_DESC_PLUS_NAME:
-					fileName = makeFileNameFromLayerNameWithIndex(i + 1, countDigits, layersToExport[i]);
-					break;
+
+                case FileNameType.INDEX_ASC_PLUS_NAME:
+                    fileName = makeFileNameFromLayerNameWithIndex(count - i, countDigits, layersToExport[i]);
+                    break;
+
+                case FileNameType.INDEX_DESC_PLUS_NAME:
+                    fileName = makeFileNameFromLayerNameWithIndex(i + 1, countDigits, layersToExport[i]);
+                    break;
             }
 
             if (fileName) {
@@ -665,9 +665,9 @@ function makeFileNameFromLayerName(layer, stripExt) {
 }
 
 function makeFileNameFromLayerNameWithIndex(index, numOfDigits, layer){
-	var fileName = makeValidFileName(layer.layer.name, prefs.replaceSpaces);
-	fileName = "" + padder(index, numOfDigits) + prefs.delimiter + fileName;
-	if (fileName.length == 0) {
+    var fileName = makeValidFileName(layer.layer.name, prefs.replaceSpaces);
+    fileName = "" + padder(index, numOfDigits) + prefs.delimiter + fileName;
+    if (fileName.length == 0) {
         fileName = "Layer";
     }
     return getUniqueFileName(fileName, layer);
