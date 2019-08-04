@@ -30,7 +30,7 @@ dialog {
             grpNaming: Group {
                 orientation: "row",
                 txtNaming: StaticText {text: "Name files:", preferredSize: [80, 20]},
-                drdNaming: DropDownList {preferredSize: [140, 20], properties: {items: ["As layers, strip extension", "As layers", "By index from top", "By index from bottom"]}},
+                drdNaming: DropDownList {preferredSize: [240, 20], properties: {items: ["As layers, strip extension", "As layers", "By index from top", "By index from bottom", "By index from top with layer name", "By index from bottom with layer name"]}},
                 cbNaming: Checkbox {text: "Allow spaces"},
                 radioUnderscore: RadioButton {text: "Use Underscore", preferredSize: [120, 20], value: true},
                 radioHyphen: RadioButton {text: "Use Hyphen", preferredSize: [120, 20]},
