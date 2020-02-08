@@ -9,7 +9,7 @@ This script was originally built as a response to a [question](http://graphicdes
 
 Make sure to download all files:
 
-<b>[Download as zip](https://github.com/jwa107/Photoshop-Export-Layers-to-Files-Fast/archive/master.zip)</b>
+<b>[Download as zip](https://github.com/hsw107/Photoshop-Export-Layers-to-Files-Fast/archive/master.zip)</b>
 
 Disclaimer: We are not associated with Adobe in any way. For any issues relating to Adobe products or Adobe scripts please contact them directly. We have never had an issue, but please use this script at your own risk. We are not responsible for any lost data or damaged PSDs so always make a back-up.
 
@@ -31,7 +31,7 @@ Features:
 * A selected group can be exported as usual (layer by layer) while everything else is left in tact. (This way variable content can be exported for complex fixed background and foreground.)
 * Can export groups as folder hierarchy. Conflicting folders are renamed.
 
-You can also see [what's coming next](https://github.com/jwa107/Photoshop-Export-Layers-to-Files-Fast/wiki/Feature-Roadmap) and browse some of our [performance test results](https://github.com/jwa107/Photoshop-Export-Layers-to-Files-Fast/wiki/Performance-Test-Results).
+You can also see [what's coming next](https://github.com/hsw107/Photoshop-Export-Layers-to-Files-Fast/wiki/Feature-Roadmap) and browse some of our [performance test results](https://github.com/hsw107/Photoshop-Export-Layers-to-Files-Fast/wiki/Performance-Test-Results).
 
 Requirements:
 -------------------------------
@@ -69,7 +69,7 @@ Version History:
 
 * A selected group can be exported as usual (layer by layer) while everything else is left in tact. (This way variable content can be exported for complex fixed background and foreground.) _Works only for the first selected group!_ If no layer/group is selected, the topmost one is assumed by Photoshop. All parent groups of the selection are made visible. Visibility of exported layers is not taken into account; all are exported.
 
-<b>25 April 2015</b> by [Johannes Walter](https://github.com/jwa107) and [Skjorn](https://github.com/skjorn)
+<b>25 April 2015</b> by [Hanna Walter](https://github.com/hsw107) and [Skjorn](https://github.com/skjorn)
 
 * Last user settings remembered for versions CS 3 and higher.
 
@@ -115,7 +115,7 @@ Version History:
 
 * Added support for both PNG-24 and PNG-8
 
-<b>24 May 2013</b> by [Johannes Walter](https://github.com/jwa107)
+<b>24 May 2013</b> by [Hanna Walter](https://github.com/hsw107)
 
 * Nesting properly handled
 *  All layers save seperately again (no more stacking).
@@ -131,11 +131,11 @@ Version History:
 * counts number of layers
 * many little code improvements
 
-<b>26 Sept 2012</b> by [Johannes Walter](https://github.com/jwa107)
+<b>26 Sept 2012</b> by [Hanna Walter](https://github.com/hsw107)
 
 * Original version
 
 
 Contact:
 -------------------------------
-Please use communication channels on GitHub to write feedback/bugs/suggestions: https://github.com/jwa107/Photoshop-Export-Layers-to-Files-Fast/issues
+Please use communication channels on GitHub to write feedback/bugs/suggestions: https://github.com/hsw107/Photoshop-Export-Layers-to-Files-Fast/issues
