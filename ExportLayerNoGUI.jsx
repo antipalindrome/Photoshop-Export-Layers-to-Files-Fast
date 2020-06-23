@@ -31,15 +31,15 @@ var FileNameType = {
     INDEX_DESC: 3,
     AS_LAYERS_NO_EXT: 4,
 
-    values: function() {
+    values: function () {
         return [this.AS_LAYERS_NO_EXT, this.AS_LAYERS, this.INDEX_DESC, this.INDEX_ASC];
     },
 
-    forIndex: function(index) {
+    forIndex: function (index) {
         return this.values()[index];
     },
 
-    getIndex: function(value) {
+    getIndex: function (value) {
         return indexOf(this.values(), value);
     }
 };
@@ -49,19 +49,19 @@ var LetterCase = {
     LOWERCASE: 2,
     UPPERCASE: 3,
 
-    values: function() {
+    values: function () {
         return [this.KEEP, this.LOWERCASE, this.UPPERCASE];
     },
 
-    forIndex: function(index) {
+    forIndex: function (index) {
         return this.values()[index];
     },
 
-    getIndex: function(value) {
+    getIndex: function (value) {
         return indexOf(this.values(), value);
     },
 
-    toExtensionType: function(value) {
+    toExtensionType: function (value) {
         switch (value) {
 
             case this.KEEP:
@@ -84,15 +84,15 @@ var TrimPrefType = {
     INDIVIDUAL: 2,
     COMBINED: 3,
 
-    values: function() {
+    values: function () {
         return [this.DONT_TRIM, this.INDIVIDUAL, this.COMBINED];
     },
 
-    forIndex: function(index) {
+    forIndex: function (index) {
         return this.values()[index];
     },
 
-    getIndex: function(value) {
+    getIndex: function (value) {
         return indexOf(this.values(), value);
     }
 };
@@ -102,15 +102,15 @@ var ExportLayerTarget = {
     VISIBLE_LAYERS: 2,
     SELECTED_LAYERS: 3, // Export selection, leave the rest as is, visibility for parent groups will be forced.
 
-    values: function() {
+    values: function () {
         return [this.ALL_LAYERS, this.VISIBLE_LAYERS, this.SELECTED_LAYERS];
     },
 
-    forIndex: function(index) {
+    forIndex: function (index) {
         return this.values()[index];
     },
 
-    getIndex: function(value) {
+    getIndex: function (value) {
         return indexOf(this.values(), value);
     }
 };
@@ -236,63 +236,62 @@ function main() {
     */
 }
 
-function triggerExport(profiler, progressBarWindow)
-{
-	env.documentCopy = app.activeDocument.duplicate();
+function triggerExport(profiler, progressBarWindow) {
+    env.documentCopy = app.activeDocument.duplicate();
 
-        // collect layers
+    // collect layers
+    profiler.resetLastTime();
+    if (prefs.topGroupAsLayer) {
+        mergeTopGroups(app.activeDocument);
+    }
+    var collected = collectLayers(progressBarWindow);
+    if (userCancelled) {
+        alert("Export cancelled! No files saved.", "Finished", false);
+        return "cancel";
+    }
+    layers = collected.layers;
+    visibleLayers = collected.visibleLayers;
+    selectedLayers = collected.selectedLayers;
+    groups = collected.groups;
+    var collectionDuration = profiler.getDuration(true, true);
+    if (env.profiling) {
+        alert("Layers collected in " + profiler.format(collectionDuration), "Debug info");
+    }
+
+    // create unique folders
+
+    var foldersOk = !prefs.groupsAsFolders;
+    if (prefs.groupsAsFolders) {
+        foldersOk = createUniqueFolders(prefs.exportLayerTarget);
+        if (foldersOk !== true) {
+            alert(foldersOk + " Not exporting layers.", "Failed", true);
+        }
+    }
+
+    // export
+    if (foldersOk === true) {
         profiler.resetLastTime();
-        if (prefs.topGroupAsLayer) {
-            mergeTopGroups(app.activeDocument);
-        }
-        var collected = collectLayers(progressBarWindow);
+
+        prefs.exportLayerTarget = ExportLayerTarget.VISIBLE_LAYERS;
+        var count = exportLayers(prefs.exportLayerTarget, progressBarWindow);
+        var exportDuration = profiler.getDuration(true, true);
+
+        var message = "";
         if (userCancelled) {
-            alert("Export cancelled! No files saved.", "Finished", false);
-            return "cancel";
+            message += "Export cancelled!\n\n";
         }
-        layers = collected.layers;
-        visibleLayers = collected.visibleLayers;
-        selectedLayers = collected.selectedLayers;
-        groups = collected.groups;
-        var collectionDuration = profiler.getDuration(true, true);
+        message += "Saved " + count.count + " files.";
         if (env.profiling) {
-            alert("Layers collected in " + profiler.format(collectionDuration), "Debug info");
+            message += "\n\nExport function took " + profiler.format(collectionDuration) + " + " + profiler.format(exportDuration) + " to perform.";
         }
-
-        // create unique folders
-
-        var foldersOk = !prefs.groupsAsFolders;
-        if (prefs.groupsAsFolders) {
-            foldersOk = createUniqueFolders(prefs.exportLayerTarget);
-            if (foldersOk !== true) {
-                alert(foldersOk + " Not exporting layers.", "Failed", true);
-            }
+        if (count.error) {
+            message += "\n\nSome layers failed to export! (Are there many layers with the same name?)";
         }
+        // alert(message, "Finished", count.error);
+    }
 
-        // export
-        if (foldersOk === true) {
-            profiler.resetLastTime();
-
-            prefs.exportLayerTarget = ExportLayerTarget.VISIBLE_LAYERS;
-		    var count = exportLayers(prefs.exportLayerTarget, progressBarWindow);
-		    var exportDuration = profiler.getDuration(true, true);
-
-		    var message = "";
-		    if (userCancelled) {
-		        message += "Export cancelled!\n\n";
-		    }
-		    message += "Saved " + count.count + " files.";
-		    if (env.profiling) {
-		        message += "\n\nExport function took " + profiler.format(collectionDuration) + " + " + profiler.format(exportDuration) + " to perform.";
-		    }
-		    if (count.error) {
-		        message += "\n\nSome layers failed to export! (Are there many layers with the same name?)";
-		    }
-		    // alert(message, "Finished", count.error);
-        }
-
-        app.activeDocument.close(SaveOptions.DONOTSAVECHANGES);
-        env.documentCopy = null;
+    app.activeDocument.close(SaveOptions.DONOTSAVECHANGES);
+    env.documentCopy = null;
 }
 
 function exportLayers(exportLayerTarget, progressBarWindow) {
@@ -554,19 +553,19 @@ function createUniqueFolders(exportLayerTarget) {
     switch (exportLayerTarget) {
 
         case ExportLayerTarget.VISIBLE_LAYERS:
-            isTargetGroup = function(group) {
+            isTargetGroup = function (group) {
                 return group.visible;
             };
             break;
 
         case ExportLayerTarget.SELECTED_LAYERS:
-            isTargetGroup = function(group) {
+            isTargetGroup = function (group) {
                 return group.selected;
             };
             break;
 
         default:
-            isTargetGroup = function(group) {
+            isTargetGroup = function (group) {
                 return true;
             };
             break;
@@ -584,7 +583,7 @@ function createUniqueFolders(exportLayerTarget) {
                     if (!handle.exists) {
                         try {
                             renamed = folder.rename(handle.name);
-                        } catch (e) {}
+                        } catch (e) { }
                         break;
                     }
                 }
@@ -627,9 +626,8 @@ function saveImage(fileName) {
                 exportPng24AM(fileName, prefs.formatArgs);
                 break;
         }
-    } 
-    else 
-    {
+    }
+    else {
         // This is what is actually called, TODO cleanup
         png24Prefs = SetPNG24ExportSettings(prefs);
         exportPng24AM(fileName, png24Prefs.formatArgs);
@@ -844,15 +842,15 @@ function createProgressBar() {
         return false;
     }
 
-    win.barRow.cancelBtn.onClick = function() {
+    win.barRow.cancelBtn.onClick = function () {
         userCancelled = true;
     };
 
-    win.onResizing = win.onResize = function() {
+    win.onResizing = win.onResize = function () {
         this.layout.resize();
     }
 
-    win.onClose = function() {
+    win.onClose = function () {
         userCancelled = true;
         return false;
     };
@@ -876,7 +874,7 @@ function updateProgressBar(win, message) {
     }
 }
 
-function repaintProgressBar(win, force /* = false*/ ) {
+function repaintProgressBar(win, force /* = false*/) {
     if (env.version >= 11) { // CS4 added support for UI updates; the previous method became unbearably slow, as is app.refresh()
         if (force) {
             app.refresh();
@@ -910,7 +908,7 @@ function showDialog() {
 
     // destination path
     dlg.funcArea.content.grpDest.txtDest.text = prefs.filePath.fsName;
-    dlg.funcArea.content.grpDest.btnDest.onClick = function() {
+    dlg.funcArea.content.grpDest.btnDest.onClick = function () {
         var newFilePath = Folder.selectDialog("Select destination folder", prefs.filePath);
         if (newFilePath) {
             prefs.filePath = newFilePath;
@@ -918,7 +916,7 @@ function showDialog() {
         }
     };
 
-    dlg.funcArea.buttons.cbOverwrite.onClick = function() {
+    dlg.funcArea.buttons.cbOverwrite.onClick = function () {
         prefs.overwrite = this.value;
         alert("pref overrwritten!")
     };
@@ -927,27 +925,27 @@ function showDialog() {
     dlg.funcArea.content.grpScale.cbScale.value = prefs.scale;
     dlg.funcArea.content.grpScale.editScale.enabled = prefs.scale;
     dlg.funcArea.content.grpScale.editScale.text = prefs.scaleValue;
-    dlg.funcArea.content.grpScale.cbScale.onClick = function() {
+    dlg.funcArea.content.grpScale.cbScale.onClick = function () {
         prefs.scale = this.value;
         dlg.funcArea.content.grpScale.editScale.enabled = this.value;
     };
 
-    dlg.funcArea.content.grpScale.editScale.onChanging = function() {
+    dlg.funcArea.content.grpScale.editScale.onChanging = function () {
         prefs.scaleValue = parseInt(this.text);
     };
 
     // layer subset selection
-    dlg.funcArea.content.grpLayers.radioLayersAll.onClick = function() {
+    dlg.funcArea.content.grpLayers.radioLayersAll.onClick = function () {
         prefs.exportLayerTarget = ExportLayerTarget.ALL_LAYERS;
         dlg.funcArea.content.grpBgFgLayer.cbBgLayer.enabled = (layerCount > 1);
         dlg.funcArea.content.grpBgFgLayer.cbFgLayer.enabled = (layerCount > 1);
     };
-    dlg.funcArea.content.grpLayers.radioLayersVis.onClick = function() {
+    dlg.funcArea.content.grpLayers.radioLayersVis.onClick = function () {
         prefs.exportLayerTarget = ExportLayerTarget.VISIBLE_LAYERS;
         dlg.funcArea.content.grpBgFgLayer.cbBgLayer.enabled = (visibleLayerCount > 1);
         dlg.funcArea.content.grpBgFgLayer.cbFgLayer.enabled = (visibleLayerCount > 1);
     };
-    dlg.funcArea.content.grpLayers.radioLayersSel.onClick = function() {
+    dlg.funcArea.content.grpLayers.radioLayersSel.onClick = function () {
         prefs.exportLayerTarget = ExportLayerTarget.SELECTED_LAYERS;
         dlg.funcArea.content.grpBgFgLayer.cbBgLayer.enabled = false;
         dlg.funcArea.content.grpBgFgLayer.cbFgLayer.enabled = false;
@@ -961,12 +959,12 @@ function showDialog() {
     dlg.funcArea.content.grpLayers.EditIgnoreLayers.enabled = prefs.ignoreLayers;
 
     dlg.funcArea.content.grpLayers.EditIgnoreLayers.text = prefs.ignoreLayersString;
-    dlg.funcArea.content.grpLayers.cbIgnoreLayers.onClick = function() {
+    dlg.funcArea.content.grpLayers.cbIgnoreLayers.onClick = function () {
         dlg.funcArea.content.grpLayers.EditIgnoreLayers.enabled = this.value;
         prefs.ignoreLayers = !this.value;
     };
 
-    dlg.funcArea.content.grpLayers.EditIgnoreLayers.onChange = function() {
+    dlg.funcArea.content.grpLayers.EditIgnoreLayers.onChange = function () {
         prefs.ignoreLayersString = this.text;
     };
 
@@ -1001,7 +999,7 @@ function showDialog() {
     }
 
     // show proper file type options
-    formatDropDown.onChange = function() {
+    formatDropDown.onChange = function () {
         // Note: There's a bug in CS5 and CC where ListItem.selected doesn't report correct value in onChange().
         // A workaround is to rely on DropDownList.selection instead.
         for (var i = formatOpts.length - 1; i >= 0; --i) {
@@ -1013,16 +1011,16 @@ function showDialog() {
     formatDropDown.selection = 0;
 
     // file name prefix
-    dlg.funcArea.content.grpPrefix.editPrefix.onChange = function() {
+    dlg.funcArea.content.grpPrefix.editPrefix.onChange = function () {
         this.text = makeValidFileName(this.text, prefs.replaceSpaces);
     };
 
     // file name suffix
-    dlg.funcArea.content.grpPrefix.editSuffix.onChange = function() {
+    dlg.funcArea.content.grpPrefix.editSuffix.onChange = function () {
         this.text = makeValidFileName(this.text, prefs.replaceSpaces);
     };
 
-    dlg.funcArea.content.grpFolderTree.cbFolderTree.onClick = function() {
+    dlg.funcArea.content.grpFolderTree.cbFolderTree.onClick = function () {
         dlg.funcArea.content.grpPrefix.editPrefix.enabled = !this.value;
         dlg.funcArea.content.grpPrefix.editSuffix.enabled = !this.value;
 
@@ -1033,7 +1031,7 @@ function showDialog() {
         cbTopGroupAsLayer.enabled = !this.value;
     };
 
-    dlg.funcArea.content.grpFolderTree.cbTopGroupAsFolder.onClick = function() {
+    dlg.funcArea.content.grpFolderTree.cbTopGroupAsFolder.onClick = function () {
         dlg.funcArea.content.grpPrefix.editPrefix.enabled = !this.value;
         dlg.funcArea.content.grpPrefix.editSuffix.enabled = !this.value;
 
@@ -1041,7 +1039,7 @@ function showDialog() {
         dlg.funcArea.content.grpFolderTree.cbTopGroupAsLayer.enabled = !this.value;
     };
 
-    dlg.funcArea.content.grpFolderTree.cbTopGroupAsLayer.onClick = function() {
+    dlg.funcArea.content.grpFolderTree.cbTopGroupAsLayer.onClick = function () {
         dlg.funcArea.content.grpPrefix.editPrefix.enabled = !this.value;
         dlg.funcArea.content.grpPrefix.editSuffix.enabled = !this.value;
 
@@ -1053,7 +1051,7 @@ function showDialog() {
     dlg.funcArea.content.grpNaming.drdNaming.selection = 0;
     dlg.funcArea.content.grpLetterCase.drdLetterCase.selection = 0;
 
-    dlg.funcArea.content.grpNaming.cbNaming.onClick = function() {
+    dlg.funcArea.content.grpNaming.cbNaming.onClick = function () {
         prefs.replaceSpaces = !this.value;
         if (prefs.replaceSpaces) {
             dlg.funcArea.content.grpNaming.radioUnderscore.show();
@@ -1064,16 +1062,16 @@ function showDialog() {
         }
     };
 
-    dlg.funcArea.content.grpNaming.radioUnderscore.onClick = function() {
+    dlg.funcArea.content.grpNaming.radioUnderscore.onClick = function () {
         prefs.delimiter = '_';
     };
 
-    dlg.funcArea.content.grpNaming.radioHyphen.onClick = function() {
+    dlg.funcArea.content.grpNaming.radioHyphen.onClick = function () {
         prefs.delimiter = '-';
     };
 
     // trimming
-    dlg.funcArea.content.grpTrim.drdTrim.onChange = function() {
+    dlg.funcArea.content.grpTrim.drdTrim.onChange = function () {
         if (TrimPrefType.forIndex(this.selection.index) == TrimPrefType.INDIVIDUAL) {
             dlg.funcArea.content.grpTrim.cbTrim.show();
         } else {
@@ -1089,12 +1087,12 @@ function showDialog() {
     dlg.funcArea.content.grpPadding.editPadding.enabled = prefs.padding;
     dlg.funcArea.content.grpPadding.editPadding.text = prefs.paddingValue;
 
-    dlg.funcArea.content.grpPadding.cbPadding.onClick = function() {
+    dlg.funcArea.content.grpPadding.cbPadding.onClick = function () {
         prefs.padding = this.value;
         dlg.funcArea.content.grpPadding.editPadding.enabled = this.value;
     };
 
-    dlg.funcArea.content.grpPadding.editPadding.onChanging = function() {
+    dlg.funcArea.content.grpPadding.editPadding.onChanging = function () {
         prefs.paddingValue = parseInt(this.text);
     };
 
@@ -1104,7 +1102,7 @@ function showDialog() {
     dlg.funcArea.content.grpBgFgLayer.cbFgLayer.enabled = (layerCount > 1);
 
     // buttons
-    dlg.funcArea.buttons.btnRun.onClick = function() {
+    dlg.funcArea.buttons.btnRun.onClick = function () {
         // collect arguments for saving and proceed
 
         prefs.outputPrefix = dlg.funcArea.content.grpPrefix.editPrefix.text;
@@ -1153,12 +1151,12 @@ function showDialog() {
 
         dlg.close(1);
     };
-    dlg.funcArea.buttons.btnCancel.onClick = function() {
+    dlg.funcArea.buttons.btnCancel.onClick = function () {
         dlg.close(0);
     };
 
     dlg.funcArea.buttons.btnSettings.enabled = env.cs3OrHigher;
-    dlg.funcArea.buttons.btnSettings.onClick = function() {
+    dlg.funcArea.buttons.btnSettings.onClick = function () {
         saveSettings(dlg, formatOpts);
         dlg.close(0);
     };
@@ -1186,7 +1184,7 @@ function applySettings(dlg, formatOpts) {
         return;
     }
 
-    with(dlg.funcArea.content) {
+    with (dlg.funcArea.content) {
         // Common settings
 
         var destFolder = new Folder(settings.destination);
@@ -1293,7 +1291,7 @@ function saveSettings(dlg, formatOpts) {
 
     var desc = new ActionDescriptor();
 
-    with(dlg.funcArea.content) {
+    with (dlg.funcArea.content) {
         // common
 
         var exportLayerTarget = ExportLayerTarget.ALL_LAYERS;
@@ -1400,7 +1398,7 @@ function getFormatOptsTarga() {
         type: "TGA",
 
         // Dialog GUI
-        dialogParams: function(parent) {
+        dialogParams: function (parent) {
             var depth = parent.add("group");
             depth.add("statictext", undefined, "Depth:");
             var bitsPerPixelLabels = ["16 bit", "24 bit", "32 bit"];
@@ -1415,7 +1413,7 @@ function getFormatOptsTarga() {
         },
 
         // Reaction to dialog confirmation
-        onDialogSelect: function(parent) {
+        onDialogSelect: function (parent) {
             prefs.format = "TGA";
             prefs.fileExtension = ".tga";
             prefs.formatArgs = new TargaSaveOptions();
@@ -1432,14 +1430,14 @@ function getFormatOptsTarga() {
         },
 
         // Save settings into an ActionDescriptor
-        packSettings: function(desc, formatOptRoot) {
+        packSettings: function (desc, formatOptRoot) {
             desc.putInteger(this.settingsKeys.depth, formatOptRoot.bitsPerPixel.selection.index);
             desc.putBoolean(this.settingsKeys.alpha, formatOptRoot.alpha.value);
             desc.putBoolean(this.settingsKeys.rle, formatOptRoot.rle.value);
         },
 
         // Get settings from an ActionDescriptor
-        unpackSettings: function(desc) {
+        unpackSettings: function (desc) {
             return {
                 depth: desc.getInteger(this.settingsKeys.depth),
                 alpha: desc.getBoolean(this.settingsKeys.alpha),
@@ -1448,7 +1446,7 @@ function getFormatOptsTarga() {
         },
 
         // Apply settings to dialog GUI
-        applySettings: function(settings, formatOptRoot) {
+        applySettings: function (settings, formatOptRoot) {
             formatOptRoot.alpha.value = settings.format[this.type].alpha;
             formatOptRoot.bitsPerPixel.selection = settings.format[this.type].depth;
             formatOptRoot.rle.value = settings.format[this.type].rle;
@@ -1461,7 +1459,7 @@ function getFormatOptsJPEG() {
         type: "JPG",
 
         // Dialog GUI
-        dialogParams: function(parent) {
+        dialogParams: function (parent) {
             var ROW_HEIGHT = 16;
 
             // quality
@@ -1473,7 +1471,7 @@ function getFormatOptsJPEG() {
             var qualityValue = row.add("statictext", undefined, "12");
             qualityValue.preferredSize = [30, ROW_HEIGHT];
 
-            parent.quality.onChanging = function() {
+            parent.quality.onChanging = function () {
                 this.value = Math.round(this.value);
                 qualityValue.text = this.value;
             };
@@ -1494,18 +1492,18 @@ function getFormatOptsJPEG() {
 
             // progressive
             parent.progressive = parent.add("checkbox", undefined, "Progressive");
-            parent.progressive.onClick = function() {
+            parent.progressive.onClick = function () {
                 parent.optimised.enabled = !this.value;
             };
         },
 
         // Reaction to dialog confirmation
-        onDialogSelect: function(parent) {
+        onDialogSelect: function (parent) {
             prefs.format = "JPG";
             prefs.fileExtension = ".jpg";
             prefs.formatArgs = new JPEGSaveOptions();
             var matteValue = [MatteType.WHITE, MatteType.BLACK, MatteType.SEMIGRAY, MatteType.NONE, MatteType.BACKGROUND, MatteType.FOREGROUND];
-            with(prefs.formatArgs) {
+            with (prefs.formatArgs) {
                 quality = parent.quality.value;
                 matte = matteValue[parent.matte.selection.index];
                 embedColorProfile = parent.icc.value;
@@ -1529,7 +1527,7 @@ function getFormatOptsJPEG() {
         },
 
         // Save settings into an ActionDescriptor
-        packSettings: function(desc, formatOptRoot) {
+        packSettings: function (desc, formatOptRoot) {
             desc.putInteger(this.settingsKeys.quality, formatOptRoot.quality.value);
             desc.putInteger(this.settingsKeys.matte, formatOptRoot.matte.selection.index);
             desc.putBoolean(this.settingsKeys.icc, formatOptRoot.icc.value);
@@ -1538,7 +1536,7 @@ function getFormatOptsJPEG() {
         },
 
         // Get settings from an ActionDescriptor
-        unpackSettings: function(desc) {
+        unpackSettings: function (desc) {
             return {
                 quality: desc.getInteger(this.settingsKeys.quality),
                 matte: desc.getInteger(this.settingsKeys.matte),
@@ -1549,7 +1547,7 @@ function getFormatOptsJPEG() {
         },
 
         // Apply settings to dialog GUI
-        applySettings: function(settings, formatOptRoot) {
+        applySettings: function (settings, formatOptRoot) {
             var formatSettings = settings.format[this.type];
             formatOptRoot.quality.value = formatSettings.quality;
             formatOptRoot.matte.selection = formatSettings.matte;
@@ -1569,7 +1567,7 @@ function getFormatOptsPNG24() {
         type: "PNG-24",
 
         // Dialog GUI
-        dialogParams: function(parent) {
+        dialogParams: function (parent) {
             var ROW_HEIGHT = 16;
 
             // matte
@@ -1585,7 +1583,7 @@ function getFormatOptsPNG24() {
             parent.transparency.preferredSize = [120, ROW_HEIGHT];
             parent.transparency.value = true;
 
-            parent.transparency.onClick = function() {
+            parent.transparency.onClick = function () {
                 parent.matte.enabled = !this.value;
             };
 
@@ -1595,7 +1593,7 @@ function getFormatOptsPNG24() {
         },
 
         // Reaction to dialog confirmation
-        onDialogSelect: function(parent) {
+        onDialogSelect: function (parent) {
             prefs.format = "PNG-24";
             prefs.fileExtension = ".png";
 
@@ -1615,7 +1613,7 @@ function getFormatOptsPNG24() {
             var matteColors = [WHITE, BLACK, GRAY, BLACK, app.backgroundColor.rgb, app.foregroundColor.rgb];
 
             prefs.formatArgs = new ExportOptionsSaveForWeb();
-            with(prefs.formatArgs) {
+            with (prefs.formatArgs) {
                 format = SaveDocumentType.PNG;
                 PNG8 = false;
                 interlaced = parent.interlaced.value;
@@ -1631,14 +1629,14 @@ function getFormatOptsPNG24() {
         },
 
         // Save settings into an ActionDescriptor
-        packSettings: function(desc, formatOptRoot) {
+        packSettings: function (desc, formatOptRoot) {
             desc.putInteger(this.settingsKeys.matte, formatOptRoot.matte.selection.index);
             desc.putBoolean(this.settingsKeys.transparency, formatOptRoot.transparency.value);
             desc.putBoolean(this.settingsKeys.interlaced, formatOptRoot.interlaced.value);
         },
 
         // Get settings from an ActionDescriptor
-        unpackSettings: function(desc) {
+        unpackSettings: function (desc) {
             return {
                 matte: desc.getInteger(this.settingsKeys.matte),
                 transparency: desc.getBoolean(this.settingsKeys.transparency),
@@ -1647,7 +1645,7 @@ function getFormatOptsPNG24() {
         },
 
         // Apply settings to dialog GUI
-        applySettings: function(settings, formatOptRoot) {
+        applySettings: function (settings, formatOptRoot) {
             var formatSettings = settings.format[this.type];
             formatOptRoot.matte.selection = formatSettings.matte;
             formatOptRoot.matte.enabled = !formatSettings.transparency;
@@ -1660,8 +1658,7 @@ function getFormatOptsPNG24() {
     };
 }
 
-function SetPNG24ExportSettings(prefs, parent)
-{
+function SetPNG24ExportSettings(prefs, parent) {
     prefs.format = "PNG-24";
     prefs.fileExtension = ".png";
 
@@ -1681,7 +1678,7 @@ function SetPNG24ExportSettings(prefs, parent)
     var matteColors = [WHITE, BLACK, GRAY, BLACK, app.backgroundColor.rgb, app.foregroundColor.rgb];
 
     prefs.formatArgs = new ExportOptionsSaveForWeb();
-    with(prefs.formatArgs) {
+    with (prefs.formatArgs) {
         format = SaveDocumentType.PNG;
         PNG8 = false;
         interlaced = false;
@@ -1697,7 +1694,7 @@ function getFormatOptsPNG8() {
         type: "PNG-8",
 
         // Dialog GUI
-        dialogParams: function(parent) {
+        dialogParams: function (parent) {
             var ROW_HEIGHT = 16;
             var LABEL_WIDTH = 105;
 
@@ -1726,7 +1723,7 @@ function getFormatOptsPNG8() {
             parent.colors.preferredSize = [70, 18];
             parent.colorsLast = 256;
 
-            parent.colors.onChange = function() {
+            parent.colors.onChange = function () {
                 var colorNum = parseInt(this.text, 10);
                 if (isNaN(colorNum)) {
                     colorNum = parent.colorsLast;
@@ -1757,12 +1754,12 @@ function getFormatOptsPNG8() {
             var ditherAmountValue = ditherAmountGroup.add("statictext", undefined, "100%");
             ditherAmountGroup.enabled = false;
 
-            parent.ditherAmount.onChanging = function() {
+            parent.ditherAmount.onChanging = function () {
                 this.value = Math.round(this.value);
                 ditherAmountValue.text = "" + this.value + "%";
             };
 
-            parent.dither.onChange = function() {
+            parent.dither.onChange = function () {
                 ditherAmountGroup.enabled = (this.selection == 1);
                 parent.ditherAmount.notify("onChanging");
             };
@@ -1777,7 +1774,7 @@ function getFormatOptsPNG8() {
             parent.transparency = transparencyPanel.add("checkbox", undefined, "Enabled");
             parent.transparency.value = true;
 
-            parent.transparency.onClick = function() {
+            parent.transparency.onClick = function () {
                 matteRow.enabled = !this.value;
                 tdRow.enabled = this.value;
             };
@@ -1802,7 +1799,7 @@ function getFormatOptsPNG8() {
             ]);
             parent.transparencyDither.selection = 0;
 
-            parent.transparencyDither.onChange = function() {
+            parent.transparencyDither.onChange = function () {
                 transDitherAmountGroup.enabled = (this.selection == 1);
                 parent.transparencyDitherAmount.notify("onChanging");
             };
@@ -1813,14 +1810,14 @@ function getFormatOptsPNG8() {
             var transDitherAmountValue = transDitherAmountGroup.add("statictext", undefined, "100%");
             transDitherAmountGroup.enabled = false;
 
-            parent.transparencyDitherAmount.onChanging = function() {
+            parent.transparencyDitherAmount.onChanging = function () {
                 this.value = Math.round(this.value);
                 transDitherAmountValue.text = "" + this.value + "%";
             };
         },
 
         // Reaction to dialog confirmation
-        onDialogSelect: function(parent) {
+        onDialogSelect: function (parent) {
             prefs.format = "PNG-8";
             prefs.fileExtension = ".png";
 
@@ -1856,7 +1853,7 @@ function getFormatOptsPNG8() {
             var matteColors = [WHITE, BLACK, GRAY, BLACK, app.backgroundColor.rgb, app.foregroundColor.rgb];
 
             prefs.formatArgs = new ExportOptionsSaveForWeb();
-            with(prefs.formatArgs) {
+            with (prefs.formatArgs) {
                 format = SaveDocumentType.PNG;
                 PNG8 = true;
                 colorReduction = colorReductionType[parent.colorReduction.selection.index];
@@ -1890,7 +1887,7 @@ function getFormatOptsPNG8() {
         },
 
         // Save settings into an ActionDescriptor
-        packSettings: function(desc, formatOptRoot) {
+        packSettings: function (desc, formatOptRoot) {
             desc.putInteger(this.settingsKeys.colorReduction, formatOptRoot.colorReduction.selection.index);
             desc.putString(this.settingsKeys.numberOfColors, formatOptRoot.colors.text);
             desc.putInteger(this.settingsKeys.dither, formatOptRoot.dither.selection.index);
@@ -1903,7 +1900,7 @@ function getFormatOptsPNG8() {
         },
 
         // Get settings from an ActionDescriptor
-        unpackSettings: function(desc) {
+        unpackSettings: function (desc) {
             return {
                 colorReduction: desc.getInteger(this.settingsKeys.colorReduction),
                 numberOfColors: desc.getString(this.settingsKeys.numberOfColors),
@@ -1918,7 +1915,7 @@ function getFormatOptsPNG8() {
         },
 
         // Apply settings to dialog GUI
-        applySettings: function(settings, formatOptRoot) {
+        applySettings: function (settings, formatOptRoot) {
             var formatSettings = settings.format[this.type];
             formatOptRoot.colorReduction.selection = formatSettings.colorReduction;
             formatOptRoot.colors.text = formatSettings.numberOfColors;
@@ -1946,7 +1943,7 @@ function getFormatOptsBMP() {
         type: "BMP",
 
         // Dialog GUI
-        dialogParams: function(parent) {
+        dialogParams: function (parent) {
             // bit depth
             var depth = parent.add("group");
             depth.add("statictext", undefined, "Depth:");
@@ -1974,7 +1971,7 @@ function getFormatOptsBMP() {
         },
 
         // Reaction to dialog confirmation
-        onDialogSelect: function(parent) {
+        onDialogSelect: function (parent) {
             prefs.format = "BMP";
             prefs.fileExtension = ".bmp";
             prefs.formatArgs = new BMPSaveOptions();
@@ -2000,7 +1997,7 @@ function getFormatOptsBMP() {
         },
 
         // Save settings into an ActionDescriptor
-        packSettings: function(desc, formatOptRoot) {
+        packSettings: function (desc, formatOptRoot) {
             desc.putBoolean(this.settingsKeys.alpha, formatOptRoot.alpha.value);
             desc.putInteger(this.settingsKeys.depth, formatOptRoot.depth.selection.index);
             desc.putBoolean(this.settingsKeys.rle, formatOptRoot.rle.value);
@@ -2008,7 +2005,7 @@ function getFormatOptsBMP() {
         },
 
         // Get settings from an ActionDescriptor
-        unpackSettings: function(desc) {
+        unpackSettings: function (desc) {
             return {
                 depth: desc.getInteger(this.settingsKeys.depth),
                 alpha: desc.getBoolean(this.settingsKeys.alpha),
@@ -2018,7 +2015,7 @@ function getFormatOptsBMP() {
         },
 
         // Apply settings to dialog GUI
-        applySettings: function(settings, formatOptRoot) {
+        applySettings: function (settings, formatOptRoot) {
             var formatSettings = settings.format[this.type];
             formatOptRoot.alpha.value = formatSettings.alpha;
             formatOptRoot.depth.selection = formatSettings.depth;
@@ -2455,7 +2452,7 @@ function exportPng8AM(fileName, options) {
             id16 = app.charIDToTypeID("Web ");
             break;
 
-            // CUSTOM not supported
+        // CUSTOM not supported
 
         case ColorReductionType.BLACKWHITE:
         case ColorReductionType.GRAYSCALE:
@@ -2609,7 +2606,7 @@ function makeValidFileName(fileName, replaceSpaces) {
 
 function formatString(text) {
     var args = Array.prototype.slice.call(arguments, 1);
-    return text.replace(/\{(\d+)\}/g, function(match, number) {
+    return text.replace(/\{(\d+)\}/g, function (match, number) {
         return (typeof args[number] != 'undefined') ? args[number] : match;
     });
 }
@@ -2668,7 +2665,7 @@ function Profiler(enabled) {
 }
 
 function defineProfilerMethods() {
-    Profiler.prototype.getDuration = function(rememberAsLastCall, sinceLastCall) {
+    Profiler.prototype.getDuration = function (rememberAsLastCall, sinceLastCall) {
         if (this.enabled) {
             var currentTime = new Date();
             var lastTime = sinceLastCall ? this.lastTime : this.startTime;
@@ -2679,11 +2676,11 @@ function defineProfilerMethods() {
         }
     }
 
-    Profiler.prototype.resetLastTime = function() {
+    Profiler.prototype.resetLastTime = function () {
         this.lastTime = new Date();
     };
 
-    Profiler.prototype.format = function(duration) {
+    Profiler.prototype.format = function (duration) {
         var output = padder(duration.getUTCHours(), 2) + ":";
         output += padder(duration.getUTCMinutes(), 2) + ":";
         output += padder(duration.getUTCSeconds(), 2) + ".";

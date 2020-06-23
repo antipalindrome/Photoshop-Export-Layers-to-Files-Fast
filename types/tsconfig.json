@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "module": "none",
+    "strict": true,
+    "noLib": true,
+    "typeRoots": []
+  },
+  "exclude": ["node_modules"]
+}
