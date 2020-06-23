@@ -183,7 +183,7 @@ function main() {
         prefs.filePath = Folder.myDocuments;
     }
     prefs.formatArgs = null;
-    prefs.exportLayerTarget = ExportLayerTarget.ALL_LAYERS;
+    prefs.exportLayerTarget = ExportLayerTarget.VISIBLE_LAYERS;
     prefs.outputPrefix = "";
     prefs.outputSuffix = "";
     prefs.naming = FileNameType.AS_LAYERS_NO_EXT;
@@ -226,13 +226,14 @@ function main() {
     }
 
     triggerExport(profiler, progressBarWindow);
-
-    // show dialogue
+    /*
+    triggerExport(profiler, progressBarWindow);
     if (showDialog() === 1) {
-        triggerExport();
+        triggerExport(profiler, progressBarWindow);
     } else {
         return "cancel";
     }
+    */
 }
 
 function triggerExport(profiler, progressBarWindow)
@@ -271,6 +272,8 @@ function triggerExport(profiler, progressBarWindow)
         // export
         if (foldersOk === true) {
             profiler.resetLastTime();
+
+            prefs.exportLayerTarget = ExportLayerTarget.VISIBLE_LAYERS;
 		    var count = exportLayers(prefs.exportLayerTarget, progressBarWindow);
 		    var exportDuration = profiler.getDuration(true, true);
 
@@ -285,7 +288,7 @@ function triggerExport(profiler, progressBarWindow)
 		    if (count.error) {
 		        message += "\n\nSome layers failed to export! (Are there many layers with the same name?)";
 		    }
-		    alert(message, "Finished", count.error);
+		    // alert(message, "Finished", count.error);
         }
 
         app.activeDocument.close(SaveOptions.DONOTSAVECHANGES);
@@ -620,18 +623,16 @@ function saveImage(fileName) {
                 break;
 
             default:
-                app.activeDocument.exportDocument(fileName, ExportType.SAVEFORWEB, prefs.formatArgs);
+                // app.activeDocument.exportDocument(fileName, ExportType.SAVEFORWEB, prefs.formatArgs);
+                exportPng24AM(fileName, prefs.formatArgs);
                 break;
         }
-    } else {
-        // app.activeDocument.saveAs(fileName, prefs.formatArgs, true, LetterCase.toExtensionType(prefs.namingLetterCase));
-        var saveOptions = new PhotoshopSaveOptions();
-		saveOptions.alphaChannels = false;
-		saveOptions.annotations = false;
-		saveOptions.embedColorProfile = true;
-		saveOptions.layers = true;
-		saveOptions.spotColors = false;
-        app.activeDocument.saveAs(fileName, saveOptions, true, LetterCase.toExtensionType(this.KEEP));
+    } 
+    else 
+    {
+        // This is what is actually called, TODO cleanup
+        png24Prefs = SetPNG24ExportSettings(prefs);
+        exportPng24AM(fileName, png24Prefs.formatArgs);
     }
 
     return true;
@@ -919,6 +920,7 @@ function showDialog() {
 
     dlg.funcArea.buttons.cbOverwrite.onClick = function() {
         prefs.overwrite = this.value;
+        alert("pref overrwritten!")
     };
 
     //Scale section
@@ -1656,6 +1658,38 @@ function getFormatOptsPNG24() {
             }
         }
     };
+}
+
+function SetPNG24ExportSettings(prefs, parent)
+{
+    prefs.format = "PNG-24";
+    prefs.fileExtension = ".png";
+
+    var WHITE = new RGBColor();
+    WHITE.red = 255;
+    WHITE.green = 255;
+    WHITE.blue = 255;
+    var BLACK = new RGBColor();
+    BLACK.red = 0;
+    BLACK.green = 0;
+    BLACK.blue = 0;
+    var GRAY = new RGBColor();
+    GRAY.red = 127;
+    GRAY.green = 127;
+    GRAY.blue = 127;
+
+    var matteColors = [WHITE, BLACK, GRAY, BLACK, app.backgroundColor.rgb, app.foregroundColor.rgb];
+
+    prefs.formatArgs = new ExportOptionsSaveForWeb();
+    with(prefs.formatArgs) {
+        format = SaveDocumentType.PNG;
+        PNG8 = false;
+        interlaced = false;
+        transparency = true;
+        matteColor = WHITE;
+    }
+
+    return prefs;
 }
 
 function getFormatOptsPNG8() {
