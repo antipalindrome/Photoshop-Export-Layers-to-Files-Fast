@@ -629,7 +629,7 @@ function saveImage(fileName) {
     }
     else {
         // This is what is actually called, TODO cleanup
-        png24Prefs = SetPNG24ExportSettings(prefs);
+        var png24Prefs = SetPNG24ExportSettings(prefs);
         exportPng24AM(fileName, png24Prefs.formatArgs);
     }
 
@@ -653,6 +653,7 @@ function makeFileNameFromIndex(index, numOfDigits, layer) {
 }
 
 function makeFileNameFromLayerName(layer, stripExt) {
+
     var fileName = makeValidFileName(layer.layer.name, prefs.replaceSpaces);
     if (stripExt) {
         var dotIdx = fileName.indexOf('.');
@@ -710,7 +711,8 @@ function getUniqueFileName(fileName, layer) {
         }
     }
 
-    fileName = prefs.filePath + "/" + localFolders + fileName;
+    // TODO: filename fixing here!
+    fileName = convertFilenameToBlankoFormat(fileName, localFolders);
 
     // Check if the file already exists. In such case a numeric suffix will be added to disambiguate.
     var uniqueName = fileName;
@@ -722,8 +724,15 @@ function getUniqueFileName(fileName, layer) {
             return handle;
         }
     }
-
     return false;
+}
+
+function convertFilenameToBlankoFormat(fileName, localFolders) {
+    var folderName = localFolders.replace("/", "");
+    fileName = app.activeDocument.name + "_" + folderName + "_" + fileName;
+    fileName = prefs.filePath + "/" + localFolders + fileName;
+    fileName = fileName.replace(" copy", "");
+    return fileName.toLowerCase();
 }
 
 function mergeTopGroups(doc) {
@@ -918,7 +927,6 @@ function showDialog() {
 
     dlg.funcArea.buttons.cbOverwrite.onClick = function () {
         prefs.overwrite = this.value;
-        alert("pref overrwritten!")
     };
 
     //Scale section
