@@ -196,7 +196,7 @@ function main() {
     prefs.scale = false;
     prefs.scaleValue = 100;
     prefs.forceTrimMethod = false;
-    prefs.groupsAsFolders = true;
+    prefs.groupsAsFolders = false;
     prefs.overwrite = false;
     prefs.padding = false;
     prefs.paddingValue = 1;
@@ -668,6 +668,7 @@ function makeFileNameFromLayerName(layer, stripExt) {
 }
 
 function getUniqueFileName(fileName, layer) {
+
     var ext = prefs.fileExtension;
     // makeValidFileName() here basically just converts the space between the prefix, the core file name and suffix,
     // but it's a good idea to keep file naming conventions in one place, i.e. inside makeValidFileName(),
@@ -684,6 +685,7 @@ function getUniqueFileName(fileName, layer) {
     }
 
     var localFolders = "";
+
     if (prefs.groupsAsFolders) {
         var parent = layer.parent;
         while (parent) {
@@ -709,6 +711,10 @@ function getUniqueFileName(fileName, layer) {
             }
             localFolders = topGroup.name + "/";
         }
+    }
+    // TODO: clean up code, this else should be the only option
+    else {
+        localFolders = layer.parent.layer.name;
     }
 
     // TODO: filename fixing here!
