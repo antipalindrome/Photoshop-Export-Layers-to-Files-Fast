@@ -165,20 +165,21 @@ var selectedLayerCount = 0;
 //
 // Entry point
 //
-
-bootstrap();
+var outputArgument = arguments[0];
+bootstrap(outputArgument);
 
 //
 // Processing logic
 //
 
-function main() {
+function main(outputPathString) {
+
     // user preferences
     prefs = new Object();
     prefs.format = "";
     prefs.fileExtension = "";
     try {
-        prefs.filePath = app.activeDocument.path;
+        prefs.filePath = outputPathString;
     } catch (e) {
         prefs.filePath = Folder.myDocuments;
     }
@@ -734,9 +735,8 @@ function getUniqueFileName(fileName, layer) {
 }
 
 function convertFilenameToBlankoFormat(fileName, localFolders) {
-    var folderName = localFolders.replace("/", "");
-    fileName = app.activeDocument.name + "_" + folderName + "_" + fileName;
-    fileName = prefs.filePath + "/" + localFolders + fileName;
+    fileName = app.activeDocument.name + "_" + localFolders + "_" + fileName;
+    fileName = prefs.filePath + "/" + fileName;
     fileName = fileName.replace(" copy", "");
     return fileName.toLowerCase();
 }
@@ -2044,10 +2044,7 @@ function getFormatOptsBMP() {
 // Bootstrapper (version support, getting additional environment settings, error handling...)
 //
 
-function bootstrap() {
-    function showError(err) {
-        alert(err + ': on line ' + err.line, 'Script Error', true);
-    }
+function bootstrap(outputPath) {
 
     // initialisation of class methods
     defineProfilerMethods();
@@ -2094,9 +2091,9 @@ function bootstrap() {
         // run the script itself
         if (env.cs3OrHigher) {
             // suspend history for CS3 or higher
-            app.activeDocument.suspendHistory('Export Layers To Files', 'main()');
+            app.activeDocument.suspendHistory('Export Layers To Files', 'main(outputPath)');
         } else {
-            main();
+            main(outputPath);
         }
 
         if (env.documentCopy) {
@@ -2104,7 +2101,7 @@ function bootstrap() {
         }
     } catch (e) {
         // report errors unless the user cancelled
-        if (e.number != 8007) showError(e);
+        if (e.number != 8007) alert(e);
         if (env.documentCopy) {
             env.documentCopy.close(SaveOptions.DONOTSAVECHANGES);
         }
