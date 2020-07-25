@@ -250,8 +250,36 @@ function triggerExport(profiler, progressBarWindow) {
         alert("Export cancelled! No files saved.", "Finished", false);
         return "cancel";
     }
+
     layers = collected.layers;
     visibleLayers = collected.visibleLayers;
+
+    alert("getting layer colors!");
+    for (var i = 0; i < visibleLayers.length; i++) {
+        /*
+        var color = getLayerColourByID(visibleLayers[i].layer.id);
+        var R = color.rgb.red.toFixed(2);
+        var G = color.rgb.green.toFixed(2);
+        var B = color.rgb.blue.toFixed(2);
+        alert(R + ", " + G + ", " + B);
+        */
+
+        var color = getLayerColourByID(visibleLayers[i].layer.id);
+        // var red = color.getDouble(stringIDToTypeID("red"));
+        alert("color name: " + color);
+        // var objRGBColor = objsolidColorLayer.getObjectValue(stringIDToTypeID("color")) ;
+        // alert("Fill\nred:"+objRGBColor.getDouble(stringIDToTypeID("red"))+"\ngrain:"+objRGBColor.getDouble(stringIDToTypeID("grain"))+"\nblue:"+objRGBColor.getDouble(stringIDToTypeID("blue")));
+
+
+        /*
+        var doc = app.activeDocument;
+        doc.activeLayer = visibleLayers[i].layer;
+        alert('active layer: ' + doc.activeLayer.name);
+        alert('Red: ' + parseInt(doc.activeLayer.foregroundColor.rgb.red) + '\rGreen: ' + parseInt(foregroundColor.rgb.green) + '\rBlue: ' + parseInt(foregroundColor.rgb.blue));
+        */
+
+    }
+
     selectedLayers = collected.selectedLayers;
     groups = collected.groups;
     var collectionDuration = profiler.getDuration(true, true);
@@ -260,7 +288,8 @@ function triggerExport(profiler, progressBarWindow) {
     }
 
     // create unique folders
-
+    // TODO: reintegrate, commenting out for debug
+    /*
     var foldersOk = !prefs.groupsAsFolders;
     if (prefs.groupsAsFolders) {
         foldersOk = createUniqueFolders(prefs.exportLayerTarget);
@@ -293,7 +322,21 @@ function triggerExport(profiler, progressBarWindow) {
 
     app.activeDocument.close(SaveOptions.DONOTSAVECHANGES);
     env.documentCopy = null;
+    */
 }
+
+function getLayerColourByID(ID) {
+
+    var ref = new ActionReference();
+    ref.putProperty(charIDToTypeID("Prpr"), stringIDToTypeID('color'));
+    ref.putIdentifier(charIDToTypeID("Lyr "), ID);
+    var actionDescriptor = executeActionGet(ref);
+    var color = actionDescriptor.getEnumerationValue(stringIDToTypeID('color'));
+    // var objRGBColor = actionDescriptor.getObjectValue(stringIDToTypeID('color'));
+    var colorString = typeIDToStringID(color);
+    return colorString;
+};
+
 
 function exportLayers(exportLayerTarget, progressBarWindow) {
     var retVal = {
@@ -580,7 +623,7 @@ function createUniqueFolders(exportLayerTarget) {
             if (folder.exists && !prefs.overwrite) {
                 var renamed = false;
                 for (var j = 1; j <= 100; ++j) {
-                    var handle = new Folder(path + "-" + padder(j, 3));
+                    var handle = new Folder(path + "_" + padder(j, 3));
                     if (!handle.exists) {
                         try {
                             renamed = folder.rename(handle.name);
@@ -726,10 +769,15 @@ function getUniqueFileName(fileName, layer) {
     for (var i = 1; i <= 100; ++i) {
         var handle = File(uniqueName + ext);
         if (handle.exists && !prefs.overwrite) {
-            uniqueName = fileName + "-" + padder(i, 3);
+            uniqueName = fileName + "_" + padder(i, 3) + ext;
         } else {
             return handle;
         }
+    }
+
+    if (!uniqueName.includes(ext)) {
+        alert("no png!");
+        uniqueName = uniqueName + ext;
     }
     return false;
 }
