@@ -165,7 +165,8 @@ var selectedLayerCount = 0;
 //
 // Entry point
 //
-var outputArgument = arguments[0];
+// var outputArgument = arguments[0];
+var outputArgument = "/Users/jedlankitus/Library/Application\ Support/MythicalGames/MythicalStudio/AssetPipeline/Build/Blankos/Intermediate/Loose/Textures/Jed/";
 bootstrap(outputArgument);
 
 //
@@ -237,6 +238,37 @@ function main(outputPathString) {
     */
 }
 
+function cTID(s) {
+    return app.charIDToTypeID(s);
+};
+
+function sTID(s) {
+    return app.stringIDToTypeID(s);
+};
+
+function getLayerDescriptor(doc, layer) {
+
+    var ref = new ActionReference();
+    ref.putEnumerated(cTID("Lyr "), cTID("Ordn"), cTID("Trgt"));
+    return executeActionGet(ref)
+};
+
+function getAdjustmentLayerColor(doc, layer) {
+    var desc = getLayerDescriptor(doc, layer);
+    var adjs = desc.getList(cTID('Adjs'));
+
+    var clrDesc = adjs.getObjectValue(0);
+    var color = clrDesc.getObjectValue(cTID('Clr '));
+
+    var red = Math.round(color.getDouble(cTID('Rd  ')));
+    var green = Math.round(color.getDouble(cTID('Grn ')));
+    var blue = Math.round(color.getDouble(cTID('Bl  ')));
+
+    // var createdSolidColor = createRGBColor(red, green, blue);
+    // var createdRGBColor = createdSolidColor.rgb;
+    return "red, " + red + ", " + "green, " + green;
+};
+
 function triggerExport(profiler, progressBarWindow) {
     env.documentCopy = app.activeDocument.duplicate();
 
@@ -264,19 +296,19 @@ function triggerExport(profiler, progressBarWindow) {
         alert(R + ", " + G + ", " + B);
         */
 
-        var color = getLayerColourByID(visibleLayers[i].layer.id);
+        //var color = getLayerColourByID(visibleLayers[i].layer.id);
         // var red = color.getDouble(stringIDToTypeID("red"));
-        alert("color name: " + color);
+        //alert("color name: " + color);
         // var objRGBColor = objsolidColorLayer.getObjectValue(stringIDToTypeID("color")) ;
         // alert("Fill\nred:"+objRGBColor.getDouble(stringIDToTypeID("red"))+"\ngrain:"+objRGBColor.getDouble(stringIDToTypeID("grain"))+"\nblue:"+objRGBColor.getDouble(stringIDToTypeID("blue")));
 
 
-        /*
         var doc = app.activeDocument;
         doc.activeLayer = visibleLayers[i].layer;
-        alert('active layer: ' + doc.activeLayer.name);
-        alert('Red: ' + parseInt(doc.activeLayer.foregroundColor.rgb.red) + '\rGreen: ' + parseInt(foregroundColor.rgb.green) + '\rBlue: ' + parseInt(foregroundColor.rgb.blue));
-        */
+        var rgb = getAdjustmentLayerColor(app.activeDocument, doc.activeLayer.name);
+        alert(rgb);
+        // alert('active layer: ' + doc.activeLayer.name);
+        // alert('Red: ' + parseInt(foregroundColor.rgb.red) + '\rGreen: ' + parseInt(foregroundColor.rgb.green) + '\rBlue: ' + parseInt(foregroundColor.rgb.blue));
 
     }
 
@@ -330,6 +362,14 @@ function getLayerColourByID(ID) {
     var ref = new ActionReference();
     ref.putProperty(charIDToTypeID("Prpr"), stringIDToTypeID('color'));
     ref.putIdentifier(charIDToTypeID("Lyr "), ID);
+    /*
+    var idRd = charIDToTypeID("Rd  ");
+    ref.putProperty(idRd, color.rgb.red);
+    var idGrn = charIDToTypeID("Grn ");
+    ref.putProperty(idGrn, color.rgb.green);
+    var idBl = charIDToTypeID("Bl  ");
+    ref.putProperty(idBl, color.rgb.blue);
+    */
     var actionDescriptor = executeActionGet(ref);
     var color = actionDescriptor.getEnumerationValue(stringIDToTypeID('color'));
     // var objRGBColor = actionDescriptor.getObjectValue(stringIDToTypeID('color'));
