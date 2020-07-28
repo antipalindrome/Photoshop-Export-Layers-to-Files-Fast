@@ -19,6 +19,9 @@
 // enable double-clicking from Finder/Explorer (CS2 and higher)
 #target photoshop
 
+// Include JSON support
+#include "json2.js"
+
 app.bringToFront();
 
 //
@@ -165,8 +168,8 @@ var selectedLayerCount = 0;
 //
 // Entry point
 //
-// var outputArgument = arguments[0];
-var outputArgument = "/Users/jedlankitus/Library/Application\ Support/MythicalGames/MythicalStudio/AssetPipeline/Build/Blankos/Intermediate/Loose/Textures/Jed/";
+var outputArgument = arguments[0];
+// var outputArgument = "/Users/jedlankitus/Library/Application\ Support/MythicalGames/MythicalStudio/AssetPipeline/Build/Blankos/Intermediate/Loose/Textures/Jed/";
 bootstrap(outputArgument);
 
 //
@@ -253,63 +256,84 @@ function getLayerDescriptor(doc, layer) {
     return executeActionGet(ref)
 };
 
+// Returns comma separated RGB values for each layer
+// TODO: why do some layers have no adjustment layer?
 function getAdjustmentLayerColor(doc, layer) {
+
     var desc = getLayerDescriptor(doc, layer);
     var adjs = desc.getList(cTID('Adjs'));
 
     var clrDesc = adjs.getObjectValue(0);
     var color = clrDesc.getObjectValue(cTID('Clr '));
 
-    var red = Math.round(color.getDouble(cTID('Rd  ')));
+    try {
+        var red = Math.round(color.getDouble(cTID('Rd  ')));
+    }
+    catch (err) {
+        var red = 0;
+    }
+    try {
+        var green = Math.round(color.getDouble(cTID('Rd  ')));
+    }
+    catch (err) {
+        var green = 0;
+    }
+    try {
+        var blue = Math.round(color.getDouble(cTID('Rd  ')));
+    }
+    catch (err) {
+        var blue = 0;
+    }
+
     var green = Math.round(color.getDouble(cTID('Grn ')));
     var blue = Math.round(color.getDouble(cTID('Bl  ')));
-
-    // var createdSolidColor = createRGBColor(red, green, blue);
-    // var createdRGBColor = createdSolidColor.rgb;
-    return "red, " + red + ", " + "green, " + green;
+    return red + ", " + green + ", " + blue;
 };
 
 function triggerExport(profiler, progressBarWindow) {
-    env.documentCopy = app.activeDocument.duplicate();
+    // env.documentCopy = app.activeDocument.duplicate();
 
     // collect layers
     profiler.resetLastTime();
     if (prefs.topGroupAsLayer) {
         mergeTopGroups(app.activeDocument);
     }
+
     var collected = collectLayers(progressBarWindow);
     if (userCancelled) {
         alert("Export cancelled! No files saved.", "Finished", false);
         return "cancel";
     }
 
+    // Gather both layers, and visible layers.
+    // We only use visible layers, TODO: remove layers code
     layers = collected.layers;
     visibleLayers = collected.visibleLayers;
 
-    alert("getting layer colors!");
+    // Create rgb / layer relationship object
+    var rgbLayerDict = {};
+
+    // For each visible layer, write the layer name and rgb values as json file
     for (var i = 0; i < visibleLayers.length; i++) {
-        /*
-        var color = getLayerColourByID(visibleLayers[i].layer.id);
-        var R = color.rgb.red.toFixed(2);
-        var G = color.rgb.green.toFixed(2);
-        var B = color.rgb.blue.toFixed(2);
-        alert(R + ", " + G + ", " + B);
-        */
-
-        //var color = getLayerColourByID(visibleLayers[i].layer.id);
-        // var red = color.getDouble(stringIDToTypeID("red"));
-        //alert("color name: " + color);
-        // var objRGBColor = objsolidColorLayer.getObjectValue(stringIDToTypeID("color")) ;
-        // alert("Fill\nred:"+objRGBColor.getDouble(stringIDToTypeID("red"))+"\ngrain:"+objRGBColor.getDouble(stringIDToTypeID("grain"))+"\nblue:"+objRGBColor.getDouble(stringIDToTypeID("blue")));
-
-
         var doc = app.activeDocument;
         doc.activeLayer = visibleLayers[i].layer;
-        var rgb = getAdjustmentLayerColor(app.activeDocument, doc.activeLayer.name);
-        alert(rgb);
-        // alert('active layer: ' + doc.activeLayer.name);
-        // alert('Red: ' + parseInt(foregroundColor.rgb.red) + '\rGreen: ' + parseInt(foregroundColor.rgb.green) + '\rBlue: ' + parseInt(foregroundColor.rgb.blue));
+        try {
+            var rgb = getAdjustmentLayerColor(app.activeDocument, doc.activeLayer.name);
+            // alert(rgb);
+            rgbLayerDict[visibleLayers[i].layer.name] = rgb;
+        }
+        catch (err) {
+            // alert("layer " + visibleLayers[i].layer.name + " has no rgb values...");
+        }
+    }
 
+    // Write the json to file
+    var jsonFile = File(prefs.filePath + doc.name + ".json");
+    if (!jsonFile.exists) {
+        jsonFile.open("w");
+        alert("about to stringify");
+        jsonFile.write(JSON.stringify(rgbLayerDict));
+        jsonFile.close;
     }
 
     selectedLayers = collected.selectedLayers;
@@ -320,8 +344,6 @@ function triggerExport(profiler, progressBarWindow) {
     }
 
     // create unique folders
-    // TODO: reintegrate, commenting out for debug
-    /*
     var foldersOk = !prefs.groupsAsFolders;
     if (prefs.groupsAsFolders) {
         foldersOk = createUniqueFolders(prefs.exportLayerTarget);
@@ -354,7 +376,6 @@ function triggerExport(profiler, progressBarWindow) {
 
     app.activeDocument.close(SaveOptions.DONOTSAVECHANGES);
     env.documentCopy = null;
-    */
 }
 
 function getLayerColourByID(ID) {
