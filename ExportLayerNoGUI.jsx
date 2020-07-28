@@ -169,7 +169,7 @@ var selectedLayerCount = 0;
 // Entry point
 //
 var outputArgument = arguments[0];
-// var outputArgument = "/Users/jedlankitus/Library/Application\ Support/MythicalGames/MythicalStudio/AssetPipeline/Build/Blankos/Intermediate/Loose/Textures/Jed/";
+//var outputArgument = "/Users/jedlankitus/Library/Application\ Support/MythicalGames/MythicalStudio/AssetPipeline/Build/Blankos/Intermediate/Loose/Textures/Jed/";
 bootstrap(outputArgument);
 
 //
@@ -827,6 +827,7 @@ function getUniqueFileName(fileName, layer) {
     }
 
     // TODO: filename fixing here!
+    localFolders = localFolders.replace(/[ ]/g, prefs.delimiter);
     fileName = convertFilenameToBlankoFormat(fileName, localFolders);
 
     // Check if the file already exists. In such case a numeric suffix will be added to disambiguate.
