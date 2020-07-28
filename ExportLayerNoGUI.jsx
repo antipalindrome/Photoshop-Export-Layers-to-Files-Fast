@@ -181,7 +181,7 @@ function main(outputPathString) {
     // user preferences
     prefs = new Object();
     prefs.format = "";
-    prefs.fileExtension = "";
+    prefs.fileExtension = ".png";
     try {
         prefs.filePath = outputPathString;
     } catch (e) {
@@ -291,7 +291,7 @@ function getAdjustmentLayerColor(doc, layer) {
 };
 
 function triggerExport(profiler, progressBarWindow) {
-    // env.documentCopy = app.activeDocument.duplicate();
+    env.documentCopy = app.activeDocument.duplicate();
 
     // collect layers
     profiler.resetLastTime();
@@ -328,10 +328,13 @@ function triggerExport(profiler, progressBarWindow) {
     }
 
     // Write the json to file
-    var jsonFile = File(prefs.filePath + doc.name + ".json");
+    // Clean up name (no .psd, no copy)
+    var docNameNoPsd = doc.name.replace(".psd", "");
+    docNameNoPsd = docNameNoPsd.replace(" copy", "");
+    var jsonFile = File(prefs.filePath + docNameNoPsd + ".json");
     if (!jsonFile.exists) {
         jsonFile.open("w");
-        alert("about to stringify");
+        // alert("about to stringify");
         jsonFile.write(JSON.stringify(rgbLayerDict));
         jsonFile.close;
     }
@@ -374,7 +377,8 @@ function triggerExport(profiler, progressBarWindow) {
         // alert(message, "Finished", count.error);
     }
 
-    app.activeDocument.close(SaveOptions.DONOTSAVECHANGES);
+    // app.activeDocument.close(SaveOptions.DONOTSAVECHANGES);
+    env.documentCopy.close(SaveOptions.DONOTSAVECHANGES);
     env.documentCopy = null;
 }
 
@@ -830,7 +834,7 @@ function getUniqueFileName(fileName, layer) {
     for (var i = 1; i <= 100; ++i) {
         var handle = File(uniqueName + ext);
         if (handle.exists && !prefs.overwrite) {
-            uniqueName = fileName + "_" + padder(i, 3) + ext;
+            uniqueName = fileName + "_" + padder(i, 1) + ext;
         } else {
             return handle;
         }
@@ -842,9 +846,10 @@ function getUniqueFileName(fileName, layer) {
     }
     return false;
 }
-
+// TODO remove .psd here
 function convertFilenameToBlankoFormat(fileName, localFolders) {
     fileName = app.activeDocument.name + "_" + localFolders + "_" + fileName;
+    fileName = fileName.replace(".psd", "");
     fileName = prefs.filePath + "/" + fileName;
     fileName = fileName.replace(" copy", "");
     return fileName.toLowerCase();
