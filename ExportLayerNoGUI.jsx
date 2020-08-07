@@ -169,7 +169,7 @@ var selectedLayerCount = 0;
 // Entry point
 //
 var outputArgument = arguments[0];
-//var outputArgument = "/Users/jedlankitus/Library/Application\ Support/MythicalGames/MythicalStudio/AssetPipeline/Build/Blankos/Intermediate/Loose/Textures/Jed/";
+// var outputArgument = "/Users/jedlankitus/Library/Application\ Support/MythicalGames/MythicalStudio/AssetPipeline/Build/Blankos/Intermediate/Loose/Textures/Jed/";
 bootstrap(outputArgument);
 
 //
@@ -256,37 +256,63 @@ function getLayerDescriptor(doc, layer) {
     return executeActionGet(ref)
 };
 
+function printLayerDescriptorKeyPairs(desc) {
+    var str = '';
+    for (var i = 0; i < desc.count; i++) {
+        str = getKeyString(desc, i);
+        alert(str);
+    }
+}
+
+function getKeyString(d, index) {
+    return (app.typeIDToStringID(d.getKey(index)) + ':' + d.getType(d.getKey(index)) + '\n');
+}
+
+// Currently unused, TODO remove
+function getLayerColourLabelByID(ID) {
+
+    var ref = new ActionReference();
+    ref.putProperty(charIDToTypeID("Prpr"), stringIDToTypeID('color'));
+    ref.putIdentifier(charIDToTypeID("Lyr "), ID);
+    var actionDescriptor = executeActionGet(ref);
+    var color = actionDescriptor.getEnumerationValue(app.stringIDToTypeID('color'));
+    // var objRGBColor = actionDescriptor.getObjectValue(stringIDToTypeID('color'));
+    var colorString = app.typeIDToStringID(color);
+    return colorString;
+};
+
+// Custom Helper function for ExtendScript (Adobe CEP) created as an alternative since JavaScript Object(keys) method does not work
+
+function getKeysWithoutObjectKeysSupport(associativeArrayObject) {
+    var arrayWithKeys = [], associativeArrayObject;
+    for (var key in associativeArrayObject) {
+        // Avoid returning these keys from the Associative Array that are stored in it for some reason
+        if (key !== undefined && key !== "toJSONString" && key !== "parseJSON") {
+            arrayWithKeys.push(key);
+        }
+    }
+    return arrayWithKeys;
+}
+
 // Returns comma separated RGB values for each layer
 // TODO: why do some layers have no adjustment layer?
 function getAdjustmentLayerColor(doc, layer) {
 
+    // alert(app.activeDocument.activeLayer.kind);
     var desc = getLayerDescriptor(doc, layer);
-    var adjs = desc.getList(cTID('Adjs'));
-
-    var clrDesc = adjs.getObjectValue(0);
-    var color = clrDesc.getObjectValue(cTID('Clr '));
 
     try {
+        var adjs = desc.getList(cTID('Adjs'));
+        var clrDesc = adjs.getObjectValue(0);
+        var color = clrDesc.getObjectValue(cTID('Clr '));
+
         var red = Math.round(color.getDouble(cTID('Rd  ')));
+        var green = Math.round(color.getDouble(cTID('Grn ')));
+        var blue = Math.round(color.getDouble(cTID('Bl  ')));
     }
     catch (err) {
-        var red = 0;
+        alert("no adjustment layer on " + layer);
     }
-    try {
-        var green = Math.round(color.getDouble(cTID('Rd  ')));
-    }
-    catch (err) {
-        var green = 0;
-    }
-    try {
-        var blue = Math.round(color.getDouble(cTID('Rd  ')));
-    }
-    catch (err) {
-        var blue = 0;
-    }
-
-    var green = Math.round(color.getDouble(cTID('Grn ')));
-    var blue = Math.round(color.getDouble(cTID('Bl  ')));
     return red + ", " + green + ", " + blue;
 };
 
@@ -319,11 +345,13 @@ function triggerExport(profiler, progressBarWindow) {
         doc.activeLayer = visibleLayers[i].layer;
         try {
             var rgb = getAdjustmentLayerColor(app.activeDocument, doc.activeLayer.name);
-            // alert(rgb);
+            if (rgbLayerDict[visibleLayers[i].layer.name] != null) {
+                alert("DUPLICATE LAYER NAME ERROR, RENAME LAYER TO BE UNIQUE!");
+            }
             rgbLayerDict[visibleLayers[i].layer.name] = rgb;
         }
         catch (err) {
-            // alert("layer " + visibleLayers[i].layer.name + " has no rgb values...");
+            alert("layer " + visibleLayers[i].layer.name + " has no rgb values...");
         }
     }
 
@@ -331,6 +359,7 @@ function triggerExport(profiler, progressBarWindow) {
     // Clean up name (no .psd, no copy)
     var docNameNoPsd = doc.name.replace(".psd", "");
     docNameNoPsd = docNameNoPsd.replace(" copy", "");
+
     var jsonFile = File(prefs.filePath + docNameNoPsd + ".json");
     if (!jsonFile.exists) {
         jsonFile.open("w");
@@ -341,6 +370,20 @@ function triggerExport(profiler, progressBarWindow) {
 
     selectedLayers = collected.selectedLayers;
     groups = collected.groups;
+
+    var groupNames = [];
+    for (var i = 0; i < groups.length; i++) {
+        groupNames[i] = getGroupName(groups[i]);
+    }
+
+    var groupsJsonFile = File(prefs.filePath + docNameNoPsd + "_GROUPS" + ".json");
+    if (!groupsJsonFile.exists) {
+        groupsJsonFile.open("w");
+        // alert("about to stringify");
+        groupsJsonFile.write(JSON.stringify(groupNames));
+        groupsJsonFile.close;
+    }
+
     var collectionDuration = profiler.getDuration(true, true);
     if (env.profiling) {
         alert("Layers collected in " + profiler.format(collectionDuration), "Debug info");
@@ -381,27 +424,6 @@ function triggerExport(profiler, progressBarWindow) {
     env.documentCopy.close(SaveOptions.DONOTSAVECHANGES);
     env.documentCopy = null;
 }
-
-function getLayerColourByID(ID) {
-
-    var ref = new ActionReference();
-    ref.putProperty(charIDToTypeID("Prpr"), stringIDToTypeID('color'));
-    ref.putIdentifier(charIDToTypeID("Lyr "), ID);
-    /*
-    var idRd = charIDToTypeID("Rd  ");
-    ref.putProperty(idRd, color.rgb.red);
-    var idGrn = charIDToTypeID("Grn ");
-    ref.putProperty(idGrn, color.rgb.green);
-    var idBl = charIDToTypeID("Bl  ");
-    ref.putProperty(idBl, color.rgb.blue);
-    */
-    var actionDescriptor = executeActionGet(ref);
-    var color = actionDescriptor.getEnumerationValue(stringIDToTypeID('color'));
-    // var objRGBColor = actionDescriptor.getObjectValue(stringIDToTypeID('color'));
-    var colorString = typeIDToStringID(color);
-    return colorString;
-};
-
 
 function exportLayers(exportLayerTarget, progressBarWindow) {
     var retVal = {
@@ -754,6 +776,15 @@ function makeFolderName(group) {
     folderName = prefs.filePath + "/" + folderName;
 
     return folderName;
+}
+
+function getGroupName(group) {
+    var groupName = makeValidFileName(group.layer.name, prefs.replaceSpaces);
+    if (groupName.length == 0) {
+        groupName = "Group";
+    }
+
+    return groupName;
 }
 
 function makeFileNameFromIndex(index, numOfDigits, layer) {
