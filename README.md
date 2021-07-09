@@ -52,7 +52,13 @@ Mac: /Applications/Adobe Photoshop VERSION/Presets/Scripts/
 
 Version History:
 -------------------------------
-<b>17 Sept 2018</b> by [willena](https://github.com/Willena), [finscn](https://github.com/finscn), [jgod](https://github.com/jgod)
+### v1.1 
+Release Date: 09 July 2021
+
+* Ability to export file names with parental group names https://github.com/hsw107/Photoshop-Export-Layers-to-Files-Fast/issues/149
+
+
+### 17 Sept 2018 by [willena](https://github.com/Willena), [finscn](https://github.com/finscn), [jgod](https://github.com/jgod)
 
 * Ability to ignore layer starting with an "exclude string" (implemented by @jgod, improved by me; Related subbranch : https://github.com/Willena/Photoshop-Export-Layers-to-Files-Fast/tree/jgod-ignore-layers-starting-with-bang)
 * Similar to the background feature, it is now possible to keep the highest layer on top of all other layer when exporting. (Related issues : #108, #96, #42; Related subbranch : https://github.com/Willena/Photoshop-Export-Layers-to-Files-Fast/tree/first-layer-as-foreground)
@@ -61,43 +67,43 @@ Version History:
 * Scale image before export (Related subbranch : https://github.com/Willena/Photoshop-Export-Layers-to-Files-Fast/tree/scale-before-export)
 
 
-<b>29 April 2016</b> by [Skjorn](https://github.com/skjorn)
+### 29 April 2016 by [Skjorn](https://github.com/skjorn)
 
 * The option "Groups as folders" exports layers in a folder tree (same as groups) instead of a flat list.
 
-<b>05 May 2015</b> by [Skjorn](https://github.com/skjorn)
+### 05 May 2015 by [Skjorn](https://github.com/skjorn)
 
 * A selected group can be exported as usual (layer by layer) while everything else is left in tact. (This way variable content can be exported for complex fixed background and foreground.) _Works only for the first selected group!_ If no layer/group is selected, the topmost one is assumed by Photoshop. All parent groups of the selection are made visible. Visibility of exported layers is not taken into account; all are exported.
 
-<b>25 April 2015</b> by [Hanna Walter](https://github.com/hsw107) and [Skjorn](https://github.com/skjorn)
+### 25 April 2015 by [Hanna Walter](https://github.com/hsw107) and [Skjorn](https://github.com/skjorn)
 
 * Last user settings remembered for versions CS 3 and higher.
 
-<b>21 November 2014</b> by [Skjorn](https://github.com/skjorn)
+### 21 November 2014 by [Skjorn](https://github.com/skjorn)
 
 *  Added option to strip extensions from layer names and made default.
 
-<b>26 September 2014</b> by [Skjorn](https://github.com/skjorn)
+### 26 September 2014 by [Skjorn](https://github.com/skjorn)
 
 * Added layer trimming.
 
-<b>01 August 2014</b> by [Skjorn](https://github.com/skjorn)
+### 01 August 2014 by [Skjorn](https://github.com/skjorn)
 
 * Lowest layer can be treated as common background.
 
-<b>10 July 2014</b> by [Skjorn](https://github.com/skjorn)
+### 10 July 2014 by [Skjorn](https://github.com/skjorn)
 
 * Added BMP support.
 * Enabled using layer indices for file names.
 * Optional file name prefix.
 
-<b>23 June 2014</b> by [Skjorn](https://github.com/skjorn)
+### 23 June 2014 by [Skjorn](https://github.com/skjorn)
 
 * Added progress bars with cancel buttons.
 * Slow layer retrieval sped up and moved at the beginning.
 * Dialog shows the correct layer count.
 
-<b>08 June 2014</b> by [Skjorn](https://github.com/skjorn)
+### 08 June 2014 by [Skjorn](https://github.com/skjorn)
 
 * Script renamed to match the built-in version.
 * The dialog extended.
@@ -107,15 +113,15 @@ Version History:
 * The document doesn't have to be saved and be a layered PSD anymore. Exporting from a temporary working copy is fine.
 * Major rewrite of internals.
 
-<b>22 May 2014</b> by [Skjorn](https://github.com/skjorn)
+### 22 May 2014 by [Skjorn](https://github.com/skjorn)
 
 * Added support for Targa (TGA).
 
-<b>02 December 2013</b> by [Justin Wang](http://www.github.com/Tangleworm)
+### 02 December 2013 by [Justin Wang](http://www.github.com/Tangleworm)
 
 * Added support for both PNG-24 and PNG-8
 
-<b>24 May 2013</b> by [Hanna Walter](https://github.com/hsw107)
+### 24 May 2013 by [Hanna Walter](https://github.com/hsw107)
 
 * Nesting properly handled
 *  All layers save seperately again (no more stacking).
@@ -131,7 +137,7 @@ Version History:
 * counts number of layers
 * many little code improvements
 
-<b>26 Sept 2012</b> by [Hanna Walter](https://github.com/hsw107)
+### 26 Sept 2012 by [Hanna Walter](https://github.com/hsw107)
 
 * Original version
 
