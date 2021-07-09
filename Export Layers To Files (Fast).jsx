@@ -30,9 +30,10 @@ var FileNameType = {
     INDEX_ASC: 2,
     INDEX_DESC: 3,
     AS_LAYERS_NO_EXT: 4,
+    AS_LAYERS_WITH_GROUP: 5,
 
     values: function() {
-        return [this.AS_LAYERS_NO_EXT, this.AS_LAYERS, this.INDEX_DESC, this.INDEX_ASC];
+        return [this.AS_LAYERS_NO_EXT, this.AS_LAYERS, this.AS_LAYERS_WITH_GROUP, this.INDEX_DESC, this.INDEX_ASC];
     },
 
     forIndex: function(index) {
@@ -409,11 +410,15 @@ function exportLayers(exportLayerTarget, progressBarWindow) {
             switch (prefs.naming) {
 
                 case FileNameType.AS_LAYERS_NO_EXT:
-                    fileName = makeFileNameFromLayerName(layersToExport[i], true);
+                    fileName = makeFileNameFromLayerName(layersToExport[i], true, false);
                     break;
 
                 case FileNameType.AS_LAYERS:
-                    fileName = makeFileNameFromLayerName(layersToExport[i], false);
+                    fileName = makeFileNameFromLayerName(layersToExport[i], false, false);
+                    break;
+
+                case FileNameType.AS_LAYERS_WITH_GROUP:
+                    fileName = makeFileNameFromLayerName(layersToExport[i], false, true);
                     break;
 
                 case FileNameType.INDEX_ASC:
@@ -640,8 +645,27 @@ function makeFileNameFromIndex(index, numOfDigits, layer) {
     return getUniqueFileName(fileName, layer);
 }
 
-function makeFileNameFromLayerName(layer, stripExt) {
-    var fileName = makeValidFileName(layer.layer.name, prefs.replaceSpaces);
+function getParentTree(layer, parents) {
+    if(layer instanceof Document) { return parents; }
+    parents.push(layer.name)
+    if(layer.parent) {
+        return getParentTree(layer.parent, parents);
+    }
+    return parents;
+}
+
+function getFullGroupName(layer, name) {
+    var parents = getParentTree(layer, []);
+    var name = "";
+    for(var i = parents.length - 1; i >= 0; i--) {
+        name += " " + parents[i];
+    }
+    return name;
+}
+
+function makeFileNameFromLayerName(layer, stripExt, withGroup) {
+    var layerName = withGroup ? getFullGroupName(layer.layer, "") : layer.layer.name;
+    var fileName = makeValidFileName(layerName, prefs.replaceSpaces);
     if (stripExt) {
         var dotIdx = fileName.indexOf('.');
         if (dotIdx >= 0) {
