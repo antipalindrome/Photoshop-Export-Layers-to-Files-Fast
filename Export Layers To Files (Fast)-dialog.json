@@ -43,9 +43,9 @@ dialog {
             grpPrefix: Group {
                 orientation: "row",
                 alignChildren: "left",
-                txtPrefix: StaticText {text: "Prefix/suffix:", preferredSize: [80, 20], helpTip: "Prefix and/or suffix that will be added to the exported file names. A space is added automatically after/before."},
+                txtPrefix: StaticText {text: "Prefix/suffix:", preferredSize: [80, 20], helpTip: "Prefix and/or suffix that will be added to the exported file names."},
                 editPrefix: EditText {preferredSize: [140, 20]},
-                txtSep: StaticText {text: "- ... -"},
+                txtSep: StaticText {text: "..."},
                 editSuffix: EditText {preferredSize: [140, 20]}
             },
             grpFolderTree: Group {
