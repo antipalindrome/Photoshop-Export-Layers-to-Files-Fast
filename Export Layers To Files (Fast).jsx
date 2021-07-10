@@ -1023,12 +1023,12 @@ function showDialog() {
 
     // file name prefix
     dlg.funcArea.content.grpPrefix.editPrefix.onChange = function() {
-        this.text = makeValidFileName(this.text, prefs.replaceSpaces);
+        this.text = makeValidFileName(this.text, prefs.replaceSpaces, true);
     };
 
     // file name suffix
     dlg.funcArea.content.grpPrefix.editSuffix.onChange = function() {
-        this.text = makeValidFileName(this.text, prefs.replaceSpaces);
+        this.text = makeValidFileName(this.text, prefs.replaceSpaces, true);
     };
 
     dlg.funcArea.content.grpFolderTree.cbFolderTree.onClick = function() {
@@ -1117,14 +1117,7 @@ function showDialog() {
         // collect arguments for saving and proceed
 
         prefs.outputPrefix = dlg.funcArea.content.grpPrefix.editPrefix.text;
-        if (prefs.outputPrefix.length > 0) {
-            prefs.outputPrefix += " ";
-        }
-
         prefs.outputSuffix = dlg.funcArea.content.grpPrefix.editSuffix.text;
-        if (prefs.outputSuffix.length > 0) {
-            prefs.outputSuffix = " " + prefs.outputSuffix;
-        }
 
         prefs.groupsAsFolders = dlg.funcArea.content.grpFolderTree.cbFolderTree.value;
 
@@ -2575,8 +2568,9 @@ function padder(input, padLength) {
     return result;
 }
 
-function makeValidFileName(fileName, replaceSpaces) {
-    var validName = fileName.replace(/^\s+|\s+$/gm, ''); // trim spaces
+function makeValidFileName(fileName, replaceSpaces, ignoreTrim) {
+    // ignoreTrim is used for prefix/suffix so they can add a leading/trailing space in if they want
+    var validName = ignoreTrim ? fileName : fileName.replace(/^\s+|\s+$/gm, ''); // trim spaces
     validName = validName.replace(/[\\\*\/\?:"\|<>]/g, ''); // remove characters not allowed in a file name
     if (replaceSpaces) {
         validName = validName.replace(/[ ]/g, prefs.delimiter); // replace spaces with chosen delimiter, since some programs still may have troubles with them
