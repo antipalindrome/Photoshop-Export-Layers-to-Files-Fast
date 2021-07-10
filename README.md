@@ -52,6 +52,12 @@ Mac: /Applications/Adobe Photoshop VERSION/Presets/Scripts/
 
 Version History:
 -------------------------------
+
+### v1.2
+Release Date: 09 July 2021
+
+* More flexible prefix/suffix https://github.com/hsw107/Photoshop-Export-Layers-to-Files-Fast/issues/128
+
 ### v1.1 
 Release Date: 09 July 2021
 
