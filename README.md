@@ -1,153 +1,56 @@
-Photoshop-Export-Layers-to-Files-Fast
-=================================
+# Photoshop-Export-Layers-to-Files-Fast
 
-<b>This script allows you to export layers in your Photoshop document as individual files</b> at a speed much faster than the built-in script from Adobe. So far it does not feature all the formats that the built-in version does, but more can be added easily upon request. Feel free to contribute to it and make it even more powerful!
+This script allows you to export layers in your Photoshop document as individual files at a speed much faster than the built-in script from Adobe.
 
-Please, consider donating a modest sum if you enjoy using our script regularly and would like to see more features implemented sooner.
+This script does not try to acheive feature parity with the built-in script, but rather provide a more streamlined / performant experience. That being said, feel free to make feature requests, and feel free to contribute to it and make it even more powerful!
 
-This script was originally built as a response to a [question](http://graphicdesign.stackexchange.com/questions/1961/export-photoshop-layers-to-individual-png-files-batch-process) on [graphicdesign.stackexchange.com](http://graphicdesign.stackexchange.com/).
+_Disclaimer:_ We are not associated with Adobe in any way. For any issues relating to Adobe products or Adobe scripts please contact them directly. We have never had an issue, but **please use this script at your own risk**. We are not responsible for any lost data or damaged PSDs so always make a back-up.
 
-Make sure to download all files:
+## How to Use
 
-<b>[Download as zip](https://github.com/hsw107/Photoshop-Export-Layers-to-Files-Fast/archive/master.zip)</b>
+- Go to the [releases page](https://github.com/hsw107/Photoshop-Export-Layers-to-Files-Fast/releases) and download the most recent release.
+- In Photoshop go to `File -> Scripts -> Browse...` and select the `Export Layers To Files (Fast).jsx` file.
+- You can add the script to the Scripts menu by adding all of the script files to `Photoshop > Presets > Scripts`
+  - Windows: `/Program Files/Adobe/Adobe Photoshop VERSION/Presets/Scripts`
+  - Mac: `/Applications/Adobe Photoshop VERSION/Presets/Scripts`
 
-Disclaimer: We are not associated with Adobe in any way. For any issues relating to Adobe products or Adobe scripts please contact them directly. We have never had an issue, but please use this script at your own risk. We are not responsible for any lost data or damaged PSDs so always make a back-up.
+## Example Screenshot
 
-Features:
--------------------------------
-* Supported export formats:
-  * PNG (8 and 24 bit)
-  * JPEG
-  * Targa
-  * BMP
-* Handles nesting in grouped layers.
-* Export either all layers or visible only.
-* Shows current progress and allows to cancel any time.
-* Shows proper layer count in advance.
-* Files are named either using layer names or automatic layer indices.
-* Lowest layer can be treated as common background.
-* Exported images can have layer size or canvas size (trimming option).
-* Last used dialog settings are remembered.
-* A selected group can be exported as usual (layer by layer) while everything else is left in tact. (This way variable content can be exported for complex fixed background and foreground.)
-* Can export groups as folder hierarchy. Conflicting folders are renamed.
+![Screenshot of the script dialog](example.png)
 
-You can also see [what's coming next](https://github.com/hsw107/Photoshop-Export-Layers-to-Files-Fast/wiki/Feature-Roadmap) and browse some of our [performance test results](https://github.com/hsw107/Photoshop-Export-Layers-to-Files-Fast/wiki/Performance-Test-Results).
+## Features
 
-Requirements:
--------------------------------
-Adobe Photoshop CS2 or higher.
+Some of the features of the script include...
 
-How To Use:
--------------------------------
-1. Open Photoshop
-2. File -> Scripts -> Browse...
-3. Locate the file, and open it.
+- Supported export formats:
+  - PNG (8 and 24 bit)
+  - JPEG
+  - Targa
+  - BMP
+- Handles nesting in grouped layers
+- Export either all layers or visible only
+- Files are named either using layer names, layer + group names, or automatic layer indices
+- Lowest layer can be treated as common background
+- Exported images can have layer size or canvas size (trimming option)
+- Last used dialog settings are remembered
+- A selected group can be exported as usual (layer by layer) while everything else is left in tact. (This way variable content can be exported for complex fixed background and foreground.)
+- Can export groups as folder hierarchy; conflicting folders are renamed
 
-Alternatively move the script into the /presets/scripts directory, located by in your Photoshop folder.
+### Known Gaps
 
-Windows: /Program Files/Adobe/Adobe Photoshop VERSION/Presets/Scripts/
+- Currently we do not support multiple artboards for export
 
-Mac: /Applications/Adobe Photoshop VERSION/Presets/Scripts/
+## Requirements
 
+We do our best to have the script be backwards compatible (back to Adobe Photoshop CS2) but are limited in what we can test for, both by Photoshop versions as well as OS. If you are encountering any issues with the current version, try downloading [previous versions](https://github.com/hsw107/Photoshop-Export-Layers-to-Files-Fast/releases) of the script instead.
 
-Version History:
--------------------------------
+## Feedback / Bugs
 
-### v1.2
-Release Date: 09 July 2021
+Please use GitHub to write feedback/bugs/suggestions by [filing an issue](https://github.com/hsw107/Photoshop-Export-Layers-to-Files-Fast/issues).
 
-* More flexible prefix/suffix https://github.com/hsw107/Photoshop-Export-Layers-to-Files-Fast/issues/128
+If you encounter a bug, please include the following information:
 
-### v1.1 
-Release Date: 09 July 2021
-
-* Ability to export file names with parental group names https://github.com/hsw107/Photoshop-Export-Layers-to-Files-Fast/issues/149
-
-
-### 17 Sept 2018 by [willena](https://github.com/Willena), [finscn](https://github.com/finscn), [jgod](https://github.com/jgod)
-
-* Ability to ignore layer starting with an "exclude string" (implemented by @jgod, improved by me; Related subbranch : https://github.com/Willena/Photoshop-Export-Layers-to-Files-Fast/tree/jgod-ignore-layers-starting-with-bang)
-* Similar to the background feature, it is now possible to keep the highest layer on top of all other layer when exporting. (Related issues : #108, #96, #42; Related subbranch : https://github.com/Willena/Photoshop-Export-Layers-to-Files-Fast/tree/first-layer-as-foreground)
-* Groups can now be exported as a single image/layer. (implemented by @finscn, updated to be mergeable by me) ( related issues : #79 #70 #69 #21 #108 ; Related subbranch : https://github.com/Willena/Photoshop-Export-Layers-to-Files-Fast/tree/finscn-groups-to-layers)
-* Add Transparent padding pixels before export (Related issue : #64 ; Related subbranch : https://github.com/Willena/Photoshop-Export-Layers-to-Files-Fast/tree/transparent-padding-pixels)
-* Scale image before export (Related subbranch : https://github.com/Willena/Photoshop-Export-Layers-to-Files-Fast/tree/scale-before-export)
-
-
-### 29 April 2016 by [Skjorn](https://github.com/skjorn)
-
-* The option "Groups as folders" exports layers in a folder tree (same as groups) instead of a flat list.
-
-### 05 May 2015 by [Skjorn](https://github.com/skjorn)
-
-* A selected group can be exported as usual (layer by layer) while everything else is left in tact. (This way variable content can be exported for complex fixed background and foreground.) _Works only for the first selected group!_ If no layer/group is selected, the topmost one is assumed by Photoshop. All parent groups of the selection are made visible. Visibility of exported layers is not taken into account; all are exported.
-
-### 25 April 2015 by [Hanna Walter](https://github.com/hsw107) and [Skjorn](https://github.com/skjorn)
-
-* Last user settings remembered for versions CS 3 and higher.
-
-### 21 November 2014 by [Skjorn](https://github.com/skjorn)
-
-*  Added option to strip extensions from layer names and made default.
-
-### 26 September 2014 by [Skjorn](https://github.com/skjorn)
-
-* Added layer trimming.
-
-### 01 August 2014 by [Skjorn](https://github.com/skjorn)
-
-* Lowest layer can be treated as common background.
-
-### 10 July 2014 by [Skjorn](https://github.com/skjorn)
-
-* Added BMP support.
-* Enabled using layer indices for file names.
-* Optional file name prefix.
-
-### 23 June 2014 by [Skjorn](https://github.com/skjorn)
-
-* Added progress bars with cancel buttons.
-* Slow layer retrieval sped up and moved at the beginning.
-* Dialog shows the correct layer count.
-
-### 08 June 2014 by [Skjorn](https://github.com/skjorn)
-
-* Script renamed to match the built-in version.
-* The dialog extended.
-* Destination folder made selectable.
-* Added an option to export only visible layers and fixed visibility toggling after export.
-* The script made faster!
-* The document doesn't have to be saved and be a layered PSD anymore. Exporting from a temporary working copy is fine.
-* Major rewrite of internals.
-
-### 22 May 2014 by [Skjorn](https://github.com/skjorn)
-
-* Added support for Targa (TGA).
-
-### 02 December 2013 by [Justin Wang](http://www.github.com/Tangleworm)
-
-* Added support for both PNG-24 and PNG-8
-
-### 24 May 2013 by [Hanna Walter](https://github.com/hsw107)
-
-* Nesting properly handled
-*  All layers save seperately again (no more stacking).
-
-<b>27 March 2013</b> by [Robin Parmar](http://robinparmar.com/) (robin(at)robinparmar(dot)com)
-
-* preferences stored in object
-* auto-increment file names to prevent collisions
-* properly handles layer groups
-* header added
-* code comments added
-* main() now has error catcher
-* counts number of layers
-* many little code improvements
-
-### 26 Sept 2012 by [Hanna Walter](https://github.com/hsw107)
-
-* Original version
-
-
-Contact:
--------------------------------
-Please use communication channels on GitHub to write feedback/bugs/suggestions: https://github.com/hsw107/Photoshop-Export-Layers-to-Files-Fast/issues
+- Your OS and OS Version
+- Your Photoshop version and release number
+- A screenshot (if applicable)
+- A `.psd` that reproduces the issue (the simpler the better)
