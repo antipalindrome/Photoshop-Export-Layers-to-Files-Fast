@@ -4,9 +4,9 @@ This script allows you to export layers in your Photoshop document as individual
 
 This script does not try to acheive feature parity with the built-in script, but rather provide a more streamlined / performant experience. That being said, feel free to make feature requests, and feel free to contribute to it and make it even more powerful!
 
-_Disclaimer:_ We are not associated with Adobe in any way. For any issues relating to Adobe products or Adobe scripts please contact them directly. We have never had an issue, but **please use this script at your own risk**. We are not responsible for any lost data or damaged PSDs so always make a back-up.
-
 ## How to Use
+
+_Disclaimer:_ We are not associated with Adobe in any way. For any issues relating to Adobe products or Adobe scripts please contact them directly. We have never had an issue, but **please use this script at your own risk**. We are not responsible for any lost data or damaged PSDs so always make a back-up.
 
 - Go to the [releases page](https://github.com/hsw107/Photoshop-Export-Layers-to-Files-Fast/releases) and download the most recent release.
 - In Photoshop go to `File -> Scripts -> Browse...` and select the `Export Layers To Files (Fast).jsx` file.
