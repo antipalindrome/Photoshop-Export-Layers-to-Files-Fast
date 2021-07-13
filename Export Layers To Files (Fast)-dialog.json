@@ -22,8 +22,8 @@ dialog {
                 orientation: "row",
                 txtLayers: StaticText {text: "Export:", preferredSize: [80, 20]},
                 radioLayersAll: RadioButton {text: "All layers", preferredSize: [80, 20], value: true},
-                radioLayersVis: RadioButton {text: "Visible only", preferredSize: [100, 20]},
                 radioLayersSel: RadioButton {text: "Selected group", preferredSize: [120, 20]},
+                cbLayersVis: Checkbox {text: "Visible only", preferredSize: [100, 20]},
                 cbIgnoreLayers: Checkbox {text: "Ignore layers starting with :"},
                 EditIgnoreLayers : EditText {preferredSize: [50, 20]}
             },
