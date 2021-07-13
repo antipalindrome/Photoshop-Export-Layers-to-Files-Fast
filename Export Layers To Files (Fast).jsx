@@ -100,8 +100,7 @@ var TrimPrefType = {
 
 var ExportLayerTarget = {
     ALL_LAYERS: 1,
-    VISIBLE_LAYERS: 2,
-    SELECTED_LAYERS: 3, // Export selection, leave the rest as is, visibility for parent groups will be forced.
+    SELECTED_LAYERS: 2, // Export selection, leave the rest as is, visibility for parent groups will be forced.
 
     values: function() {
         return [this.ALL_LAYERS, this.VISIBLE_LAYERS, this.SELECTED_LAYERS];
@@ -140,6 +139,7 @@ var DEFAULT_SETTINGS = {
     forceTrimMethod: app.stringIDToTypeID("forceTrimMethod"),
     groupsAsFolders: app.stringIDToTypeID("groupsAsFolders"),
     ignoreLayersString: app.stringIDToTypeID('ignoreLayersString'),
+    visibleOnly: app.stringIDToTypeID('visibleOnly'),
     ignoreLayers: app.stringIDToTypeID('ignoreLayers'),
     padding: app.stringIDToTypeID("padding"),
     paddingValue: app.stringIDToTypeID("paddingValue")
@@ -203,6 +203,7 @@ function main() {
     prefs.paddingValue = 1;
     prefs.ignoreLayersString = "!";
     prefs.ignoreLayers = false;
+    prefs.visibleOnly = false;
 
     userCancelled = false;
 
@@ -305,10 +306,6 @@ function exportLayers(exportLayerTarget, progressBarWindow) {
             layersToExport = layers;
             break;
 
-        case ExportLayerTarget.VISIBLE_LAYERS:
-            layersToExport = visibleLayers;
-            break;
-
         case ExportLayerTarget.SELECTED_LAYERS:
             layersToExport = selectedLayers;
             // Bg layer is redundant since everything else outside the selection is essentially a background/foreground.
@@ -384,8 +381,8 @@ function exportLayers(exportLayerTarget, progressBarWindow) {
         // When visibility is switched, the parent group becomes visible and a previously invisible child may become visible by accident.
         for (var i = 0; i < count; ++i) {
             makeInvisible(layersToExport[i]);
-            //layersToExport[i].layer.visible = false;
         }
+
         if (prefs.bgLayer) {
             makeVisible(layersToExport[count]);
         }
@@ -403,7 +400,7 @@ function exportLayers(exportLayerTarget, progressBarWindow) {
         for (var i = (prefs.fgLayer ? 1 : 0); i < count; ++i) {
             var layer = layersToExport[i].layer;
 
-            // Ignore layers that have a bang in front, ie: "not".
+            // Ignore layers that have are prefixed with ignoreLayersString
             if (layer.name.indexOf(prefs.ignoreLayersString) === 0) continue;
 
             var fileName;
@@ -548,13 +545,6 @@ function createUniqueFolders(exportLayerTarget) {
     var isTargetGroup;
 
     switch (exportLayerTarget) {
-
-        case ExportLayerTarget.VISIBLE_LAYERS:
-            isTargetGroup = function(group) {
-                return group.visible;
-            };
-            break;
-
         case ExportLayerTarget.SELECTED_LAYERS:
             isTargetGroup = function(group) {
                 return group.selected;
@@ -788,24 +778,20 @@ function undo(doc) {
 }
 
 function makeInvisible(layer) {
-    layer.layer.visible = false;
-
-    var current = layer.parent;
-    while (current) {
-        if (!current.layer.visible) {
-            current.layer.visible = false;
-        }
-        current = current.parent;
-    }
+    setVisible(layer, false);
 }
 
 function makeVisible(layer) {
-    layer.layer.visible = true;
+    setVisible(layer, true);
+}
+
+function setVisible(layer, isVisible) {
+    layer.layer.visible = isVisible;
 
     var current = layer.parent;
     while (current) {
         if (!current.layer.visible) {
-            current.layer.visible = true;
+            current.layer.visible = isVisible;
         }
         current = current.parent;
     }
@@ -951,10 +937,8 @@ function showDialog() {
         dlg.funcArea.content.grpBgFgLayer.cbBgLayer.enabled = (layerCount > 1);
         dlg.funcArea.content.grpBgFgLayer.cbFgLayer.enabled = (layerCount > 1);
     };
-    dlg.funcArea.content.grpLayers.radioLayersVis.onClick = function() {
-        prefs.exportLayerTarget = ExportLayerTarget.VISIBLE_LAYERS;
-        dlg.funcArea.content.grpBgFgLayer.cbBgLayer.enabled = (visibleLayerCount > 1);
-        dlg.funcArea.content.grpBgFgLayer.cbFgLayer.enabled = (visibleLayerCount > 1);
+    dlg.funcArea.content.grpLayers.cbLayersVis.onClick = function() {
+        prefs.visibleOnly = this.value;
     };
     dlg.funcArea.content.grpLayers.radioLayersSel.onClick = function() {
         prefs.exportLayerTarget = ExportLayerTarget.SELECTED_LAYERS;
@@ -963,7 +947,7 @@ function showDialog() {
         dlg.funcArea.content.grpBgFgLayer.cbBgLayer.value = false;
         dlg.funcArea.content.grpBgFgLayer.cbFgLayer.value = false;
     };
-    dlg.funcArea.content.grpLayers.radioLayersVis.enabled = (visibleLayerCount > 0);
+    dlg.funcArea.content.grpLayers.cbLayersVis.enabled = (visibleLayerCount > 0);
     dlg.funcArea.content.grpLayers.radioLayersSel.enabled = (selectedLayerCount > 0);
 
     dlg.funcArea.content.grpLayers.cbIgnoreLayers.value = prefs.ignoreLayers;
@@ -1198,13 +1182,6 @@ function applySettings(dlg, formatOpts) {
         }
 
         switch (settings.exportLayerTarget) {
-
-            case ExportLayerTarget.VISIBLE_LAYERS:
-                if (grpLayers.radioLayersVis.enabled) {
-                    grpLayers.radioLayersVis.notify();
-                }
-                break;
-
             case ExportLayerTarget.SELECTED_LAYERS:
                 if (grpLayers.radioLayersSel.enabled) {
                     grpLayers.radioLayersSel.notify();
@@ -1212,6 +1189,7 @@ function applySettings(dlg, formatOpts) {
                 break;
         }
 
+        grpLayers.cbLayersVis.value = settings.visibleOnly;
         // option to ignore layer with name starting with a special str
         grpLayers.EditIgnoreLayers.text = settings.ignoreLayersString;
         grpLayers.EditIgnoreLayers.notify();
@@ -1299,14 +1277,13 @@ function saveSettings(dlg, formatOpts) {
         // common
 
         var exportLayerTarget = ExportLayerTarget.ALL_LAYERS;
-        if (grpLayers.radioLayersVis.value) {
-            exportLayerTarget = ExportLayerTarget.VISIBLE_LAYERS;
-        } else if (grpLayers.radioLayersSel.value) {
+        if (grpLayers.radioLayersSel.value) {
             exportLayerTarget = ExportLayerTarget.SELECTED_LAYERS;
         }
 
         desc.putString(DEFAULT_SETTINGS.destination, grpDest.txtDest.text);
         desc.putString(DEFAULT_SETTINGS.ignoreLayersString, grpLayers.EditIgnoreLayers.text);
+        desc.putBoolean(DEFAULT_SETTINGS.visibleOnly, grpLayers.cbLayersVis.value);
         desc.putBoolean(DEFAULT_SETTINGS.overwrite, dlg.funcArea.buttons.cbOverwrite.value);
         desc.putInteger(DEFAULT_SETTINGS.exportLayerTarget, exportLayerTarget);
         desc.putInteger(DEFAULT_SETTINGS.nameFiles, FileNameType.forIndex(grpNaming.drdNaming.selection.index));
@@ -1376,7 +1353,8 @@ function getSettings(formatOpts) {
             exportForeground: desc.getBoolean(DEFAULT_SETTINGS.exportForeground),
             fileType: desc.getString(DEFAULT_SETTINGS.fileType),
             forceTrimMethod: desc.getBoolean(DEFAULT_SETTINGS.forceTrimMethod),
-            ignoreLayersString: desc.getString(DEFAULT_SETTINGS.ignoreLayersString)
+            ignoreLayersString: desc.getString(DEFAULT_SETTINGS.ignoreLayersString),
+            visibleOnly: desc.getString(DEFAULT_SETTINGS.visibleOnly)
 
             // per file format filled below
 
@@ -2159,11 +2137,14 @@ function collectLayersAM(progressBarWindow) {
                     if (layerSection == "layerSectionContent") {
                         if (!isAdjustmentLayer(activeLayer)) {
                             var layer = { layer: activeLayer, parent: currentGroup };
-                            layers.push(layer);
+                            var visibleMatters = ((prefs.visibleOnly && layerVisible) || !prefs.visibleOnly);
+                            if(visibleMatters) {
+                                layers.push(layer);
+                            }
                             if (layerVisible && visibleInGroup[visibleInGroup.length - 1]) {
                                 visibleLayers.push(layer);
                             }
-                            if (selected > 0) {
+                            if (selected > 0 && visibleMatters) {
                                 selectedLayers.push(layer);
                             }
                             if (currentGroup) {
