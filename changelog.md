@@ -1,5 +1,18 @@
 # Changelog
 
+## v2.0
+
+_Release Date: SOON_
+
+- New smaller, and hopefully easier to use UI
+- "Visible only" is now a checkbox (can use with "All Layers" or "Selected Group") https://github.com/hsw107/Photoshop-Export-Layers-to-Files-Fast/issues/91
+- Delimiter is now a custom input
+  - Deprecated “Allow Spaces”
+- Prefix/Suffix supports some string formatting:
+  - `{i} … {iiii}` in prefix or suffix to add index (with leading zeros) https://github.com/hsw107/Photoshop-Export-Layers-to-Files-Fast/issues/39
+  - `{n}` in prefix/suffix to add layer name
+- Prefix/Suffix is no longer disabled on group options select
+
 ## v1.2
 
 _Release Date: 09 July, 2021_
