@@ -1224,6 +1224,14 @@ function showDialog() {
     fields.cbPadding.value = prefs.padding;
     fields.grpPaddingLabel.enabled = prefs.padding;
     fields.txtPadding.text = prefs.paddingValue;
+    fields.txtPadding.onChange = function() {
+    var paddingNum = parseInt(this.text, 10);
+    if (isNaN(paddingNum)) {
+        paddingNum = prefs.paddingValue;
+    }
+    paddingNum = Math.max(paddingNum, 0);
+    this.text = paddingNum;
+    };
     fields.cbPadding.onClick = function() {
         fields.grpPaddingLabel.enabled = this.value;
     };
@@ -1234,6 +1242,14 @@ function showDialog() {
     fields.cbScale.value = prefs.scale;
     fields.grpScaleLabel.enabled = prefs.scale;
     fields.txtScale.text = prefs.scaleValue;
+    fields.txtScale.onChange = function() {
+    var scaleNum = parseInt(this.text, 10);
+    if (isNaN(scaleNum)) {
+        scaleNum = prefs.paddingValue;
+    }
+    scaleNum = Math.max(scaleNum, 1);
+    this.text = scaleNum;
+    };
     fields.cbScale.onClick = function() {
         fields.grpScaleLabel.enabled = this.value;
     };
@@ -1260,6 +1276,16 @@ function showDialog() {
     // =====
     fields.ddPng8ColorReduction.selection = prefs.png8ColorReduction;
     fields.txtPng8NumberofColors.text = prefs.png8NumberOfColors;
+    fields.txtPng8NumberofColors.onChange = function() {
+        var colorNum = parseInt(this.text, 10);
+        if (isNaN(colorNum)) {
+            colorNum = prefs.png8NumberOfColors;
+        } 
+        colorNum = Math.min(colorNum, 256);
+        colorNum = Math.max(colorNum, 0);
+        this.text = colorNum;
+    };
+
     fields.ddPng8Dither.selection = prefs.png8DitherType;
     fields.ddPng8Dither.onChange = function() {
          fields.grpPng8DitherSlider.enabled = this.selection.index === 1;
