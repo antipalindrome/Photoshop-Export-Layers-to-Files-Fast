@@ -231,6 +231,16 @@ var Formats = {
             return options;
         }
     },
+    "PSD": {
+        index: 5,
+        fileType: "PSD",
+        fileExtension: ".psd", 
+        formatArgs: function() {
+            var options = new PhotoshopSaveOptions();
+            options.layers = false;
+            return options;
+        }
+    }
 }   
 
 var Matte = {
@@ -371,6 +381,7 @@ function main() {
 
     // show dialog
     if (showDialog() === 1) {
+        prefs.documentName = app.activeDocument.name.split('.')[0];
         env.documentCopy = app.activeDocument.duplicate();
 
         // collect layers
@@ -809,14 +820,25 @@ function makeFileNameFromLayerName(layer, stripExt, withGroup, index) {
 
 function getUniqueFileName(fileName, layer, index) {
     var ext = prefs.fileExtension;
-
+    var date = new Date();
     // These are all the valid formattings supported by prefix/suffix
     var replacements = [
         ["{i}", index], 
         ["{ii}", padder(index, 2)], 
         ["{iii}", padder(index, 3)], 
         ["{iiii}", padder(index, 4)],
-        ["{n}", layer.layer.name],
+        ["{ln}", layer.layer.name],
+        ["{dn}", prefs.documentName],
+        ["{M}", (date.getMonth() + 1)],
+        ["{MM}", padder(date.getMonth() + 1, 2)],
+        ["{D}", date.getDate()],
+        ["{DD}",padder(date.getDate(), 2)],
+        ["{YY}", ("" + date.getFullYear()).substring(2)],
+        ["{YYYY}", date.getFullYear()],
+        ["{HH}", padder(date.getHours(), 2)],
+        ["{mm}", padder(date.getMinutes(), 2)],
+        ["{ss}", padder(date.getSeconds(), 2)],
+        ["{sss}", padder(date.getMilliseconds(), 3)],
     ];
 
     var outputPrefix = prefs.outputPrefix;
@@ -2346,6 +2368,7 @@ function getDialogFields(dialog) {
 }
 
 function makeMainDialog() {    
+
     // DIALOG
     // ======
     var dialog = new Window("dialog", undefined, undefined, {closeButton: false, resizeable: true}); 
@@ -2984,10 +3007,6 @@ function makeMainDialog() {
         tabBmp.spacing = 5; 
         tabBmp.margins = 10; 
 
-    // TABPNLEXPORTOPTIONS
-    // ===================
-    tabpnlExportOptions.selection = tabPng24; 
-
     // GRPBMPDEPTH
     // ===========
     var grpBmpDepth = tabBmp.add("group", undefined, {name: "grpBmpDepth"}); 
@@ -3014,6 +3033,19 @@ function makeMainDialog() {
     var cbBmpFlipRowOrder = tabBmp.add("checkbox", undefined, undefined, {name: "cbBmpFlipRowOrder"}); 
         cbBmpFlipRowOrder.text = "Flip Row Order"; 
 
+    // PSD
+    // ===
+    var PSD = tabpnlExportOptions.add("tab", undefined, undefined, {name: "PSD"}); 
+        PSD.text = "PSD"; 
+        PSD.orientation = "column"; 
+        PSD.alignChildren = ["left","top"]; 
+        PSD.spacing = 10; 
+        PSD.margins = 10; 
+
+    // TABPNLEXPORTOPTIONS
+    // ===================
+    tabpnlExportOptions.selection = PSD; 
+
     // DIALOG
     // ======
     var lblMetadata = dialog.add("statictext", undefined, undefined, {name: "lblMetadata"}); 
@@ -3027,9 +3059,6 @@ function makeMainDialog() {
 
         lblContact.add("statictext", undefined, "To get the most recent version, or leave feedback, go to:", {name: "lblContact"}); 
         lblContact.add("statictext", undefined, "https://github.com/hsw107/Photoshop-Export-Layers-to-Files-Fast", {name: "lblContact"}); 
-
-
-
 
   return dialog;
 }
