@@ -76,13 +76,13 @@ The following characters are **not** supported in the delimiter field:
 The following characters are **not** supported in the prefix or suffix field:
 `\`, `/`, `*`, `?`, `|`, `:`, `"`, `<`, `>`
 
-| Prefix  | Suffix       | Output Example               |
-| ------- | ------------ | ---------------------------- |
-| `test-` | N/A          | `test-layer-3.png`           |
-| N/A     | `.scale-100` | `layer-3.scale-100.png`      |
-| `test-` | `.scale-100` | `test-layer-3.scale-100.png` |
-| `{ii}-` | N/A          | `04-layer-3.png`             |
-| `{n}-`  | N/A          | `layer-3-layer-3.png`        |
+| Prefix    | Suffix       | Output Example               |
+| --------- | ------------ | ---------------------------- |
+| `test-`   | N/A          | `test-layer-3.png`           |
+| N/A       | `.scale-100` | `layer-3.scale-100.png`      |
+| `test-`   | `.scale-100` | `test-layer-3.scale-100.png` |
+| `{ii}-`   | N/A          | `04-layer-3.png`             |
+| `{YYYY}-` | N/A          | `2021-layer-3.png`           |
 
 #### Variable Substitution
 
