@@ -1,8 +1,16 @@
 # Changelog
 
+## v2.1
+
+_Release Date: 19 July, 2021_
+
+- Add more string substitution to the prefix/suffix fields https://github.com/hsw107/Photoshop-Export-Layers-to-Files-Fast/issues/71
+- Renamed string substitution `{n}` to `{ln}`
+- Add PSD export support https://github.com/hsw107/Photoshop-Export-Layers-to-Files-Fast/issues/92
+
 ## v2.0
 
-_Release Date: SOON_
+_Release Date: 19 July, 2021_
 
 - New smaller, and hopefully easier to use UI
 - "Visible only" is now a checkbox (can use with "All Layers" or "Selected Group") https://github.com/hsw107/Photoshop-Export-Layers-to-Files-Fast/issues/91

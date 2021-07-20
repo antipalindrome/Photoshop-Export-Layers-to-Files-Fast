@@ -27,6 +27,7 @@ Some of the features of the script include...
   - JPEG
   - Targa
   - BMP
+  - PSD
 - Handles nesting in grouped layers
 - Export either all layers or visible only
 - Files are named either using layer names, layer + group names, or automatic layer indices
@@ -93,7 +94,18 @@ Prefix and Suffix fields can take the following string substitutes.
 | `{ii}`   | Will be replaced with the index of the layer, with a leading zero                        |
 | `{iii}`  | Will be replaced with the index of the layer, with up to two leading zeros               |
 | `{iiii}` | Will be replaced with the index of the layer, with up to three leading zeros             |
-| `{n}`    | Will be replaced with the layer name. Useful for when exporting filenames as their index |
+| `{ln}`   | Will be replaced with the layer name. Useful for when exporting filenames as their index |
+| `{dn}`   | Will be replaced with the document name                                                  |
+| `{M}`    | Will be replaced with the month                                                          |
+| `{MM}`   | Will be replaced with the month, with a leading zero                                     |
+| `{D}`    | Will be replaced with the date of the month                                              |
+| `{DD}`   | Will be replaced with the date of the month, with a leading zero                         |
+| `{YY}`   | Will be replaced with the year, as the last two digits                                   |
+| `{YYYY}` | Will be replaced with the year, as all four                                              |
+| `{HH}`   | Will be replaced with the hours, with a leading zero                                     |
+| `{mm}`   | Will be replaced with the minutes, with a leading zero                                   |
+| `{ss}`   | Will be replaced with the seconds, with a leading zero                                   |
+| `{sss}`  | Will be replaced with the milliseconds, with leading zeros                               |
 
 ### Known Gaps
 
