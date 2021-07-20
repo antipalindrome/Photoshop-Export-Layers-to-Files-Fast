@@ -2,7 +2,7 @@
 
 This script allows you to export layers in your Photoshop document as individual files at a speed much faster than the built-in script from Adobe.
 
-This script does not try to acheive feature parity with the built-in script, but rather provide a more streamlined / performant experience. That being said, feel free to make feature requests, and feel free to contribute to it and make it even more powerful!
+This script does not try to achieve feature parity with the built-in script, but rather provide a more streamlined / performant experience. That being said, feel free to [make feature requests](https://github.com/hsw107/Photoshop-Export-Layers-to-Files-Fast/issues/new), and feel free to contribute to it and make it even more powerful!
 
 ## How to Use
 
@@ -35,6 +35,65 @@ Some of the features of the script include...
 - Last used dialog settings are remembered
 - A selected group can be exported as usual (layer by layer) while everything else is left in tact. (This way variable content can be exported for complex fixed background and foreground.)
 - Can export groups as folder hierarchy; conflicting folders are renamed
+
+## Extra Field Documentation
+
+### Selected Group
+
+Will only support the selected group. Note that you must selected the group before launching the script, otherwise this option will be disabled. When you run the script this way, all other layers will be left untouched, meaning any visible layers on top or bottom may show in the export.
+
+### Ignore Layers Starting With
+
+When this is selected, you can specify a prefix that will be used to match against layer names. Any matching layers will be ignored during the export.
+
+For example, if you specify `x` in the input, all layers starting with the letter `x` will not be exported.
+
+### Filenames
+
+| Option                             | Example                                                    |
+| ---------------------------------- | ---------------------------------------------------------- |
+| `Use Layer Name (strip extension)` | `layer-3.png` => `layer-3`                                 |
+| `Use Layer Name (keep extension)`  | `layer-3.png` => `layer-3.png`                             |
+| `Use layer and parent group names` | `group 1 > layer-3` => `group-1-layer-3.png`               |
+| `Use index descending`             | `layer-10`, where `layer-10` is the top-most layer => `01` |
+| `Use index ascending`              | `layer-5`, where `layer-5` is the top-most layer => `5`    |
+
+### Use Custom Delimiter
+
+`Use Custom Delimiter` will enable the use of a custom delimiter. Custom delimiters will be used instead of spaces in layer names and in the prefix/suffix fields. Note that the use of a space inside the file name is not supported by Photoshop, so by default a `-` delimiter will be used if not custom delimiter is specified.
+
+For example:
+`my layer 1` will export as `my-layer-1`
+
+The following characters are not supported in the delimiter field:
+`\`, `/`, `*`, `?`, `|`, `.`, `:`, `"`, `<`, `>`, `%`, `,`, `;`, `=`
+
+### Prefix/Suffix
+
+`Prefix` and `Suffix` will add a prefix and suffix, respectively, to every exported filename, and is compatible with all the options in Filenames above.
+
+The following characters are not supported in the prefix or suffix field:
+`\`, `/`, `*`, `?`, `|`, `:`, `"`, `<`, `>`
+
+| Prefix  | Suffix       | Output Example               |
+| ------- | ------------ | ---------------------------- |
+| `test-` | N/A          | `test-layer-3.png`           |
+| N/A     | `.scale-100` | `layer-3.scale-100.png`      |
+| `test-` | `.scale-100` | `test-layer-3.scale-100.png` |
+| `{ii}-` | N/A          | `04-layer-3.png`             |
+| `{n}-`  | N/A          | `layer-3-layer-3.png`        |
+
+#### Variable Substitution
+
+Prefix and Suffix fields can take the following string substitutes.
+
+| Option   | Example                                                                                  |
+| -------- | ---------------------------------------------------------------------------------------- |
+| `{i}`    | Will be replaced with the index of the layer                                             |
+| `{ii}`   | Will be replaced with the index of the layer, with a leading zero                        |
+| `{iii}`  | Will be replaced with the index of the layer, with up to two leading zeros               |
+| `{iiii}` | Will be replaced with the index of the layer, with up to three leading zeros             |
+| `{n}`    | Will be replaced with the layer name. Useful for when exporting filenames as their index |
 
 ### Known Gaps
 

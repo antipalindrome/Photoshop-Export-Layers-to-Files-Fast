@@ -332,7 +332,6 @@ var layerCount = 0;
 var visibleLayerCount = 0;
 var selectedLayerCount = 0;
 
-
 //
 // Entry point
 //
@@ -2206,7 +2205,6 @@ function indexOf(array, element) {
             break;
         }
     }
-
     return index;
 }
 
@@ -2231,7 +2229,6 @@ function loadResource(file) {
 
     return rsrcString;
 }
-
 
 function Profiler(enabled) {
     this.enabled = enabled;
@@ -2491,7 +2488,7 @@ function makeMainDialog() {
     var lblLetterCasing = grpCasing.add("statictext", undefined, undefined, {name: "lblLetterCasing"}); 
         lblLetterCasing.text = "Letter Casing"; 
 
-    var ddLetterCasing_array = ["Keep","Uppercase","Lowercase"]; 
+    var ddLetterCasing_array = ["Keep","Lowercase","Uppercase"]; 
     var ddLetterCasing = grpCasing.add("dropdownlist", undefined, undefined, {name: "ddLetterCasing", items: ddLetterCasing_array}); 
         ddLetterCasing.selection = 0; 
 
@@ -2728,7 +2725,7 @@ function makeMainDialog() {
     // ===================
     var tabpnlExportOptions = pnlExportAs.add("tabbedpanel", undefined, undefined, {name: "tabpnlExportOptions"}); 
         tabpnlExportOptions.alignChildren = "fill"; 
-        tabpnlExportOptions.preferredSize.width = 554.625; 
+        tabpnlExportOptions.preferredSize.width = 565.875; 
         tabpnlExportOptions.margins = 0; 
         tabpnlExportOptions.alignment = ["fill","center"]; 
 
@@ -2815,7 +2812,7 @@ function makeMainDialog() {
 
     var ddPng8Dither_array = ["None","Diffusion","Pattern","Noise"]; 
     var ddPng8Dither = grpPng8Dither.add("dropdownlist", undefined, undefined, {name: "ddPng8Dither", items: ddPng8Dither_array}); 
-        ddPng8Dither.selection = 0; 
+        ddPng8Dither.selection = 1; 
 
     // GRPPNG8DITHERSLIDER
     // ===================
@@ -2864,7 +2861,7 @@ function makeMainDialog() {
     // GRPPNG8TRANSPARENCYDITHER
     // =========================
     var grpPng8TransparencyDither = grpPng8Transparency.add("group", undefined, {name: "grpPng8TransparencyDither"}); 
-        grpPng8TransparencyDither.enabled = true; 
+        grpPng8TransparencyDither.enabled = false; 
         grpPng8TransparencyDither.orientation = "row"; 
         grpPng8TransparencyDither.alignChildren = ["left","center"]; 
         grpPng8TransparencyDither.spacing = 10; 
@@ -2989,7 +2986,7 @@ function makeMainDialog() {
 
     // TABPNLEXPORTOPTIONS
     // ===================
-    tabpnlExportOptions.selection = tabJpg; 
+    tabpnlExportOptions.selection = tabPng24; 
 
     // GRPBMPDEPTH
     // ===========
@@ -3030,6 +3027,9 @@ function makeMainDialog() {
 
         lblContact.add("statictext", undefined, "To get the most recent version, or leave feedback, go to:", {name: "lblContact"}); 
         lblContact.add("statictext", undefined, "https://github.com/hsw107/Photoshop-Export-Layers-to-Files-Fast", {name: "lblContact"}); 
+
+
+
 
   return dialog;
 }
