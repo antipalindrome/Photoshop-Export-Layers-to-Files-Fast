@@ -101,7 +101,7 @@ Prefix and Suffix fields can take the following string substitutes.
 | `{D}`    | Will be replaced with the date of the month                                              |
 | `{DD}`   | Will be replaced with the date of the month, with a leading zero                         |
 | `{YY}`   | Will be replaced with the year, as the last two digits                                   |
-| `{YYYY}` | Will be replaced with the year, as all four                                              |
+| `{YYYY}` | Will be replaced with the year, as all four digits                                       |
 | `{HH}`   | Will be replaced with the hours, with a leading zero                                     |
 | `{mm}`   | Will be replaced with the minutes, with a leading zero                                   |
 | `{ss}`   | Will be replaced with the seconds, with a leading zero                                   |
