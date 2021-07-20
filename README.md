@@ -40,7 +40,7 @@ Some of the features of the script include...
 
 ### Selected Group
 
-Will only support the selected group. Note that you must selected the group before launching the script, otherwise this option will be disabled. When you run the script this way, all other layers will be left untouched, meaning any visible layers on top or bottom may show in the export.
+Will only export the selected group. Note that you must selected the group before launching the script, otherwise this option will be disabled. When you run the script this way, all other layers will be left untouched, meaning any visible layers on top or bottom may show in the export.
 
 ### Ignore Layers Starting With
 
@@ -52,8 +52,8 @@ For example, if you specify `x` in the input, all layers starting with the lette
 
 | Option                             | Example                                                    |
 | ---------------------------------- | ---------------------------------------------------------- |
-| `Use Layer Name (strip extension)` | `layer-3.png` => `layer-3`                                 |
-| `Use Layer Name (keep extension)`  | `layer-3.png` => `layer-3.png`                             |
+| `Use Layer Name (strip extension)` | `layer-3.png` => `layer-3.png`                             |
+| `Use Layer Name (keep extension)`  | `layer-3.png` => `layer-3.png.png`                         |
 | `Use layer and parent group names` | `group 1 > layer-3` => `group-1-layer-3.png`               |
 | `Use index descending`             | `layer-10`, where `layer-10` is the top-most layer => `01` |
 | `Use index ascending`              | `layer-5`, where `layer-5` is the top-most layer => `5`    |
@@ -65,14 +65,14 @@ For example, if you specify `x` in the input, all layers starting with the lette
 For example:
 `my layer 1` will export as `my-layer-1`
 
-The following characters are not supported in the delimiter field:
+The following characters are **not** supported in the delimiter field:
 `\`, `/`, `*`, `?`, `|`, `.`, `:`, `"`, `<`, `>`, `%`, `,`, `;`, `=`
 
 ### Prefix/Suffix
 
 `Prefix` and `Suffix` will add a prefix and suffix, respectively, to every exported filename, and is compatible with all the options in Filenames above.
 
-The following characters are not supported in the prefix or suffix field:
+The following characters are **not** supported in the prefix or suffix field:
 `\`, `/`, `*`, `?`, `|`, `:`, `"`, `<`, `>`
 
 | Prefix  | Suffix       | Output Example               |
