@@ -197,7 +197,7 @@ var Formats = {
             return options;
         }
     },
-    "TIF": {
+    "TIFF": {
         index: 3,
         fileType: "TIF",
         fileExtension: ".tif",
@@ -3035,7 +3035,7 @@ function makeMainDialog() {
         tabTif.margins = 10; 
 
     // GRPTIFENCODING
-    // =============
+    // ==============
     var grpTifEncoding = tabTif.add("group", undefined, {name: "grpTifEncoding"}); 
         grpTifEncoding.orientation = "row"; 
         grpTifEncoding.alignChildren = ["left","center"]; 
@@ -3050,16 +3050,15 @@ function makeMainDialog() {
         ddTifEncoding.selection = 0; 
 
     // GRPTIFQUALITY
-    // ===================
+    // =============
     var grpTifQuality = grpTifEncoding.add("group", undefined, {name: "grpTifQuality"}); 
-        grpTifQuality.enabled = false; 
         grpTifQuality.orientation = "row"; 
         grpTifQuality.alignChildren = ["left","center"]; 
         grpTifQuality.spacing = 10; 
         grpTifQuality.margins = 0; 
-    
-    var lblQuality = grpTifQuality.add("statictext", undefined, undefined, {name: "lblQuality"}); 
-        lblQuality.text = "Quality"; 
+
+    var lblTifQuality = grpTifQuality.add("statictext", undefined, undefined, {name: "lblTifQuality"}); 
+        lblTifQuality.text = "Quality"; 
 
     var sldrTifQuality = grpTifQuality.add("slider", undefined, undefined, undefined, undefined, {name: "sldrTifQuality"}); 
         sldrTifQuality.minvalue = 0; 
@@ -3074,6 +3073,7 @@ function makeMainDialog() {
     // ======
     var cbTifWithAlpha = tabTif.add("checkbox", undefined, undefined, {name: "cbTifWithAlpha"}); 
         cbTifWithAlpha.text = "Alpha Channel"; 
+
     var cbTifIcc = tabTif.add("checkbox", undefined, undefined, {name: "cbTifIcc"}); 
         cbTifIcc.text = "ICC Profile"; 
 
