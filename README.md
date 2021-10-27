@@ -116,6 +116,15 @@ Prefix and Suffix fields can take the following string substitutes.
 
 We do our best to have the script be backwards compatible (back to Adobe Photoshop CS2) but are limited in what we can test for, both by Photoshop versions as well as OS. If you are encountering any issues with the current version, try downloading [previous versions](https://github.com/hsw107/Photoshop-Export-Layers-to-Files-Fast/releases) of the script instead.
 
+## Contributing
+
+Please feel free to contribute! We appreciate it!
+
+Here are some things to know:
+
+- When updating the dialog UI, please reference the `dev/dialog.js` and import it at https://scriptui.joonas.me/. Then, when you've made the appropriate UI changes, export the dialog and copy/paste the top comment block into the `dev/dialog.js` file and copy/paste the remainder into the `showDialog` function inside `Export Layers To Files (Fast).jsx`.
+- Be sure to test that any UI you add gets saved between script runs. i.e. If the user checks a checkbox, that checkbox should remain checked the next time they run the script.
+
 ## Feedback / Bugs
 
 Please use GitHub to write feedback/bugs/suggestions by [filing an issue](https://github.com/hsw107/Photoshop-Export-Layers-to-Files-Fast/issues).
