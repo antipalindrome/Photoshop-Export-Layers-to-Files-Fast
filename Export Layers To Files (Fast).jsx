@@ -2184,7 +2184,8 @@ function exportPng8AM(fileName, options) {
 
 function padder(input, padLength) {
     // pad the input with zeroes up to indicated length
-    var result = (new Array(padLength + 1 - input.toString().length)).join('0') + input;
+    var length = padLength + 1 - input.toString().length;
+    var result = (new Array(Math.max(length, 0))).join('0') + input;
     return result;
 }
 
