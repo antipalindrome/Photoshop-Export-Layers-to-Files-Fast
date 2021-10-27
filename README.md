@@ -25,6 +25,7 @@ Some of the features of the script include...
 - Supported export formats:
   - PNG (8 and 24 bit)
   - JPEG
+  - TIFF
   - Targa
   - BMP
   - PSD
