@@ -3028,11 +3028,11 @@ function makeMainDialog() {
     // TABTIF
     // ======
     var tabTif = tabpnlExportOptions.add("tab", undefined, undefined, {name: "tabTif"}); 
-    tabTif.text = "TIF"; 
-    tabTif.orientation = "column"; 
-    tabTif.alignChildren = ["left","top"]; 
-    tabTif.spacing = 5; 
-    tabTif.margins = 10; 
+        tabTif.text = "TIFF"; 
+        tabTif.orientation = "column"; 
+        tabTif.alignChildren = ["left","top"]; 
+        tabTif.spacing = 5; 
+        tabTif.margins = 10; 
 
     // GRPTIFENCODING
     // =============
