@@ -17,7 +17,7 @@
 // Most current version always available at: https://github.com/hsw107/Photoshop-Export-Layers-to-Files-Fast
 
 // enable double-clicking from Finder/Explorer (CS2 and higher)
-#target photoshop
+//#target photoshop
 
 app.bringToFront();
 
@@ -204,7 +204,7 @@ var Formats = {
         formatArgs: function() {
             var options = new TiffSaveOptions();
             var ratio = 12 / 100;
-            options.quality = Math.round(prefs.tifQuality * ratio);
+            options.jpegQuality = Math.round(prefs.tifQuality * ratio);
             var encoding = [TIFFEncoding.NONE, TIFFEncoding.TIFFLZW, TIFFEncoding.TIFFZIP, TIFFEncoding.JPEG];
             options.imageCompression = encoding[prefs.tifEncoding];
             options.alphaChannels = prefs.tifAlphaChannel; 
@@ -213,8 +213,64 @@ var Formats = {
             return options;
         }
     },
-    "TGA": {
+    "PDF": {
         index: 4,
+        fileType: "PDF",
+        fileExtension: ".pdf",
+        formatArgs: function() {
+            var standardType = [
+                PDFStandard.NONE,
+                PDFStandard.PDFX1A2001,
+                PDFStandard.PDFX1A2003,
+                PDFStandard.PDFX32002,
+                PDFStandard.PDFX32003,
+                PDFStandard.PDFX42008
+            ];
+            var compatibilityType = [
+                PDFCompatibility.PDF13,
+                PDFCompatibility.PDF14,
+                PDFCompatibility.PDF15,
+                PDFCompatibility.PDF16,
+                PDFCompatibility.PDF17
+            ];
+            var resampleType = [
+                PDFResample.NONE,
+                PDFResample.PDFAVERAGE,
+                PDFResample.PDFSUBSAMPLE,
+                PDFResample.PDFBICUBIC
+            ];
+            var encodingType = [
+                PDFEncoding.NONE,
+                PDFEncoding.PDFZIP,
+                PDFEncoding.JPEG
+            ];
+            var destinationProfileList = ["Japan Color 2001 Coated","Japan Color 2001 Uncoated","Japan Color 2002 Newspaper","Japan Color 2003 Web Coated","Japan Web Coated (Ad)","U.S. Sheetfed Coated v2","U.S. Sheetfed Uncoated v2","U.S. Web Coated (SWOP) v2","U.S. Web Uncoated v2","-","sRGB IEC61966-2.1","Adobe RGB (1998)","Apple RGB","ColorMatch RGBimage P3","ProPhoto RGB","Rec.601 NTSC Gamma 2.4","Rec.601 PAL Gamma 2.4","Rec.709 Gamma 2.4"]; 
+            
+            var options = new PDFSaveOptions();
+            options.PDFStandard = standardType[prefs.pdfStandard];
+            options.PDFCompatibility = compatibilityType[prefs.pdfCompatibility];
+            var ratio = 12 / 100;
+            options.jpegQuality = Math.round(prefs.pdfQuality * ratio);           
+            options.encoding = encodingType[prefs.pdfEncoding];
+            options.alphaChannels = prefs.pdfAlphaChannel;
+            options.embedColorProfile = prefs.pdfIcc;        
+            options.layers = false;
+            options.colorConversion = prefs.pdfColorConversion;
+            options.destinationProfile = prefs.pdfColorConversion ? destinationProfileList[prefs.pdfDestinationProfile] : "";
+            options.profileInclusionPolicy = false;
+            options.downSample = resampleType[prefs.pdfDownSample];
+            options.downSampleSize = parseInt(prefs.pdfDownSampleSize, 10);
+            options.downSampleSizeLimit = parseInt(prefs.pdfDownSampleSizeLimit, 10);
+            options.preserveEditing = false; 
+            options.embedThumbnail = false;
+            options.optimizeForWeb = true;
+            options.view = false;
+            options.convertToEightBit = true;           
+            return options;
+        }
+    },
+    "TGA": {
+        index: 5,
         fileType: "TGA",
         fileExtension: ".tga",
         formatArgs: function() { 
@@ -227,7 +283,7 @@ var Formats = {
         }
     },
     "BMP": {
-        index: 5,
+        index: 6,
         fileType: "BMP",
         fileExtension: ".bmp",
         formatArgs: function() { 
@@ -248,7 +304,7 @@ var Formats = {
         }
     },
     "PSD": {
-        index: 6,
+        index: 7,
         fileType: "PSD",
         fileExtension: ".psd", 
         formatArgs: function() {
@@ -313,6 +369,17 @@ var DEFAULT_SETTINGS = {
     tifEncoding: app.stringIDToTypeID('tifEncoding'),
     tifAlphaChannel: app.stringIDToTypeID("tifAlphaChannel"),
     tifIcc: app.stringIDToTypeID('tifIcc'),
+    pdfStandard: app.stringIDToTypeID('pdfStandard'),
+    pdfCompatibility: app.stringIDToTypeID('pdfCompatibility'),
+    pdfQuality: app.stringIDToTypeID('pdfQuality'),
+    pdfEncoding: app.stringIDToTypeID('pdfEncoding'),
+    pdfAlphaChannel: app.stringIDToTypeID("pdfAlphaChannel"),
+    pdfIcc: app.stringIDToTypeID('pdfIcc'),
+    pdfColorConversion: app.stringIDToTypeID('pdfColorConversion'),
+    pdfDestinationProfile: app.stringIDToTypeID('pdfDestinationProfile'),
+    pdfDownSample: app.stringIDToTypeID('pdfDownSample'),
+    pdfDownSampleSize: app.stringIDToTypeID('pdfDownSampleSize'),
+    pdfDownSampleSizeLimit: app.stringIDToTypeID('pdfDownSampleSizeLimit'),
     letterCase: app.stringIDToTypeID("letterCase"),
     nameFiles: app.stringIDToTypeID("nameFiles"),
     outputPrefix: app.stringIDToTypeID("outputPrefix"),
@@ -1381,7 +1448,7 @@ function showDialog() {
     fields.cbJpgOptimized.value = prefs.jpgOptimized;
     fields.cbJpgProgressive.value = prefs.jpgProgressive;
 
-        // TIF
+    // TIF
     // ===
     fields.ddTifEncoding.selection = prefs.tifEncoding;
     fields.ddTifEncoding.onChange = function() {
@@ -1398,6 +1465,47 @@ function showDialog() {
 
     fields.cbTifWithAlpha.value = prefs.tifAlphaChannel;
     fields.cbTifIcc.value = prefs.tifIcc;
+  
+    // PDF
+    // ===
+    fields.ddPdfStandard.selection = prefs.pdfStandard;
+    fields.ddPdfCompatibility.selection = prefs.pdfCompatibility;
+    fields.ddPdfEncoding.selection = prefs.pdfEncoding;
+    fields.ddPdfEncoding.onChange = function() {
+         fields.grpPdfQuality.enabled = this.selection.index === 2;
+    }
+    fields.grpPdfQuality.enabled = prefs.pdfEncoding === 2;
+    fields.sldrPdfQuality.value = prefs.pdfQuality;
+    fields.lblPdfQualityValue.text = prefs.pdfQuality;
+    fields.sldrPdfQuality.onChanging = function() {
+        this.value = Math.floor(this.value);
+        fields.lblPdfQualityValue.text = this.value;
+    }
+    
+    fields.cbPdfWithAlpha.value = prefs.pdfAlphaChannel;
+    fields.cbPdfIcc.value = prefs.pdfIcc;
+
+    fields.cbPdfColorConversion.value = prefs.pdfColorConversion;
+    fields.cbPdfColorConversion.onClick = function() {
+        fields.grpPdfDestinationProfile.enabled = this.value;
+    }
+    fields.grpPdfDestinationProfile.enabled = prefs.pdfColorConversion;
+    fields.ddPdfDestinationProfile.selection = prefs.pdfDestinationProfile;
+    fields.ddPdfDownSample.selection = prefs.pdfDownSample;
+    fields.ddPdfDownSample.onChange = function() {
+        fields.grpPdfDownSampleSize.enabled = this.selection.index > 0;
+   }
+   fields.grpPdfDownSampleSize.enabled = prefs.pdfDownSample > 0;
+    fields.txtPdfDownSampleSize.text = prefs.pdfDownSampleSize;
+    fields.txtPdfDownSampleSize.onChange = function() {
+        var sampleSize = parseInt(this.text, 10);
+        if (isNaN(sampleSize)) {
+            sampleSize = prefs.pdfDownSampleSize;
+        }
+        this.text = sampleSize;
+        fields.txtPdfDownSampleSizeLimit.text = this.text * 1.5;
+    };
+    fields.txtPdfDownSampleSizeLimit.text = prefs.pdfDownSampleSizeLimit;
 
     // TGA
     // ===
@@ -1460,6 +1568,18 @@ function saveSettings(dialog) {
     desc.putInteger(DEFAULT_SETTINGS.tifEncoding, fields.ddTifEncoding.selection.index);
     desc.putBoolean(DEFAULT_SETTINGS.tifAlphaChannel, fields.cbTifWithAlpha.value);
     desc.putBoolean(DEFAULT_SETTINGS.tifIcc, fields.cbTifIcc.value);
+
+    desc.putInteger(DEFAULT_SETTINGS.pdfStandard, fields.ddPdfStandard.selection.index);
+    desc.putInteger(DEFAULT_SETTINGS.pdfCompatibility, fields.ddPdfCompatibility.selection.index);
+    desc.putInteger(DEFAULT_SETTINGS.pdfQuality, fields.sldrPdfQuality.value);
+    desc.putInteger(DEFAULT_SETTINGS.pdfEncoding, fields.ddPdfEncoding.selection.index);
+    desc.putBoolean(DEFAULT_SETTINGS.pdfAlphaChannel, fields.cbPdfWithAlpha.value);
+    desc.putBoolean(DEFAULT_SETTINGS.pdfIcc, fields.cbPdfIcc.value);
+    desc.putBoolean(DEFAULT_SETTINGS.pdfColorConversion, fields.cbPdfColorConversion.value);
+    desc.putInteger(DEFAULT_SETTINGS.pdfDestinationProfile, fields.ddPdfDestinationProfile.selection.index);
+    desc.putInteger(DEFAULT_SETTINGS.pdfDownSample, fields.ddPdfDownSample.selection.index);
+    desc.putInteger(DEFAULT_SETTINGS.pdfDownSampleSize, parseInt(fields.txtPdfDownSampleSize.text));
+    desc.putInteger(DEFAULT_SETTINGS.pdfDownSampleSizeLimit, parseInt(fields.txtPdfDownSampleSizeLimit.text));
 
     desc.putInteger(DEFAULT_SETTINGS.letterCase, LetterCase.forIndex(fields.ddLetterCasing.selection.index));
     desc.putInteger(DEFAULT_SETTINGS.nameFiles, FileNameType.forIndex(fields.ddNameAs.selection.index));
@@ -1537,6 +1657,17 @@ function getDefaultSettings() {
             tifEncoding: 1,
             tifAlphaChannel: false,
             tifIcc: false,
+            pdfStandard: 0,
+            pdfCompatibility: 0,
+            pdfQuality: 100,
+            pdfEncoding: 2,
+            pdfAlphaChannel: false,
+            pdfIcc: false,
+            pdfColorConversion: false,
+            pdfDestinationProfile: 5,
+            pdfDownSample: 3,
+            pdfDownSampleSize: 300,
+            pdfDownSampleSizeLimit: 450,
             ignoreLayersString: "!",
             letterCase: LetterCase.KEEP,
             nameFiles: FileNameType.AS_LAYERS_NO_EXT,
@@ -1617,6 +1748,17 @@ function getSettings(formatOpts) {
             tifEncoding: desc.getInteger(DEFAULT_SETTINGS.tifEncoding),
             tifAlphaChannel: desc.getBoolean(DEFAULT_SETTINGS.tifAlphaChannel),
             tifIcc: desc.getBoolean(DEFAULT_SETTINGS.tifIcc),
+            pdfStandard: desc.getInteger(DEFAULT_SETTINGS.pdfStandard),
+            pdfCompatibility: desc.getInteger(DEFAULT_SETTINGS.pdfCompatibility),
+            pdfQuality: desc.getInteger(DEFAULT_SETTINGS.pdfQuality),
+            pdfEncoding: desc.getInteger(DEFAULT_SETTINGS.pdfEncoding),
+            pdfAlphaChannel: desc.getBoolean(DEFAULT_SETTINGS.pdfAlphaChannel),
+            pdfIcc: desc.getBoolean(DEFAULT_SETTINGS.pdfIcc),
+            pdfColorConversion: desc.getBoolean(DEFAULT_SETTINGS.pdfColorConversion),
+            pdfDestinationProfile: desc.getInteger(DEFAULT_SETTINGS.pdfDestinationProfile),
+            pdfDownSample: desc.getInteger(DEFAULT_SETTINGS.pdfDownSample),
+            pdfDownSampleSize: desc.getInteger(DEFAULT_SETTINGS.pdfDownSampleSize),
+            pdfDownSampleSizeLimit: desc.getInteger(DEFAULT_SETTINGS.pdfDownSampleSizeLimit),
             letterCase: desc.getInteger(DEFAULT_SETTINGS.letterCase),
             nameFiles: desc.getInteger(DEFAULT_SETTINGS.nameFiles),
             outputPrefix: desc.getString(DEFAULT_SETTINGS.outputPrefix),
@@ -2412,6 +2554,22 @@ function getDialogFields(dialog) {
         ddTifEncoding: dialog.findElement("ddTifEncoding"),
         cbTifWithAlpha: dialog.findElement("cbTifWithAlpha"),
         cbTifIcc: dialog.findElement("cbTifIcc"),
+        // PDF
+        ddPdfStandard: dialog.findElement("ddPdfStandard"),
+        ddPdfCompatibility: dialog.findElement("ddPdfCompatibility"),
+        grpPdfQuality: dialog.findElement("grpPdfQuality"),
+        sldrPdfQuality: dialog.findElement("sldrPdfQuality"),
+        lblPdfQualityValue: dialog.findElement("lblPdfQualityValue"),
+        ddPdfEncoding: dialog.findElement("ddPdfEncoding"),
+        cbPdfWithAlpha: dialog.findElement("cbPdfWithAlpha"),
+        cbPdfIcc: dialog.findElement("cbPdfIcc"),
+        cbPdfColorConversion: dialog.findElement("cbPdfColorConversion"),
+        grpPdfDestinationProfile: dialog.findElement("grpPdfDestinationProfile"),
+        ddPdfDestinationProfile: dialog.findElement("ddPdfDestinationProfile"),
+        grpPdfDownSampleSize: dialog.findElement("grpPdfDownSampleSize"),
+        ddPdfDownSample: dialog.findElement("ddPdfDownSample"),
+        txtPdfDownSampleSize: dialog.findElement("txtPdfDownSampleSize"),
+        txtPdfDownSampleSizeLimit: dialog.findElement("txtPdfDownSampleSizeLimit"),
         // TGA
         ddTgaDepth: dialog.findElement("ddTgaDepth"),
         cbTgaWithAlpha: dialog.findElement("cbTgaWithAlpha"),
@@ -3076,6 +3234,143 @@ function makeMainDialog() {
 
     var cbTifIcc = tabTif.add("checkbox", undefined, undefined, {name: "cbTifIcc"}); 
         cbTifIcc.text = "ICC Profile"; 
+
+    // TABPDF
+    // ======
+    var tabPdf = tabpnlExportOptions.add("tab", undefined, undefined, {name: "tabPdf"}); 
+        tabPdf.text = "PDF"; 
+        tabPdf.orientation = "column"; 
+        tabPdf.alignChildren = ["left","top"]; 
+        tabPdf.spacing = 5; 
+        tabPdf.margins = 10; 
+
+    // GRPPDFSTANDARD
+    // ==============
+    var grpPdfStandard = tabPdf.add("group", undefined, {name: "grpPdfStandard"}); 
+        grpPdfStandard.orientation = "row"; 
+        grpPdfStandard.alignChildren = ["left","center"]; 
+        grpPdfStandard.spacing = 10; 
+        grpPdfStandard.margins = 0; 
+
+    var lblPdfStandard = grpPdfStandard.add("statictext", undefined, undefined, {name: "lblPdfStandard"}); 
+        lblPdfStandard.text = "Standard"; 
+
+    var ddPdfStandard_array = ["None","PDF/X-1a:2001","PDF/X-1a:2003","PDF/X-3:2002","PDF/X-3:2003","PDF/X-4:2010"]; 
+    var ddPdfStandard = grpPdfStandard.add("dropdownlist", undefined, undefined, {name: "ddPdfStandard", items: ddPdfStandard_array}); 
+        ddPdfStandard.selection = 0; 
+
+    var lblPdfCompatibility = grpPdfStandard.add("statictext", undefined, undefined, {name: "lblPdfCompatibility"}); 
+        lblPdfCompatibility.text = "Compatibility"; 
+
+    var ddPdfCompatibility_array = ["Acrobat 4 (PDF 1.3)","Acrobat 5 (PDF 1.4)","Acrobat 6 (PDF 1.5)","Acrobat 7 (PDF 1.6)","Acrobat 8 (PDF 1.7)"]; 
+    var ddPdfCompatibility = grpPdfStandard.add("dropdownlist", undefined, undefined, {name: "ddPdfCompatibility", items: ddPdfCompatibility_array}); 
+        ddPdfCompatibility.selection = 0; 
+
+    // GRPPDFCOLORCONVERSION
+    // =====================
+    var grpPdfColorConversion = tabPdf.add("group", undefined, {name: "grpPdfColorConversion"}); 
+        grpPdfColorConversion.orientation = "row"; 
+        grpPdfColorConversion.alignChildren = ["left","center"]; 
+        grpPdfColorConversion.spacing = 10; 
+        grpPdfColorConversion.margins = 0; 
+
+    var cbPdfColorConversion = grpPdfColorConversion.add("checkbox", undefined, undefined, {name: "cbPdfColorConversion"}); 
+        cbPdfColorConversion.text = "Color Conversion"; 
+
+    // GRPPDFDESTINATIONPROFILE
+    // ========================
+    var grpPdfDestinationProfile = grpPdfColorConversion.add("group", undefined, {name: "grpPdfDestinationProfile"}); 
+        grpPdfDestinationProfile.orientation = "row"; 
+        grpPdfDestinationProfile.alignChildren = ["left","center"]; 
+        grpPdfDestinationProfile.spacing = 10; 
+        grpPdfDestinationProfile.margins = 0; 
+
+    var lblPdfDestinationProfile = grpPdfDestinationProfile.add("statictext", undefined, undefined, {name: "lblPdfDestinationProfile"}); 
+        lblPdfDestinationProfile.text = "Destination"; 
+
+    var ddPdfDestinationProfile_array = ["Japan Color 2001 Coated","Japan Color 2001 Uncoated","Japan Color 2002 Newspaper","Japan Color 2003 Web Coated","Japan Web Coated (Ad)","U.S. Sheetfed Coated v2","U.S. Sheetfed Uncoated v2","U.S. Web Coated (SWOP) v2","U.S. Web Uncoated v2","-","sRGB IEC61966-2.1","Adobe RGB (1998)","Apple RGB","ColorMatch RGBimage P3","ProPhoto RGB","Rec.601 NTSC Gamma 2.4","Rec.601 PAL Gamma 2.4","Rec.709 Gamma 2.4"]; 
+    var ddPdfDestinationProfile = grpPdfDestinationProfile.add("dropdownlist", undefined, undefined, {name: "ddPdfDestinationProfile", items: ddPdfDestinationProfile_array}); 
+        ddPdfDestinationProfile.selection = 0; 
+
+    // GRPPDFDOWNSAMPLE
+    // ================
+    var grpPdfDownSample = tabPdf.add("group", undefined, {name: "grpPdfDownSample"}); 
+        grpPdfDownSample.orientation = "row"; 
+        grpPdfDownSample.alignChildren = ["left","center"]; 
+        grpPdfDownSample.spacing = 10; 
+        grpPdfDownSample.margins = 0; 
+
+    var ddPdfDownSample_array = ["Do Not Downsample","Average Downsampling To","Subsampling To","Bicubic Downsampling To"]; 
+    var ddPdfDownSample = grpPdfDownSample.add("dropdownlist", undefined, undefined, {name: "ddPdfDownSample", items: ddPdfDownSample_array}); 
+        ddPdfDownSample.selection = 3; 
+
+    // GRPPDFDOWNSAMPLESIZE
+    // ====================
+    var grpPdfDownSampleSize = grpPdfDownSample.add("group", undefined, {name: "grpPdfDownSampleSize"}); 
+        grpPdfDownSampleSize.orientation = "row"; 
+        grpPdfDownSampleSize.alignChildren = ["left","center"]; 
+        grpPdfDownSampleSize.spacing = 10; 
+        grpPdfDownSampleSize.margins = 0; 
+
+    var txtPdfDownSampleSize = grpPdfDownSampleSize.add('edittext {properties: {name: "txtPdfDownSampleSize"}}'); 
+        txtPdfDownSampleSize.text = "300"; 
+        txtPdfDownSampleSize.preferredSize.width = 40; 
+
+    var lblPdfDownSampleSize = grpPdfDownSampleSize.add("statictext", undefined, undefined, {name: "lblPdfDownSampleSize"}); 
+        lblPdfDownSampleSize.text = "PPI"; 
+
+    var lblPdfDownSampleSizeLimit = grpPdfDownSampleSize.add("statictext", undefined, undefined, {name: "lblPdfDownSampleSizeLimit"}); 
+        lblPdfDownSampleSizeLimit.text = "For Images Above"; 
+
+    var txtPdfDownSampleSizeLimit = grpPdfDownSampleSize.add('edittext {properties: {name: "txtPdfDownSampleSizeLimit"}}'); 
+        txtPdfDownSampleSizeLimit.text = "450"; 
+        txtPdfDownSampleSizeLimit.preferredSize.width = 40; 
+
+    var lblPdfDownSampleSizeLimit2 = grpPdfDownSampleSize.add("statictext", undefined, undefined, {name: "lblPdfDownSampleSizeLimit2"}); 
+        lblPdfDownSampleSizeLimit2.text = "PPI"; 
+
+    // GRPPDFENCODING
+    // ==============
+    var grpPdfEncoding = tabPdf.add("group", undefined, {name: "grpPdfEncoding"}); 
+        grpPdfEncoding.orientation = "row"; 
+        grpPdfEncoding.alignChildren = ["left","center"]; 
+        grpPdfEncoding.spacing = 10; 
+        grpPdfEncoding.margins = 0; 
+
+    var lblPdfEncoding = grpPdfEncoding.add("statictext", undefined, undefined, {name: "lblPdfEncoding"}); 
+        lblPdfEncoding.text = "Compression"; 
+
+    var ddPdfEncoding_array = ["None","ZIP","JPEG"]; 
+    var ddPdfEncoding = grpPdfEncoding.add("dropdownlist", undefined, undefined, {name: "ddPdfEncoding", items: ddPdfEncoding_array}); 
+        ddPdfEncoding.selection = 2; 
+
+    // GRPPDFQUALITY
+    // =============
+    var grpPdfQuality = grpPdfEncoding.add("group", undefined, {name: "grpPdfQuality"}); 
+        grpPdfQuality.orientation = "row"; 
+        grpPdfQuality.alignChildren = ["left","center"]; 
+        grpPdfQuality.spacing = 10; 
+        grpPdfQuality.margins = 0; 
+
+    var lblPdfQuality = grpPdfQuality.add("statictext", undefined, undefined, {name: "lblPdfQuality"}); 
+        lblPdfQuality.text = "Quality"; 
+
+    var sldrPdfQuality = grpPdfQuality.add("slider", undefined, undefined, undefined, undefined, {name: "sldrPdfQuality"}); 
+        sldrPdfQuality.minvalue = 0; 
+        sldrPdfQuality.maxvalue = 100; 
+        sldrPdfQuality.value = 50; 
+        sldrPdfQuality.preferredSize.width = 100; 
+
+    var lblPdfQualityValue = grpPdfQuality.add("statictext", undefined, undefined, {name: "lblPdfQualityValue"}); 
+        lblPdfQualityValue.text = "100"; 
+
+    // TABPDF
+    // ======
+    var cbPdfWithAlpha = tabPdf.add("checkbox", undefined, undefined, {name: "cbPdfWithAlpha"}); 
+        cbPdfWithAlpha.text = "Alpha Channel"; 
+
+    var cbPdfIcc = tabPdf.add("checkbox", undefined, undefined, {name: "cbPdfIcc"}); 
+        cbPdfIcc.text = "ICC Profile"; 
 
     // TABTGA
     // ======
