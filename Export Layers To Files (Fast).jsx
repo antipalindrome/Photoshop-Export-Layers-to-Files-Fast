@@ -17,7 +17,7 @@
 // Most current version always available at: https://github.com/hsw107/Photoshop-Export-Layers-to-Files-Fast
 
 // enable double-clicking from Finder/Explorer (CS2 and higher)
-//#target photoshop
+#target photoshop
 
 app.bringToFront();
 

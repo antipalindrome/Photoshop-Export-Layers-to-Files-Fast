@@ -8,7 +8,7 @@ This script does not try to achieve feature parity with the built-in script, but
 
 _Disclaimer:_ We are not associated with Adobe in any way. For any issues relating to Adobe products or Adobe scripts please contact them directly. We have never had an issue, but **please use this script at your own risk**. We are not responsible for any lost data or damaged PSDs so always make a back-up.
 
-- Go to the [releases page](https://github.com/hsw107/Photoshop-Export-Layers-to-Files-Fast/releases) and download the most recent release.
+- Go to the [releases page](https://github.com/hsw107/Photoshop-Export-Layers-to-Files-Fast/releases) and download [the most recent release](https://github.com/hsw107/Photoshop-Export-Layers-to-Files-Fast/releases/latest).
 - In Photoshop go to `File -> Scripts -> Browse...` and select the `Export Layers To Files (Fast).jsx` file.
 - You can add the script to the Scripts menu by adding all of the script files to `Photoshop > Presets > Scripts`
   - Windows: `/Program Files/Adobe/Adobe Photoshop VERSION/Presets/Scripts`
@@ -26,6 +26,7 @@ Some of the features of the script include...
   - PNG (8 and 24 bit)
   - JPEG
   - TIFF
+  - PDF
   - Targa
   - BMP
   - PSD
