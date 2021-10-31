@@ -401,6 +401,7 @@ var DEFAULT_SETTINGS = {
     png24Transparency: app.stringIDToTypeID('png24Transparency'),
     scale: app.stringIDToTypeID("scale"),
     scaleValue: app.stringIDToTypeID("scaleValue"),
+    silent: app.stringIDToTypeID("silent"),
     tgaAlphaChannel: app.stringIDToTypeID("tgaAlphaChannel"),
     tgaDepth: app.stringIDToTypeID("tgaDepth"),
     tgaRleCompression: app.stringIDToTypeID("tgaRleCompression"),
@@ -504,7 +505,7 @@ function main() {
         if (foldersOk === true) {
             profiler.resetLastTime();
 
-            var count = exportLayers(prefs.exportLayerTarget, progressBarWindow);
+            var count = exportLayers(prefs.exportLayerTarget, prefs.silent ? null : progressBarWindow);
             var exportDuration = profiler.getDuration(true, true);
 
             var message = "";
@@ -518,7 +519,9 @@ function main() {
             if (count.error) {
                 message += "\n\nSome layers failed to export! (Are there many layers with the same name?)";
             }
-            alert(message, "Finished", count.error);
+            if(!prefs.silent) {
+                alert(message, "Finished", count.error);
+            }
         }
 
         app.activeDocument.close(SaveOptions.DONOTSAVECHANGES);
@@ -1274,6 +1277,7 @@ function showDialog() {
     };
 
     fields.cbOverwriteFiles.value = prefs.overwrite;
+    fields.cbSilent.value = prefs.silent;
 
     // ======================
     // OUTPUT OPTIONS SECTION
@@ -1586,6 +1590,7 @@ function saveSettings(dialog) {
     desc.putString(DEFAULT_SETTINGS.outputPrefix, fields.txtPrefix.text);
     desc.putString(DEFAULT_SETTINGS.outputSuffix, fields.txtSuffix.text);
     desc.putBoolean(DEFAULT_SETTINGS.overwrite, fields.cbOverwriteFiles.value);
+    desc.putBoolean(DEFAULT_SETTINGS.silent, fields.cbSilent.value);
     desc.putBoolean(DEFAULT_SETTINGS.padding, fields.cbPadding.value);
     desc.putInteger(DEFAULT_SETTINGS.paddingValue, parseInt(fields.txtPadding.text));
     
@@ -1648,27 +1653,12 @@ function getDefaultSettings() {
             exportLayerTarget: ExportLayerTarget.ALL_LAYERS,
             fileType: "PNG-24",
             groupsAsFolders: false,
-            jpgQuality: 100,
-            jpgMatte: 0,
+            ignoreLayersString: "!",
             jpgIcc: false,
+            jpgMatte: 0,
             jpgOptimized: false,
             jpgProgressive: false,
-            tifQuality: 100,
-            tifEncoding: 1,
-            tifAlphaChannel: false,
-            tifIcc: false,
-            pdfStandard: 0,
-            pdfCompatibility: 0,
-            pdfQuality: 100,
-            pdfEncoding: 2,
-            pdfAlphaChannel: false,
-            pdfIcc: false,
-            pdfColorConversion: false,
-            pdfDestinationProfile: 5,
-            pdfDownSample: 3,
-            pdfDownSampleSize: 300,
-            pdfDownSampleSizeLimit: 450,
-            ignoreLayersString: "!",
+            jpgQuality: 100,
             letterCase: LetterCase.KEEP,
             nameFiles: FileNameType.AS_LAYERS_NO_EXT,
             outputPrefix: "",
@@ -1676,39 +1666,46 @@ function getDefaultSettings() {
             overwrite: false,
             padding: false,
             paddingValue: 0,
-            png8ColorReduction: 0,
-            png8NumberOfColors: 256,
-            png8DitherType: 0,
-            png8DitherValue: 100,
-            png8Matte: 0,
-            png8Transparency: false,
-            png8TransparencyDitherType: 0,
-            png8TransparencyDitherValue: 100,
-            png8Interlaced: false,
+            pdfAlphaChannel: false,
+            pdfColorConversion: false,
+            pdfCompatibility: 0,
+            pdfDestinationProfile: 5,
+            pdfDownSample: 3,
+            pdfDownSampleSize: 300,
+            pdfDownSampleSizeLimit: 450,
+            pdfEncoding: 2,
+            pdfIcc: false,
+            pdfQuality: 100,
+            pdfStandard: 0,
             png24Interlaced: false,
             png24Matte: 0,
             png24Transparency: false,
+            png8ColorReduction: 0,
+            png8DitherType: 0,
+            png8DitherValue: 100,
+            png8Interlaced: false,
+            png8Matte: 0,
+            png8NumberOfColors: 256,
+            png8Transparency: false,
+            png8TransparencyDitherType: 0,
+            png8TransparencyDitherValue: 100,
             scale: false,
             scaleValue: 100,
+            silent: false,
             tgaAlphaChannel: false,
             tgaDepth: 0,
             tgaRleCompression: false,
+            tifAlphaChannel: false,
+            tifEncoding: 1,
+            tifIcc: false,
+            tifQuality: 100,
             topGroupAsFolder: false,
             topGroupAsLayer: false,
             trim: false,
             trimValue: TrimPrefType.INDIVIDUAL,
             useDelimiter: false,
             visibleOnly: false,
-
-            // per file format filled below
-
-            // format: []
         };
-
-        // result.format = [];
-        // for (var i = 0; i < formatOpts.length; ++i) {
-        //     result.format[formatOpts[i].opt.type] = formatOpts[i].opt.unpackSettings(desc);
-        // }
 
     return result;
 }
@@ -1739,26 +1736,11 @@ function getSettings(formatOpts) {
             groupsAsFolders: desc.getBoolean(DEFAULT_SETTINGS.groupsAsFolders),
             ignoreLayers: desc.getBoolean(DEFAULT_SETTINGS.ignoreLayers),
             ignoreLayersString: desc.getString(DEFAULT_SETTINGS.ignoreLayersString),
-            jpgQuality: desc.getInteger(DEFAULT_SETTINGS.jpgQuality),
-            jpgMatte: desc.getInteger(DEFAULT_SETTINGS.jpgMatte),
             jpgIcc: desc.getBoolean(DEFAULT_SETTINGS.jpgIcc),
+            jpgMatte: desc.getInteger(DEFAULT_SETTINGS.jpgMatte),
             jpgOptimized: desc.getBoolean(DEFAULT_SETTINGS.jpgOptimized),
             jpgProgressive: desc.getBoolean(DEFAULT_SETTINGS.jpgProgressive),
-            tifQuality: desc.getInteger(DEFAULT_SETTINGS.tifQuality),
-            tifEncoding: desc.getInteger(DEFAULT_SETTINGS.tifEncoding),
-            tifAlphaChannel: desc.getBoolean(DEFAULT_SETTINGS.tifAlphaChannel),
-            tifIcc: desc.getBoolean(DEFAULT_SETTINGS.tifIcc),
-            pdfStandard: desc.getInteger(DEFAULT_SETTINGS.pdfStandard),
-            pdfCompatibility: desc.getInteger(DEFAULT_SETTINGS.pdfCompatibility),
-            pdfQuality: desc.getInteger(DEFAULT_SETTINGS.pdfQuality),
-            pdfEncoding: desc.getInteger(DEFAULT_SETTINGS.pdfEncoding),
-            pdfAlphaChannel: desc.getBoolean(DEFAULT_SETTINGS.pdfAlphaChannel),
-            pdfIcc: desc.getBoolean(DEFAULT_SETTINGS.pdfIcc),
-            pdfColorConversion: desc.getBoolean(DEFAULT_SETTINGS.pdfColorConversion),
-            pdfDestinationProfile: desc.getInteger(DEFAULT_SETTINGS.pdfDestinationProfile),
-            pdfDownSample: desc.getInteger(DEFAULT_SETTINGS.pdfDownSample),
-            pdfDownSampleSize: desc.getInteger(DEFAULT_SETTINGS.pdfDownSampleSize),
-            pdfDownSampleSizeLimit: desc.getInteger(DEFAULT_SETTINGS.pdfDownSampleSizeLimit),
+            jpgQuality: desc.getInteger(DEFAULT_SETTINGS.jpgQuality),
             letterCase: desc.getInteger(DEFAULT_SETTINGS.letterCase),
             nameFiles: desc.getInteger(DEFAULT_SETTINGS.nameFiles),
             outputPrefix: desc.getString(DEFAULT_SETTINGS.outputPrefix),
@@ -1766,23 +1748,39 @@ function getSettings(formatOpts) {
             overwrite: desc.getBoolean(DEFAULT_SETTINGS.overwrite),
             padding: desc.getBoolean(DEFAULT_SETTINGS.padding),
             paddingValue: desc.getInteger(DEFAULT_SETTINGS.paddingValue),
-            png8ColorReduction: desc.getInteger(DEFAULT_SETTINGS.png8ColorReduction),
-            png8NumberOfColors: desc.getInteger(DEFAULT_SETTINGS.png8NumberOfColors),
-            png8DitherType: desc.getInteger(DEFAULT_SETTINGS.png8DitherType),
-            png8DitherValue: desc.getInteger(DEFAULT_SETTINGS.png8DitherValue),
-            png8Matte: desc.getInteger(DEFAULT_SETTINGS.png8Matte),
-            png8Transparency: desc.getBoolean(DEFAULT_SETTINGS.png8Transparency),
-            png8TransparencyDitherType: desc.getInteger(DEFAULT_SETTINGS.png8TransparencyDitherType),
-            png8TransparencyDitherValue: desc.getInteger(DEFAULT_SETTINGS.png8TransparencyDitherValue),
-            png8Interlaced: desc.getBoolean(DEFAULT_SETTINGS.png8Interlaced),
+            pdfAlphaChannel: desc.getBoolean(DEFAULT_SETTINGS.pdfAlphaChannel),
+            pdfColorConversion: desc.getBoolean(DEFAULT_SETTINGS.pdfColorConversion),
+            pdfCompatibility: desc.getInteger(DEFAULT_SETTINGS.pdfCompatibility),
+            pdfDestinationProfile: desc.getInteger(DEFAULT_SETTINGS.pdfDestinationProfile),
+            pdfDownSample: desc.getInteger(DEFAULT_SETTINGS.pdfDownSample),
+            pdfDownSampleSize: desc.getInteger(DEFAULT_SETTINGS.pdfDownSampleSize),
+            pdfDownSampleSizeLimit: desc.getInteger(DEFAULT_SETTINGS.pdfDownSampleSizeLimit),
+            pdfEncoding: desc.getInteger(DEFAULT_SETTINGS.pdfEncoding),
+            pdfIcc: desc.getBoolean(DEFAULT_SETTINGS.pdfIcc),
+            pdfQuality: desc.getInteger(DEFAULT_SETTINGS.pdfQuality),
+            pdfStandard: desc.getInteger(DEFAULT_SETTINGS.pdfStandard),
             png24Interlaced: desc.getBoolean(DEFAULT_SETTINGS.png24Interlaced),
             png24Matte: desc.getInteger(DEFAULT_SETTINGS.png24Matte),
             png24Transparency: desc.getBoolean(DEFAULT_SETTINGS.png24Transparency),
+            png8ColorReduction: desc.getInteger(DEFAULT_SETTINGS.png8ColorReduction),
+            png8DitherType: desc.getInteger(DEFAULT_SETTINGS.png8DitherType),
+            png8DitherValue: desc.getInteger(DEFAULT_SETTINGS.png8DitherValue),
+            png8Interlaced: desc.getBoolean(DEFAULT_SETTINGS.png8Interlaced),
+            png8Matte: desc.getInteger(DEFAULT_SETTINGS.png8Matte),
+            png8NumberOfColors: desc.getInteger(DEFAULT_SETTINGS.png8NumberOfColors),
+            png8Transparency: desc.getBoolean(DEFAULT_SETTINGS.png8Transparency),
+            png8TransparencyDitherType: desc.getInteger(DEFAULT_SETTINGS.png8TransparencyDitherType),
+            png8TransparencyDitherValue: desc.getInteger(DEFAULT_SETTINGS.png8TransparencyDitherValue),
             scale: desc.getBoolean(DEFAULT_SETTINGS.scale),
             scaleValue: desc.getInteger(DEFAULT_SETTINGS.scaleValue),
+            silent: desc.getBoolean(DEFAULT_SETTINGS.silent),
             tgaAlphaChannel: desc.getBoolean(DEFAULT_SETTINGS.tgaAlphaChannel),
             tgaDepth: desc.getInteger(DEFAULT_SETTINGS.tgaDepth),
             tgaRleCompression: desc.getBoolean(DEFAULT_SETTINGS.tgaRleCompression),
+            tifAlphaChannel: desc.getBoolean(DEFAULT_SETTINGS.tifAlphaChannel),
+            tifEncoding: desc.getInteger(DEFAULT_SETTINGS.tifEncoding),
+            tifIcc: desc.getBoolean(DEFAULT_SETTINGS.tifIcc),
+            tifQuality: desc.getInteger(DEFAULT_SETTINGS.tifQuality),
             topGroupAsFolder: desc.getBoolean(DEFAULT_SETTINGS.topGroupAsFolder),
             topGroupAsLayer: desc.getBoolean(DEFAULT_SETTINGS.topGroupAsLayer),
             trim: desc.getBoolean(DEFAULT_SETTINGS.trim),
@@ -1790,15 +1788,7 @@ function getSettings(formatOpts) {
             useDelimiter: desc.getBoolean(DEFAULT_SETTINGS.useDelimiter),
             visibleOnly: desc.getBoolean(DEFAULT_SETTINGS.visibleOnly),
 
-            // per file format filled below
-
-            // format: []
         };
-
-        // result.format = [];
-        // for (var i = 0; i < formatOpts.length; ++i) {
-        //     result.format[formatOpts[i].opt.type] = formatOpts[i].opt.unpackSettings(desc);
-        // }
     } catch (e) {
     }
 
@@ -1851,7 +1841,8 @@ function bootstrap() {
             env.scriptFileName = $.fileName;
         } else {
             try {
-                //throw new Error();        // doesn't provide the file name, at least in CS2
+                //throw new Error();        
+                // doesn't provide the file name, at least in CS2
                 var illegal = RUNTIME_ERROR;
             } catch (e) {
                 env.scriptFileName = e.fileName;
@@ -1924,12 +1915,6 @@ function collectLayersAM(progressBarWindow) {
         var idMkVs = app.charIDToTypeID("MkVs");
 
         var FEW_LAYERS = 10;
-
-        // newer PS's freeze or crash on Mac OS X Yosemite
-        //if (layerCount <= FEW_LAYERS) {
-        // don't show the progress bar UI for only a few layers
-        //progressBarWindow = null;
-        //}
 
         if (progressBarWindow) {
             // The layer count is actually + 1 if there's a background present, but it should be no biggie.
@@ -2040,15 +2025,6 @@ function collectLayersAM(progressBarWindow) {
             if (e.message != "cancel") throw e;
         }
 
-        // restore selection (unfortunately CS2 doesn't support multiselection, so only the topmost layer is re-selected)
-        /*desc.clear();
-         ref = new ActionReference();
-         var totalLayerCount = selectionDesc.getInteger(app.charIDToTypeID("Cnt "));
-         ref.putIndex(idLyr, selectionDesc.getInteger(app.charIDToTypeID("ItmI")) - (totalLayerCount - layerCount));
-         desc.putReference(idNull, ref);
-         desc.putBoolean(idMkVs, false);
-         app.executeAction(idSlct, desc, DialogModes.NO);*/
-
         if (progressBarWindow) {
             progressBarWindow.hide();
         }
@@ -2097,12 +2073,6 @@ function countLayersAM(progressBarWindow) {
         var idMkVs = app.charIDToTypeID("MkVs");
 
         var FEW_LAYERS = 10;
-
-        // newer PS's freeze or crash on Mac OS X Yosemite
-        //if (layerCount <= FEW_LAYERS) {
-        // don't show the progress bar UI for only a few layers
-        //progressBarWindow = null;
-        //}
 
         if (progressBarWindow) {
             // The layer count is actually + 1 if there's a background present, but it should be no biggie.
@@ -2501,6 +2471,7 @@ function getDialogFields(dialog) {
         btnCancel: dialog.findElement("btnCancel"),
         btnSaveAndCancel: dialog.findElement("btnSaveAndCancel"),
         cbOverwriteFiles: dialog.findElement("cbOverwriteFiles"),
+        cbSilent: dialog.findElement("cbSilent"),
 
         cbGroupsAsFolders: dialog.findElement("cbGroupsAsFolders"),
         cbTopGroupsAsFolders: dialog.findElement("cbTopGroupsAsFolders"),
@@ -2585,7 +2556,6 @@ function getDialogFields(dialog) {
 }
 
 function makeMainDialog() {    
-
     // DIALOG
     // ======
     var dialog = new Window("dialog", undefined, undefined, {closeButton: false, resizeable: true}); 
@@ -2819,6 +2789,11 @@ function makeMainDialog() {
         cbOverwriteFiles.helpTip = "If checked, will overwrite existing files if they have the same name. Otherwise it will make unique copies"; 
         cbOverwriteFiles.text = "Overwrite Existing Files"; 
         cbOverwriteFiles.alignment = ["center","top"]; 
+
+    var cbSilent = grpActions.add("checkbox", undefined, undefined, {name: "cbSilent"}); 
+        cbSilent.helpTip = "If checked, will run without a progress bar and success confirmation."; 
+        cbSilent.text = "Run Silently"; 
+        cbSilent.alignment = ["center","top"]; 
 
     // PNLOUTPUT
     // =========
@@ -3450,7 +3425,7 @@ function makeMainDialog() {
 
     // TABPNLEXPORTOPTIONS
     // ===================
-    tabpnlExportOptions.selection = PSD; 
+    tabpnlExportOptions.selection = tabPng24; 
 
     // DIALOG
     // ======
