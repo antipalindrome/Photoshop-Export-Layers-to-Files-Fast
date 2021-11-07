@@ -293,8 +293,8 @@ var Formats = {
             options.rleCompression = prefs.bmpRleCompression;
             options.flipRowOrder = prefs.bmpFlipRowOrder;
             var resolution_enum = [
-                BMPDepthType.THIRTYTWO,
                 BMPDepthType.TWENTYFOUR,
+                BMPDepthType.THIRTYTWO,
                 BMPDepthType.BMP_R5G6B5,
                 BMPDepthType.BMP_A1R5G5B5,
                 BMPDepthType.BMP_A4R4G4B4
@@ -2559,7 +2559,7 @@ function makeMainDialog() {
     // DIALOG
     // ======
     var dialog = new Window("dialog", undefined, undefined, {closeButton: false, resizeable: true}); 
-        dialog.text = "Export Layers To Files"; 
+        dialog.text = "Export Layers To Files v2.4.1"; 
         dialog.orientation = "column"; 
         dialog.alignChildren = ["center","center"]; 
         dialog.spacing = 5; 
@@ -2940,7 +2940,7 @@ function makeMainDialog() {
     // ===================
     var tabpnlExportOptions = pnlExportAs.add("tabbedpanel", undefined, undefined, {name: "tabpnlExportOptions"}); 
         tabpnlExportOptions.alignChildren = "fill"; 
-        tabpnlExportOptions.preferredSize.width = 565.875; 
+        tabpnlExportOptions.preferredSize.width = 554.625; 
         tabpnlExportOptions.margins = 0; 
         tabpnlExportOptions.alignment = ["fill","center"]; 
 
@@ -3399,7 +3399,7 @@ function makeMainDialog() {
     var lblBmpDepth = grpBmpDepth.add("statictext", undefined, undefined, {name: "lblBmpDepth"}); 
         lblBmpDepth.text = "Depth"; 
 
-    var ddBmpDepth_array = ["24 bit","36 bit","RGB 565 (16 bit)","ARGB 1555 (16 bit)","ARGB 4444 (16 bit)"]; 
+    var ddBmpDepth_array = ["24 bit","32 bit","RGB 565 (16 bit)","ARGB 1555 (16 bit)","ARGB 4444 (16 bit)"]; 
     var ddBmpDepth = grpBmpDepth.add("dropdownlist", undefined, undefined, {name: "ddBmpDepth", items: ddBmpDepth_array}); 
         ddBmpDepth.selection = 0; 
 
