@@ -1,23 +1,18 @@
 // NAME:
 //  Export Layers To Files
 
-// DESCRIPTION:
-//  Improved version of the built-in "Export Layers To Files" script:
-//  * Supports PNG and possibly other formats in the future.
-//  * Does not create multiple document duplicates, so it's much faster.
-//  Saves each layer in the active document to a file in a preferred format named after the layer. Supported formats:
-//  * PNG
-//  * JPEG
-//  * Targa
-//  * BMP
+// VERSION:
+// v2.6.0
 
 // REQUIRES:
 //  Adobe Photoshop CS2 or higher
 
-// Most current version always available at: https://github.com/hsw107/Photoshop-Export-Layers-to-Files-Fast
+// Most current version always available at: https://github.com/antipalindrome/Photoshop-Export-Layers-to-Files-Fast
 
 // enable double-clicking from Finder/Explorer (CS2 and higher)
 #target photoshop
+
+var BATCH_OPERATION = false;
 
 app.bringToFront();
 
@@ -470,7 +465,10 @@ function main() {
     }
 
     // show dialog
-    if (showDialog() === 1) {
+    if (BATCH_OPERATION || showDialog() === 1) {
+        if(BATCH_OPERATION) {
+            finalizeSettingsPrerun();
+        }
         prefs.documentName = app.activeDocument.name.split('.')[0];
         env.documentCopy = app.activeDocument.duplicate();
 
@@ -521,7 +519,7 @@ function main() {
             if (count.error) {
                 message += "\n\nSome layers failed to export! (Are there many layers with the same name?)";
             }
-            if(!prefs.silent) {
+            if(!prefs.silent && !BATCH_OPERATION) {
                 alert(message, "Finished", count.error);
             }
         }
@@ -1090,6 +1088,23 @@ function isAdjustmentLayer(layer) {
 
 }
 
+function finalizeSettingsPrerun() {
+    // Reload prefs to make sure they are up-to-date
+    prefs = getSettings();
+
+    // Some image format prefs are not retained through inputs
+    // so we need to load them separately
+    var format = Formats[prefs.fileType];
+    prefs.fileType = format.fileType;
+    prefs.fileExtension = format.fileExtension;
+    prefs.formatArgs = format.formatArgs();
+
+    var destFolder = new Folder(prefs.destination);
+    if (!destFolder.exists) {
+        destFolder.create();
+    }
+}
+
 //
 // User interface
 //
@@ -1247,23 +1262,10 @@ function showDialog() {
     // ==============
     fields.btnRun.onClick = function() {
         saveSettings(dialog);
-
-        // Reload prefs to make sure they are up-to-date
-        prefs = getSettings();
-
-        // Some image format prefs are not retained through inputs
-        // so we need to load them separately
+        finalizeSettingsPrerun();
+    
         var format = Formats[prefs.fileType];
         fields.tabpnlExportOptions.selection = format.index;
-        prefs.fileType = format.fileType;
-        prefs.fileExtension = format.fileExtension;
-        prefs.formatArgs = format.formatArgs();
-
-        var destFolder = new Folder(prefs.destination);
-        if (!destFolder.exists) {
-            destFolder.create();
-        }
-
 
         dialog.close(1);
     };
@@ -2566,7 +2568,7 @@ function makeMainDialog() {
     // DIALOG
     // ======
     var dialog = new Window("dialog", undefined, undefined, {closeButton: false, resizeable: true}); 
-    dialog.text = "Export Layers To Files v2.5.0"; 
+    dialog.text = "Export Layers To Files v2.6.0"; 
     dialog.orientation = "column"; 
     dialog.alignChildren = ["center","center"]; 
     dialog.spacing = 5; 
