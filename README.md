@@ -4,6 +4,18 @@ This script allows you to export layers in your Photoshop document as individual
 
 This script does not try to achieve feature parity with the built-in script, but rather provide a more streamlined / performant experience. That being said, feel free to [make feature requests](https://github.com/antipalindrome/Photoshop-Export-Layers-to-Files-Fast/issues/new), and feel free to contribute to it and make it even more powerful!
 
+## Table of Contents
+
+- [How to Use](#how-to-use)
+- [Example Screenshot](#example-screenshot)
+- [Features](#features)
+- [Extra Field Documentation](#extra-field-documentation)
+- [Batch Processing / Actions](#batch-processing--actions)
+- [Requirements](#requirements)
+- [Contributing](#contributing)
+- [Feedback / Bugs](#feedback--bugs)
+
+
 ## How to Use
 
 _Disclaimer:_ We are not associated with Adobe in any way. For any issues relating to Adobe products or Adobe scripts please contact them directly. We have never had an issue, but **please use this script at your own risk**. We are not responsible for any lost data or damaged PSDs so always make a back-up.
