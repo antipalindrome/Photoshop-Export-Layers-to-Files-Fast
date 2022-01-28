@@ -2566,7 +2566,7 @@ function makeMainDialog() {
     // DIALOG
     // ======
     var dialog = new Window("dialog", undefined, undefined, {closeButton: false, resizeable: true}); 
-        dialog.text = "Export Layers To Files v2.4.1"; 
+        dialog.text = "Export Layers To Files v2.5.0"; 
         dialog.orientation = "column"; 
         dialog.alignChildren = ["center","center"]; 
         dialog.spacing = 5; 
@@ -3187,7 +3187,7 @@ function makeMainDialog() {
 
     var ddTifEncoding_array = ["None","LZW","ZIP","JPG"]; 
     var ddTifEncoding = grpTifEncoding.add("dropdownlist", undefined, undefined, {name: "ddTifEncoding", items: ddTifEncoding_array}); 
-        ddTifEncoding.selection = 0; 
+        ddTifEncoding.selection = 1; 
 
     // GRPTIFQUALITY
     // =============
@@ -3212,13 +3212,13 @@ function makeMainDialog() {
     // TABTIF
     // ======
     var cbTifWithAlpha = tabTif.add("checkbox", undefined, undefined, {name: "cbTifWithAlpha"}); 
-        cbTifWithAlpha.text = "Alpha Channel"; 
+        cbTifWithAlpha.text = "With Alpha Channel"; 
 
     var cbTifIcc = tabTif.add("checkbox", undefined, undefined, {name: "cbTifIcc"}); 
         cbTifIcc.text = "ICC Profile"; 
 
     var cbTifTransparency = tabTif.add("checkbox", undefined, undefined, {name: "cbTifTransparency"}); 
-        cbTifTransparency.text = "Save Transparency"; 
+        cbTifTransparency.text = "Transparency"; 
 
     // TABPDF
     // ======
@@ -3352,7 +3352,7 @@ function makeMainDialog() {
     // TABPDF
     // ======
     var cbPdfWithAlpha = tabPdf.add("checkbox", undefined, undefined, {name: "cbPdfWithAlpha"}); 
-        cbPdfWithAlpha.text = "Alpha Channel"; 
+        cbPdfWithAlpha.text = "With Alpha Channel"; 
 
     var cbPdfIcc = tabPdf.add("checkbox", undefined, undefined, {name: "cbPdfIcc"}); 
         cbPdfIcc.text = "ICC Profile"; 
@@ -3411,7 +3411,7 @@ function makeMainDialog() {
 
     var ddBmpDepth_array = ["24 bit","32 bit","RGB 565 (16 bit)","ARGB 1555 (16 bit)","ARGB 4444 (16 bit)"]; 
     var ddBmpDepth = grpBmpDepth.add("dropdownlist", undefined, undefined, {name: "ddBmpDepth", items: ddBmpDepth_array}); 
-        ddBmpDepth.selection = 0; 
+        ddBmpDepth.selection = 1; 
 
     // TABBMP
     // ======
@@ -3435,7 +3435,7 @@ function makeMainDialog() {
 
     // TABPNLEXPORTOPTIONS
     // ===================
-    tabpnlExportOptions.selection = tabPng24; 
+    tabpnlExportOptions.selection = tabTif; 
 
     // DIALOG
     // ======
@@ -3449,7 +3449,7 @@ function makeMainDialog() {
         lblContact.spacing = 0; 
 
         lblContact.add("statictext", undefined, "To get the most recent version, or leave feedback, go to:", {name: "lblContact"}); 
-        lblContact.add("statictext", undefined, "https://github.com/hsw107/Photoshop-Export-Layers-to-Files-Fast", {name: "lblContact"});
+        lblContact.add("statictext", undefined, "https://github.com/antipalindrome/Photoshop-Export-Layers-to-Files-Fast", {name: "lblContact"}); 
 
   return dialog;
 }
