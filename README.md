@@ -113,6 +113,21 @@ Prefix and Suffix fields can take the following string substitutes.
 
 - Currently we do not support multiple artboards for export
 
+## Batch Processing / Actions
+
+Many people like to set up the script once, and then use batch processing or actions to automatically run the script.
+
+To use the script this way, follow these instructions:
+
+1. Run the script, set your desired settings in the dialog and then hit "Save and Close"
+2. Open up the script file, in TextEdit (Mac), Notepad (Windows), or in a code IDE.
+3. At the top of the script, locate the code that reads `var BATCH_OPERATION = false;`
+4. Change this to say `var BATCH_OPERATION = true;`
+5. You can now rerun the script, and it will auto-run with the previous settings.
+
+In order to make changes to the settings again, you'll need to change `BATCH_OPERATION` back to `false` and rerun the script.
+
+
 ## Requirements
 
 We do our best to have the script be backwards compatible (back to Adobe Photoshop CS2) but are limited in what we can test for, both by Photoshop versions as well as OS. If you are encountering any issues with the current version, try downloading [previous versions](https://github.com/antipalindrome/Photoshop-Export-Layers-to-Files-Fast/releases) of the script instead.
