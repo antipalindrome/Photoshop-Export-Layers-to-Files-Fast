@@ -2947,7 +2947,7 @@ function makeMainDialog() {
     // ===================
     var tabpnlExportOptions = pnlExportAs.add("tabbedpanel", undefined, undefined, {name: "tabpnlExportOptions"}); 
         tabpnlExportOptions.alignChildren = "fill"; 
-        tabpnlExportOptions.preferredSize.width = 554.612; 
+        tabpnlExportOptions.preferredSize.width = 554.625; 
         tabpnlExportOptions.margins = 0; 
         tabpnlExportOptions.alignment = ["fill","center"]; 
 
@@ -3187,7 +3187,7 @@ function makeMainDialog() {
 
     var ddTifEncoding_array = ["None","LZW","ZIP","JPG"]; 
     var ddTifEncoding = grpTifEncoding.add("dropdownlist", undefined, undefined, {name: "ddTifEncoding", items: ddTifEncoding_array}); 
-        ddTifEncoding.selection = 1; 
+        ddTifEncoding.selection = 0; 
 
     // GRPTIFQUALITY
     // =============
@@ -3411,7 +3411,7 @@ function makeMainDialog() {
 
     var ddBmpDepth_array = ["24 bit","32 bit","RGB 565 (16 bit)","ARGB 1555 (16 bit)","ARGB 4444 (16 bit)"]; 
     var ddBmpDepth = grpBmpDepth.add("dropdownlist", undefined, undefined, {name: "ddBmpDepth", items: ddBmpDepth_array}); 
-        ddBmpDepth.selection = 1; 
+        ddBmpDepth.selection = 0; 
 
     // TABBMP
     // ======
