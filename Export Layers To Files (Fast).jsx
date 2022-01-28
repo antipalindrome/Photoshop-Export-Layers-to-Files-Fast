@@ -210,6 +210,7 @@ var Formats = {
             options.alphaChannels = prefs.tifAlphaChannel; 
             options.layers = false; 
             options.embedColorProfile = prefs.tifIcc;
+            options.transparency = prefs.tifTransparency; 
             return options;
         }
     },
@@ -369,6 +370,7 @@ var DEFAULT_SETTINGS = {
     tifEncoding: app.stringIDToTypeID('tifEncoding'),
     tifAlphaChannel: app.stringIDToTypeID("tifAlphaChannel"),
     tifIcc: app.stringIDToTypeID('tifIcc'),
+    tifTransparency: app.stringIDToTypeID('tifTransparency'),
     pdfStandard: app.stringIDToTypeID('pdfStandard'),
     pdfCompatibility: app.stringIDToTypeID('pdfCompatibility'),
     pdfQuality: app.stringIDToTypeID('pdfQuality'),
@@ -1469,6 +1471,7 @@ function showDialog() {
 
     fields.cbTifWithAlpha.value = prefs.tifAlphaChannel;
     fields.cbTifIcc.value = prefs.tifIcc;
+    fields.cbTifTransparency.value = prefs.tifTransparency;
   
     // PDF
     // ===
@@ -1572,6 +1575,7 @@ function saveSettings(dialog) {
     desc.putInteger(DEFAULT_SETTINGS.tifEncoding, fields.ddTifEncoding.selection.index);
     desc.putBoolean(DEFAULT_SETTINGS.tifAlphaChannel, fields.cbTifWithAlpha.value);
     desc.putBoolean(DEFAULT_SETTINGS.tifIcc, fields.cbTifIcc.value);
+    desc.putBoolean(DEFAULT_SETTINGS.tifTransparency, fields.cbTifTransparency.value);
 
     desc.putInteger(DEFAULT_SETTINGS.pdfStandard, fields.ddPdfStandard.selection.index);
     desc.putInteger(DEFAULT_SETTINGS.pdfCompatibility, fields.ddPdfCompatibility.selection.index);
@@ -1698,6 +1702,7 @@ function getDefaultSettings() {
             tifAlphaChannel: false,
             tifEncoding: 1,
             tifIcc: false,
+            tifTransparency: false,
             tifQuality: 100,
             topGroupAsFolder: false,
             topGroupAsLayer: false,
@@ -1780,6 +1785,7 @@ function getSettings(formatOpts) {
             tifAlphaChannel: desc.getBoolean(DEFAULT_SETTINGS.tifAlphaChannel),
             tifEncoding: desc.getInteger(DEFAULT_SETTINGS.tifEncoding),
             tifIcc: desc.getBoolean(DEFAULT_SETTINGS.tifIcc),
+            tifTransparency: desc.getBoolean(DEFAULT_SETTINGS.tifTransparency),
             tifQuality: desc.getInteger(DEFAULT_SETTINGS.tifQuality),
             topGroupAsFolder: desc.getBoolean(DEFAULT_SETTINGS.topGroupAsFolder),
             topGroupAsLayer: desc.getBoolean(DEFAULT_SETTINGS.topGroupAsLayer),
@@ -2525,6 +2531,7 @@ function getDialogFields(dialog) {
         ddTifEncoding: dialog.findElement("ddTifEncoding"),
         cbTifWithAlpha: dialog.findElement("cbTifWithAlpha"),
         cbTifIcc: dialog.findElement("cbTifIcc"),
+        cbTifTransparency: dialog.findElement("cbTifTransparency"),
         // PDF
         ddPdfStandard: dialog.findElement("ddPdfStandard"),
         ddPdfCompatibility: dialog.findElement("ddPdfCompatibility"),
@@ -2940,7 +2947,7 @@ function makeMainDialog() {
     // ===================
     var tabpnlExportOptions = pnlExportAs.add("tabbedpanel", undefined, undefined, {name: "tabpnlExportOptions"}); 
         tabpnlExportOptions.alignChildren = "fill"; 
-        tabpnlExportOptions.preferredSize.width = 554.625; 
+        tabpnlExportOptions.preferredSize.width = 554.612; 
         tabpnlExportOptions.margins = 0; 
         tabpnlExportOptions.alignment = ["fill","center"]; 
 
@@ -3180,7 +3187,7 @@ function makeMainDialog() {
 
     var ddTifEncoding_array = ["None","LZW","ZIP","JPG"]; 
     var ddTifEncoding = grpTifEncoding.add("dropdownlist", undefined, undefined, {name: "ddTifEncoding", items: ddTifEncoding_array}); 
-        ddTifEncoding.selection = 0; 
+        ddTifEncoding.selection = 1; 
 
     // GRPTIFQUALITY
     // =============
@@ -3209,6 +3216,9 @@ function makeMainDialog() {
 
     var cbTifIcc = tabTif.add("checkbox", undefined, undefined, {name: "cbTifIcc"}); 
         cbTifIcc.text = "ICC Profile"; 
+
+    var cbTifTransparency = tabTif.add("checkbox", undefined, undefined, {name: "cbTifTransparency"}); 
+        cbTifTransparency.text = "Save Transparency"; 
 
     // TABPDF
     // ======
@@ -3401,7 +3411,7 @@ function makeMainDialog() {
 
     var ddBmpDepth_array = ["24 bit","32 bit","RGB 565 (16 bit)","ARGB 1555 (16 bit)","ARGB 4444 (16 bit)"]; 
     var ddBmpDepth = grpBmpDepth.add("dropdownlist", undefined, undefined, {name: "ddBmpDepth", items: ddBmpDepth_array}); 
-        ddBmpDepth.selection = 0; 
+        ddBmpDepth.selection = 1; 
 
     // TABBMP
     // ======
@@ -3439,7 +3449,7 @@ function makeMainDialog() {
         lblContact.spacing = 0; 
 
         lblContact.add("statictext", undefined, "To get the most recent version, or leave feedback, go to:", {name: "lblContact"}); 
-        lblContact.add("statictext", undefined, "https://github.com/hsw107/Photoshop-Export-Layers-to-Files-Fast", {name: "lblContact"}); 
+        lblContact.add("statictext", undefined, "https://github.com/hsw107/Photoshop-Export-Layers-to-Files-Fast", {name: "lblContact"});
 
   return dialog;
 }
