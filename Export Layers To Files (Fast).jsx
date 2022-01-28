@@ -210,6 +210,7 @@ var Formats = {
             options.alphaChannels = prefs.tifAlphaChannel; 
             options.layers = false; 
             options.embedColorProfile = prefs.tifIcc;
+            options.transparency = prefs.tifTransparency; 
             return options;
         }
     },
@@ -369,6 +370,7 @@ var DEFAULT_SETTINGS = {
     tifEncoding: app.stringIDToTypeID('tifEncoding'),
     tifAlphaChannel: app.stringIDToTypeID("tifAlphaChannel"),
     tifIcc: app.stringIDToTypeID('tifIcc'),
+    tifTransparency: app.stringIDToTypeID('tifTransparency'),
     pdfStandard: app.stringIDToTypeID('pdfStandard'),
     pdfCompatibility: app.stringIDToTypeID('pdfCompatibility'),
     pdfQuality: app.stringIDToTypeID('pdfQuality'),
@@ -1469,6 +1471,7 @@ function showDialog() {
 
     fields.cbTifWithAlpha.value = prefs.tifAlphaChannel;
     fields.cbTifIcc.value = prefs.tifIcc;
+    fields.cbTifTransparency.value = prefs.tifTransparency;
   
     // PDF
     // ===
@@ -1572,6 +1575,7 @@ function saveSettings(dialog) {
     desc.putInteger(DEFAULT_SETTINGS.tifEncoding, fields.ddTifEncoding.selection.index);
     desc.putBoolean(DEFAULT_SETTINGS.tifAlphaChannel, fields.cbTifWithAlpha.value);
     desc.putBoolean(DEFAULT_SETTINGS.tifIcc, fields.cbTifIcc.value);
+    desc.putBoolean(DEFAULT_SETTINGS.tifTransparency, fields.cbTifTransparency.value);
 
     desc.putInteger(DEFAULT_SETTINGS.pdfStandard, fields.ddPdfStandard.selection.index);
     desc.putInteger(DEFAULT_SETTINGS.pdfCompatibility, fields.ddPdfCompatibility.selection.index);
@@ -1698,6 +1702,7 @@ function getDefaultSettings() {
             tifAlphaChannel: false,
             tifEncoding: 1,
             tifIcc: false,
+            tifTransparency: false,
             tifQuality: 100,
             topGroupAsFolder: false,
             topGroupAsLayer: false,
@@ -1780,6 +1785,7 @@ function getSettings(formatOpts) {
             tifAlphaChannel: desc.getBoolean(DEFAULT_SETTINGS.tifAlphaChannel),
             tifEncoding: desc.getInteger(DEFAULT_SETTINGS.tifEncoding),
             tifIcc: desc.getBoolean(DEFAULT_SETTINGS.tifIcc),
+            tifTransparency: desc.getBoolean(DEFAULT_SETTINGS.tifTransparency),
             tifQuality: desc.getInteger(DEFAULT_SETTINGS.tifQuality),
             topGroupAsFolder: desc.getBoolean(DEFAULT_SETTINGS.topGroupAsFolder),
             topGroupAsLayer: desc.getBoolean(DEFAULT_SETTINGS.topGroupAsLayer),
@@ -2525,6 +2531,7 @@ function getDialogFields(dialog) {
         ddTifEncoding: dialog.findElement("ddTifEncoding"),
         cbTifWithAlpha: dialog.findElement("cbTifWithAlpha"),
         cbTifIcc: dialog.findElement("cbTifIcc"),
+        cbTifTransparency: dialog.findElement("cbTifTransparency"),
         // PDF
         ddPdfStandard: dialog.findElement("ddPdfStandard"),
         ddPdfCompatibility: dialog.findElement("ddPdfCompatibility"),
@@ -3210,6 +3217,9 @@ function makeMainDialog() {
     var cbTifIcc = tabTif.add("checkbox", undefined, undefined, {name: "cbTifIcc"}); 
         cbTifIcc.text = "ICC Profile"; 
 
+    var cbTifTransparency = tabTif.add("checkbox", undefined, undefined, {name: "cbTifTransparency"}); 
+        cbTifTransparency.text = "Save Transparency"; 
+
     // TABPDF
     // ======
     var tabPdf = tabpnlExportOptions.add("tab", undefined, undefined, {name: "tabPdf"}); 
@@ -3439,7 +3449,7 @@ function makeMainDialog() {
         lblContact.spacing = 0; 
 
         lblContact.add("statictext", undefined, "To get the most recent version, or leave feedback, go to:", {name: "lblContact"}); 
-        lblContact.add("statictext", undefined, "https://github.com/hsw107/Photoshop-Export-Layers-to-Files-Fast", {name: "lblContact"}); 
+        lblContact.add("statictext", undefined, "https://github.com/hsw107/Photoshop-Export-Layers-to-Files-Fast", {name: "lblContact"});
 
   return dialog;
 }
