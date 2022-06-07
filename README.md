@@ -26,6 +26,8 @@ _Disclaimer:_ We are not associated with Adobe in any way. For any issues relati
   - Windows: `/Program Files/Adobe/Adobe Photoshop VERSION/Presets/Scripts`
   - Mac: `/Applications/Adobe Photoshop VERSION/Presets/Scripts`
 
+**NOTE:** The script needs the `Export Layers To Files (Fast)-progress_bar.json` file to run as well. Without this you will get a "Progress bar resource corrupt" error. Please ensure that the `.jsx` and the `.json` files are siblings in the same directory.
+
 ## Example Screenshot
 
 ![Screenshot of the script dialog](example.png)
