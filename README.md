@@ -22,11 +22,10 @@ _Disclaimer:_ We are not associated with Adobe in any way. For any issues relati
 
 - Go to the [releases page](https://github.com/antipalindrome/Photoshop-Export-Layers-to-Files-Fast/releases) and download [the most recent release](https://github.com/antipalindrome/Photoshop-Export-Layers-to-Files-Fast/releases/latest).
 - In Photoshop go to `File -> Scripts -> Browse...` and select the `Export Layers To Files (Fast).jsx` file.
+  - NOTE: The script needs the `Export Layers To Files (Fast)-progress_bar.json` file to run as well. Without this you will get a "Progress bar resource corrupt" error. Please ensure that the `.jsx` and the `.json` files are siblings in the same directory.
 - You can add the script to the Scripts menu by adding all of the script files to `Photoshop > Presets > Scripts`
   - Windows: `/Program Files/Adobe/Adobe Photoshop VERSION/Presets/Scripts`
   - Mac: `/Applications/Adobe Photoshop VERSION/Presets/Scripts`
-
-**NOTE:** The script needs the `Export Layers To Files (Fast)-progress_bar.json` file to run as well. Without this you will get a "Progress bar resource corrupt" error. Please ensure that the `.jsx` and the `.json` files are siblings in the same directory.
 
 ## Example Screenshot
 
