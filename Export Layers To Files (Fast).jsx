@@ -897,7 +897,7 @@ function makeFileNameFromLayerName(layer, stripExt, withGroup, index) {
     var layerName = withGroup ? getFullGroupName(layer.layer, "") : layer.layer.name;
     var fileName = makeValidFileName(layerName, prefs.useDelimiter);
     if (stripExt) {
-        var dotIdx = fileName.indexOf('.');
+        var dotIdx = fileName.lastIndexOf('.');
         if (dotIdx >= 0) {
             fileName = fileName.substring(0, dotIdx);
         }
