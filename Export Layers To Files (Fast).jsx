@@ -2,7 +2,7 @@
 //  Export Layers To Files
 
 // VERSION:
-// v2.7.0
+// v2.7.1
 
 // REQUIRES:
 //  Adobe Photoshop CS2 or higher
@@ -1963,14 +1963,17 @@ function collectLayersAM(progressBarWindow) {
                     if (layerSection == "layerSectionContent") {
                         if (!isAdjustmentLayer(activeLayer)) {
                             var layer = { layer: activeLayer, parent: currentGroup };
-                            var visibleMatters = ((prefs.visibleOnly && layerVisible) || !prefs.visibleOnly);
-                            if((visibleMatters && currentGroup && currentGroup.visible) || (visibleMatters && !currentGroup)) {
+                            var isLayerVisible = prefs.visibleOnly && layerVisible
+                            var isGroupVisible = isLayerVisible && currentGroup && currentGroup.visible;
+                            var noGroupJustLayer = isLayerVisible && !currentGroup;
+                            var exportAll = !prefs.visibleOnly;
+                            if(isGroupVisible || noGroupJustLayer || exportAll) {
                                 layers.push(layer);
                             }
                             if (layerVisible && visibleInGroup[visibleInGroup.length - 1]) {
                                 visibleLayers.push(layer);
                             }
-                            if (selected > 0 && visibleMatters) {
+                            if (selected > 0 && (isLayerVisible || exportAll)) {
                                 selectedLayers.push(layer);
                             }
                             if (currentGroup) {
@@ -2569,7 +2572,7 @@ function makeMainDialog() {
     // DIALOG
     // ======
     var dialog = new Window("dialog", undefined, undefined, {closeButton: false, resizeable: true}); 
-    dialog.text = "Export Layers To Files v2.7.0"; 
+    dialog.text = "Export Layers To Files v2.7.1"; 
     dialog.orientation = "column"; 
     dialog.alignChildren = ["center","center"]; 
     dialog.spacing = 5; 
