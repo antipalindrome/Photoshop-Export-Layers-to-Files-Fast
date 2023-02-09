@@ -898,6 +898,11 @@ function getFullGroupName(layer, name) {
 
 function makeFileNameFromLayerName(layer, stripExt, withGroup, index) {
     var layerName = withGroup ? getFullGroupName(layer.layer, "") : layer.layer.name;
+    if(prefs.useRegex) {
+        var regex = new RegExp(prefs.regexPattern);
+        layerName = layerName.replace(regex, prefs.regexReplace);
+    }
+    
     var fileName = makeValidFileName(layerName, prefs.useDelimiter);
     if (stripExt) {
         var dotIdx = fileName.lastIndexOf('.');
