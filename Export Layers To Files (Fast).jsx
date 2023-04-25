@@ -20,6 +20,23 @@ app.bringToFront();
 // Type definitions
 //
 
+var PrefixSelectionMode = {
+    IGNORE_PREFIXED: 1,
+    ONLY_PREFIXED: 2,
+
+    values: function() {
+        return [this.IGNORE_PREFIXED, this.ONLY_PREFIXED];
+    },
+
+    forIndex: function(index) {
+        return this.values()[index];
+    },
+
+    getIndex: function(value) {
+        return indexOf(this.values(), value);
+    }
+};
+
 var FileNameType = {
     AS_LAYERS: 1,
     INDEX_ASC: 2,
@@ -354,8 +371,9 @@ var DEFAULT_SETTINGS = {
     exportLayerTarget: app.stringIDToTypeID("exportLayerTarget"),
     fileType: app.stringIDToTypeID("fileType"),
     groupsAsFolders: app.stringIDToTypeID("groupsAsFolders"),
-    ignoreLayers: app.stringIDToTypeID('ignoreLayers'),
-    ignoreLayersString: app.stringIDToTypeID('ignoreLayersString'),
+    ignoreOrOnlyLayersSelectionEnabled: app.stringIDToTypeID('ignoreOrOnlyLayersSelectionEnabled'),
+    ignoreOrOnlyLayersString: app.stringIDToTypeID('ignoreOrOnlyLayersString'),
+    ignoreOrOnlyLayersSelection: app.stringIDToTypeID('ignoreOrOnlyLayersSelection'),
     jpgQuality: app.stringIDToTypeID('jpgQuality'),
     jpgMatte: app.stringIDToTypeID('jpgMatte'),
     jpgIcc: app.stringIDToTypeID('jpgIcc'),
@@ -1220,12 +1238,18 @@ function showDialog() {
 
     fields.cbVisibleOnly.enabled = (visibleLayerCount > 0);
     fields.cbVisibleOnly.value = prefs.visibleOnly;
-    fields.cbIgnorePrefix.value = prefs.ignoreLayers;
-    fields.txtIgnorePrefix.enabled = prefs.ignoreLayers;
+    
+    fields.cbIgnoreOrOnlyLayersSelectionEnabled.value = prefs.ignoreOrOnlyLayersSelectionEnabled;
+    fields.txtIgnoreOrOnlyPrefix.enabled = prefs.ignoreOrOnlyLayersSelectionEnabled;
+    fields.ddIgnoreOrOnlyLayersSelection.selection = PrefixSelectionMode.getIndex(prefs.ignoreOrOnlyLayersSelection);
+    fields.ddIgnoreOrOnlyLayersSelection.enabled = prefs.ignoreOrOnlyLayersSelectionEnabled;
+    fields.lblIgnoreOrOnlyLayerSelection.enabled = prefs.ignoreOrOnlyLayersSelectionEnabled;
+    fields.txtIgnoreOrOnlyPrefix.text = prefs.ignoreOrOnlyLayersString;
 
-    fields.txtIgnorePrefix.text = prefs.ignoreLayersString;
-    fields.cbIgnorePrefix.onClick = function() {
-        fields.txtIgnorePrefix.enabled = this.value;
+    fields.cbIgnoreOrOnlyLayersSelectionEnabled.onClick = function() {
+        fields.lblIgnoreOrOnlyLayerSelection.enabled = this.value;
+        fields.txtIgnoreOrOnlyPrefix.enabled = this.value;
+        fields.ddIgnoreOrOnlyLayersSelection.enabled = this.value;
     };
 
 
@@ -1564,8 +1588,9 @@ function saveSettings(dialog) {
     desc.putInteger(DEFAULT_SETTINGS.exportLayerTarget, exportLayerTarget);
     desc.putString(DEFAULT_SETTINGS.fileType, fields.tabpnlExportOptions.selection.text);
     desc.putBoolean(DEFAULT_SETTINGS.groupsAsFolders, fields.cbGroupsAsFolders.value);
-    desc.putBoolean(DEFAULT_SETTINGS.ignoreLayers, fields.cbIgnorePrefix.value);
-    desc.putString(DEFAULT_SETTINGS.ignoreLayersString, fields.txtIgnorePrefix.text);
+    desc.putBoolean(DEFAULT_SETTINGS.ignoreOrOnlyLayersSelectionEnabled, fields.cbIgnoreOrOnlyLayersSelectionEnabled.value);
+    desc.putString(DEFAULT_SETTINGS.ignoreOrOnlyLayersString, fields.txtIgnoreOrOnlyPrefix.text);
+    desc.putInteger(DEFAULT_SETTINGS.ignoreOrOnlyLayersSelection, PrefixSelectionMode.forIndex(fields.ddIgnoreOrOnlyLayersSelection.selection.index));
 
     desc.putInteger(DEFAULT_SETTINGS.jpgQuality, fields.sldrJpgQuality.value);
     desc.putInteger(DEFAULT_SETTINGS.jpgMatte, fields.ddJpgMatte.selection.index);
@@ -1659,7 +1684,8 @@ function getDefaultSettings() {
             exportLayerTarget: ExportLayerTarget.ALL_LAYERS,
             fileType: "PNG-24",
             groupsAsFolders: false,
-            ignoreLayersString: "!",
+            ignoreOrOnlyLayersString: "!",
+            ignoreOrOnlyLayersSelection: 0,
             jpgIcc: false,
             jpgMatte: 0,
             jpgOptimized: false,
@@ -1741,8 +1767,9 @@ function getSettings(formatOpts) {
             exportLayerTarget: desc.getInteger(DEFAULT_SETTINGS.exportLayerTarget),
             fileType: desc.getString(DEFAULT_SETTINGS.fileType),
             groupsAsFolders: desc.getBoolean(DEFAULT_SETTINGS.groupsAsFolders),
-            ignoreLayers: desc.getBoolean(DEFAULT_SETTINGS.ignoreLayers),
-            ignoreLayersString: desc.getString(DEFAULT_SETTINGS.ignoreLayersString),
+            ignoreOrOnlyLayersSelectionEnabled: desc.getBoolean(DEFAULT_SETTINGS.ignoreOrOnlyLayersSelectionEnabled),
+            ignoreOrOnlyLayersString: desc.getString(DEFAULT_SETTINGS.ignoreOrOnlyLayersString),
+            ignoreOrOnlyLayersSelection: desc.getInteger(DEFAULT_SETTINGS.ignoreOrOnlyLayersSelection),
             jpgIcc: desc.getBoolean(DEFAULT_SETTINGS.jpgIcc),
             jpgMatte: desc.getInteger(DEFAULT_SETTINGS.jpgMatte),
             jpgOptimized: desc.getBoolean(DEFAULT_SETTINGS.jpgOptimized),
@@ -2469,8 +2496,10 @@ function getDialogFields(dialog) {
         radioAll: dialog.findElement("radioAll"),
         radioSelected: dialog.findElement("radioSelected"),
         cbVisibleOnly: dialog.findElement("cbVisibleOnly"),
-        cbIgnorePrefix: dialog.findElement("cbIgnorePrefix"),
-        txtIgnorePrefix: dialog.findElement("txtIgnorePrefix"),
+        cbIgnoreOrOnlyLayersSelectionEnabled: dialog.findElement("cbIgnoreOrOnlyLayersSelectionEnabled"),
+        txtIgnoreOrOnlyPrefix: dialog.findElement("txtIgnoreOrOnlyPrefix"),
+        ddIgnoreOrOnlyLayersSelection: dialog.findElement("ddIgnoreOrOnlyLayersSelection"),
+        lblIgnoreOrOnlyLayerSelection: dialog.findElement("lblIgnoreOrOnlyLayerSelection"),
 
         ddNameAs: dialog.findElement("ddNameAs"),
         cbDelimiter: dialog.findElement("cbDelimiter"),
@@ -2654,20 +2683,40 @@ function makeMainDialog() {
 
     // GRPIGNOREPREFIX
     // ===============
-    var grpIgnorePrefix = grpIgnore.add("group", undefined, {name: "grpIgnorePrefix"}); 
-    grpIgnorePrefix.orientation = "row"; 
-    grpIgnorePrefix.alignChildren = ["left","center"]; 
-    grpIgnorePrefix.spacing = 10; 
-    grpIgnorePrefix.margins = 0; 
+    var grpIgnoreOrOnlyPrefix = grpIgnore.add("group", undefined, {name: "grpIgnorePrefix"}); 
+    grpIgnoreOrOnlyPrefix.orientation = "row"; 
+    grpIgnoreOrOnlyPrefix.alignChildren = ["left","center"]; 
+    grpIgnoreOrOnlyPrefix.spacing = 10; 
+    grpIgnoreOrOnlyPrefix.margins = 0; 
 
-    var cbIgnorePrefix = grpIgnorePrefix.add("checkbox", undefined, undefined, {name: "cbIgnorePrefix"}); 
-    cbIgnorePrefix.helpTip = "Ignore layers starting with"; 
-    cbIgnorePrefix.text = "Ignore Layers Starting With "; 
+    var cbIgnoreOrOnlyLayersSelectionEnabled = grpIgnoreOrOnlyPrefix.add("checkbox", undefined, undefined, {name: "cbIgnoreOrOnlyLayersSelectionEnabled"}); 
+    cbIgnoreOrOnlyLayersSelectionEnabled.helpTip = "Enable layer selection by prefix"; 
+    cbIgnoreOrOnlyLayersSelectionEnabled.text = ""; 
+    var ddIgnoreOrOnlyLayersSelection_array = ['Ignore', 'Only'];
+    var ddIgnoreOrOnlyLayersSelection = grpIgnoreOrOnlyPrefix.add(
+      'dropdownlist',
+      undefined,
+      undefined,
+      {
+        name: 'ddIgnoreOrOnlyLayersSelection',
+        items: ddIgnoreOrOnlyLayersSelection_array,
+      }
+    );
+    ddIgnoreOrOnlyLayersSelection.helpTip = 'Choose whether to ignore or select only layers with prefix'; 
+    ddIgnoreOrOnlyLayersSelection.selection = 0; 
 
-    var txtIgnorePrefix = grpIgnorePrefix.add('edittext {properties: {name: "txtIgnorePrefix"}}'); 
-    txtIgnorePrefix.helpTip = "The prefix to match against"; 
-    txtIgnorePrefix.text = "!"; 
-    txtIgnorePrefix.preferredSize.width = 31; 
+    var lblIgnoreOrOnlyLayerSelection = grpIgnoreOrOnlyPrefix.add(
+        'statictext',
+        undefined,
+        undefined,
+        { name: 'lblIgnoreOrOnlyLayerSelection' }
+      );
+      lblIgnoreOrOnlyLayerSelection.text = 'Layers Starting With';
+
+    var txtIgnoreOrOnlyPrefix = grpIgnoreOrOnlyPrefix.add('edittext {properties: {name: "txtIgnoreOrOnlyPrefix"}}'); 
+    txtIgnoreOrOnlyPrefix.helpTip = "The prefix to match against"; 
+    txtIgnoreOrOnlyPrefix.text = "!"; 
+    txtIgnoreOrOnlyPrefix.preferredSize.width = 31; 
 
     // PNLNAMEFILES
     // ============
