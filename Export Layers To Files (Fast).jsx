@@ -661,10 +661,16 @@ function exportLayers(exportLayerTarget, progressBarWindow) {
         for (var i = (prefs.exportForeground ? 1 : 0); i < count; ++i) {
             var layer = layersToExport[i].layer;
 
-            // Ignore layers that have are prefixed with ignoreLayersString
-            if (prefs.ignoreLayers 
-                && prefs.ignoreLayersString.length > 0 
-                && layer.name.indexOf(prefs.ignoreLayersString) === 0) continue;
+            // Ignore layers that have are prefixed with ignoreOrOnlyLayersString
+            if ((prefs.ignoreOrOnlyLayersSelectionEnabled 
+                && prefs.ignoreOrOnlyLayersSelection == PrefixSelectionMode.IGNORE_PREFIXED 
+                && prefs.ignoreOrOnlyLayersString.length > 0 
+                && layer.name.indexOf(prefs.ignoreOrOnlyLayersString) === 0)
+                || (prefs.ignoreOrOnlyLayersSelectionEnabled 
+                    && prefs.ignoreOrOnlyLayersSelection == PrefixSelectionMode.ONLY_PREFIXED
+                    && prefs.ignoreOrOnlyLayersString.length > 0
+                    && layer.name.indexOf(prefs.ignoreOrOnlyLayersString) !== 0)) continue;
+
 
             var fileName;
             switch (prefs.nameFiles) {
