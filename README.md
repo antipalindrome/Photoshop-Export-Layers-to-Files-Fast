@@ -1,4 +1,4 @@
-# Photoshop-Export-Layers-to-Files-Fast
+# Photoshop-Export-Layers-to-Files-Fast.
 
 This script allows you to export layers in your Photoshop document as individual files at a speed much faster than the built-in script from Adobe.
 
@@ -14,7 +14,6 @@ This script does not try to achieve feature parity with the built-in script, but
 - [Requirements](#requirements)
 - [Contributing](#contributing)
 - [Feedback / Bugs](#feedback--bugs)
-
 
 ## How to Use
 
@@ -139,7 +138,6 @@ To use the script this way, follow these instructions:
 5. You can now rerun the script, and it will auto-run with the previous settings.
 
 In order to make changes to the settings again, you'll need to change `BATCH_OPERATION` back to `false` and rerun the script.
-
 
 ## Requirements
 
