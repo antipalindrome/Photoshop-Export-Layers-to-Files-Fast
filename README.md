@@ -57,9 +57,9 @@ Some of the features of the script include...
 
 Will only export the selected group. Note that you must selected the group before launching the script, otherwise this option will be disabled. When you run the script this way, all other layers will be left untouched, meaning any visible layers on top or bottom may show in the export.
 
-### Ignore Layers Starting With
+### Ignore/Only Layers Starting With
 
-When this is selected, you can specify a prefix that will be used to match against layer names. Any matching layers will be ignored during the export.
+When this is selected, you can specify whether to ignore or select layers with a specified prefix. Depending on the option selected only layers with prefix or without it will be exported.
 
 For example, if you specify `x` in the input, all layers starting with the letter `x` will not be exported.
 
