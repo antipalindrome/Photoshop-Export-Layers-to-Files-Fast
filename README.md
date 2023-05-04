@@ -61,7 +61,7 @@ Will only export the selected group. Note that you must selected the group befor
 
 When this is selected, you can specify whether to ignore or select layers with a specified prefix. Depending on the option selected only layers with prefix or without it will be exported.
 
-For example, if you specify `x` in the input, all layers starting with the letter `x` will not be exported.
+For example, if you specify `x` in the input when 'Ignore' mode is selected, all layers starting with the letter `x` will not be exported. If you select 'Only' mode, just the layers with name starting witx `x` will be exported.
 
 ### Filenames
 
