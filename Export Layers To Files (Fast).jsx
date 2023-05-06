@@ -20,6 +20,23 @@ app.bringToFront();
 // Type definitions
 //
 
+var PrefixSelectionMode = {
+    IGNORE_PREFIXED: 1,
+    ONLY_PREFIXED: 2,
+
+    values: function() {
+        return [this.IGNORE_PREFIXED, this.ONLY_PREFIXED];
+    },
+
+    forIndex: function(index) {
+        return this.values()[index];
+    },
+
+    getIndex: function(value) {
+        return indexOf(this.values(), value);
+    }
+};
+
 var FileNameType = {
     AS_LAYERS: 1,
     INDEX_ASC: 2,
@@ -354,8 +371,9 @@ var DEFAULT_SETTINGS = {
     exportLayerTarget: app.stringIDToTypeID("exportLayerTarget"),
     fileType: app.stringIDToTypeID("fileType"),
     groupsAsFolders: app.stringIDToTypeID("groupsAsFolders"),
-    ignoreLayers: app.stringIDToTypeID('ignoreLayers'),
-    ignoreLayersString: app.stringIDToTypeID('ignoreLayersString'),
+    ignoreModeEnabled: app.stringIDToTypeID('ignoreModeEnabled'),
+    ignoreModeString: app.stringIDToTypeID('ignoreModeString'),
+    ignoreModeSelection: app.stringIDToTypeID('ignoreModeSelection'),
     jpgQuality: app.stringIDToTypeID('jpgQuality'),
     jpgMatte: app.stringIDToTypeID('jpgMatte'),
     jpgIcc: app.stringIDToTypeID('jpgIcc'),
@@ -643,10 +661,16 @@ function exportLayers(exportLayerTarget, progressBarWindow) {
         for (var i = (prefs.exportForeground ? 1 : 0); i < count; ++i) {
             var layer = layersToExport[i].layer;
 
-            // Ignore layers that have are prefixed with ignoreLayersString
-            if (prefs.ignoreLayers 
-                && prefs.ignoreLayersString.length > 0 
-                && layer.name.indexOf(prefs.ignoreLayersString) === 0) continue;
+            // Ignore layers that have are prefixed with ignoreModeString
+            if ((prefs.ignoreModeEnabled 
+                && prefs.ignoreModeSelection == PrefixSelectionMode.IGNORE_PREFIXED 
+                && prefs.ignoreModeString.length > 0 
+                && layer.name.indexOf(prefs.ignoreModeString) === 0)
+                || (prefs.ignoreModeEnabled 
+                    && prefs.ignoreModeSelection == PrefixSelectionMode.ONLY_PREFIXED
+                    && prefs.ignoreModeString.length > 0
+                    && layer.name.indexOf(prefs.ignoreModeString) !== 0)) continue;
+
 
             var fileName;
             switch (prefs.nameFiles) {
@@ -1220,12 +1244,18 @@ function showDialog() {
 
     fields.cbVisibleOnly.enabled = (visibleLayerCount > 0);
     fields.cbVisibleOnly.value = prefs.visibleOnly;
-    fields.cbIgnorePrefix.value = prefs.ignoreLayers;
-    fields.txtIgnorePrefix.enabled = prefs.ignoreLayers;
+    
+    fields.cbIgnoreModeSelectionEnabled.value = prefs.ignoreModeEnabled;
+    fields.txtIgnoreModePrefix.enabled = prefs.ignoreModeEnabled;
+    fields.ddIgnoreModeSelection.selection = PrefixSelectionMode.getIndex(prefs.ignoreModeSelection);
+    fields.ddIgnoreModeSelection.enabled = prefs.ignoreModeEnabled;
+    fields.lblIgnoreModeSelection.enabled = prefs.ignoreModeEnabled;
+    fields.txtIgnoreModePrefix.text = prefs.ignoreModeString;
 
-    fields.txtIgnorePrefix.text = prefs.ignoreLayersString;
-    fields.cbIgnorePrefix.onClick = function() {
-        fields.txtIgnorePrefix.enabled = this.value;
+    fields.cbIgnoreModeSelectionEnabled.onClick = function() {
+        fields.lblIgnoreModeSelection.enabled = this.value;
+        fields.txtIgnoreModePrefix.enabled = this.value;
+        fields.ddIgnoreModeSelection.enabled = this.value;
     };
 
 
@@ -1564,8 +1594,9 @@ function saveSettings(dialog) {
     desc.putInteger(DEFAULT_SETTINGS.exportLayerTarget, exportLayerTarget);
     desc.putString(DEFAULT_SETTINGS.fileType, fields.tabpnlExportOptions.selection.text);
     desc.putBoolean(DEFAULT_SETTINGS.groupsAsFolders, fields.cbGroupsAsFolders.value);
-    desc.putBoolean(DEFAULT_SETTINGS.ignoreLayers, fields.cbIgnorePrefix.value);
-    desc.putString(DEFAULT_SETTINGS.ignoreLayersString, fields.txtIgnorePrefix.text);
+    desc.putBoolean(DEFAULT_SETTINGS.ignoreModeEnabled, fields.cbIgnoreModeSelectionEnabled.value);
+    desc.putString(DEFAULT_SETTINGS.ignoreModeString, fields.txtIgnoreModePrefix.text);
+    desc.putInteger(DEFAULT_SETTINGS.ignoreModeSelection, PrefixSelectionMode.forIndex(fields.ddIgnoreModeSelection.selection.index));
 
     desc.putInteger(DEFAULT_SETTINGS.jpgQuality, fields.sldrJpgQuality.value);
     desc.putInteger(DEFAULT_SETTINGS.jpgMatte, fields.ddJpgMatte.selection.index);
@@ -1659,7 +1690,8 @@ function getDefaultSettings() {
             exportLayerTarget: ExportLayerTarget.ALL_LAYERS,
             fileType: "PNG-24",
             groupsAsFolders: false,
-            ignoreLayersString: "!",
+            ignoreModeString: "!",
+            ignoreModeSelection: 0,
             jpgIcc: false,
             jpgMatte: 0,
             jpgOptimized: false,
@@ -1741,8 +1773,9 @@ function getSettings(formatOpts) {
             exportLayerTarget: desc.getInteger(DEFAULT_SETTINGS.exportLayerTarget),
             fileType: desc.getString(DEFAULT_SETTINGS.fileType),
             groupsAsFolders: desc.getBoolean(DEFAULT_SETTINGS.groupsAsFolders),
-            ignoreLayers: desc.getBoolean(DEFAULT_SETTINGS.ignoreLayers),
-            ignoreLayersString: desc.getString(DEFAULT_SETTINGS.ignoreLayersString),
+            ignoreModeEnabled: desc.getBoolean(DEFAULT_SETTINGS.ignoreModeEnabled),
+            ignoreModeString: desc.getString(DEFAULT_SETTINGS.ignoreModeString),
+            ignoreModeSelection: desc.getInteger(DEFAULT_SETTINGS.ignoreModeSelection),
             jpgIcc: desc.getBoolean(DEFAULT_SETTINGS.jpgIcc),
             jpgMatte: desc.getInteger(DEFAULT_SETTINGS.jpgMatte),
             jpgOptimized: desc.getBoolean(DEFAULT_SETTINGS.jpgOptimized),
@@ -2469,8 +2502,10 @@ function getDialogFields(dialog) {
         radioAll: dialog.findElement("radioAll"),
         radioSelected: dialog.findElement("radioSelected"),
         cbVisibleOnly: dialog.findElement("cbVisibleOnly"),
-        cbIgnorePrefix: dialog.findElement("cbIgnorePrefix"),
-        txtIgnorePrefix: dialog.findElement("txtIgnorePrefix"),
+        cbIgnoreModeSelectionEnabled: dialog.findElement("cbIgnoreModeSelectionEnabled"),
+        txtIgnoreModePrefix: dialog.findElement("txtIgnoreModePrefix"),
+        ddIgnoreModeSelection: dialog.findElement("ddIgnoreModeSelection"),
+        lblIgnoreModeSelection: dialog.findElement("lblIgnoreModeSelection"),
 
         ddNameAs: dialog.findElement("ddNameAs"),
         cbDelimiter: dialog.findElement("cbDelimiter"),
@@ -2654,20 +2689,40 @@ function makeMainDialog() {
 
     // GRPIGNOREPREFIX
     // ===============
-    var grpIgnorePrefix = grpIgnore.add("group", undefined, {name: "grpIgnorePrefix"}); 
-    grpIgnorePrefix.orientation = "row"; 
-    grpIgnorePrefix.alignChildren = ["left","center"]; 
-    grpIgnorePrefix.spacing = 10; 
-    grpIgnorePrefix.margins = 0; 
+    var grpIgnoreModePrefix = grpIgnore.add("group", undefined, {name: "grpIgnorePrefix"}); 
+    grpIgnoreModePrefix.orientation = "row"; 
+    grpIgnoreModePrefix.alignChildren = ["left","center"]; 
+    grpIgnoreModePrefix.spacing = 10; 
+    grpIgnoreModePrefix.margins = 0; 
 
-    var cbIgnorePrefix = grpIgnorePrefix.add("checkbox", undefined, undefined, {name: "cbIgnorePrefix"}); 
-    cbIgnorePrefix.helpTip = "Ignore layers starting with"; 
-    cbIgnorePrefix.text = "Ignore Layers Starting With "; 
+    var cbIgnoreModeSelectionEnabled = grpIgnoreModePrefix.add("checkbox", undefined, undefined, {name: "cbIgnoreModeSelectionEnabled"}); 
+    cbIgnoreModeSelectionEnabled.helpTip = "Enable layer selection by prefix"; 
+    cbIgnoreModeSelectionEnabled.text = ""; 
+    var ddIgnoreModeSelection_array = ['Ignore', 'Only'];
+    var ddIgnoreModeSelection = grpIgnoreModePrefix.add(
+      'dropdownlist',
+      undefined,
+      undefined,
+      {
+        name: 'ddIgnoreModeSelection',
+        items: ddIgnoreModeSelection_array,
+      }
+    );
+    ddIgnoreModeSelection.helpTip = 'Choose whether to ignore or select only layers with prefix'; 
+    ddIgnoreModeSelection.selection = 0; 
 
-    var txtIgnorePrefix = grpIgnorePrefix.add('edittext {properties: {name: "txtIgnorePrefix"}}'); 
-    txtIgnorePrefix.helpTip = "The prefix to match against"; 
-    txtIgnorePrefix.text = "!"; 
-    txtIgnorePrefix.preferredSize.width = 31; 
+    var lblIgnoreModeSelection = grpIgnoreModePrefix.add(
+        'statictext',
+        undefined,
+        undefined,
+        { name: 'lblIgnoreModeSelection' }
+      );
+      lblIgnoreModeSelection.text = 'Layers Starting With';
+
+    var txtIgnoreModePrefix = grpIgnoreModePrefix.add('edittext {properties: {name: "txtIgnoreModePrefix"}}'); 
+    txtIgnoreModePrefix.helpTip = "The prefix to match against"; 
+    txtIgnoreModePrefix.text = "!"; 
+    txtIgnoreModePrefix.preferredSize.width = 31; 
 
     // PNLNAMEFILES
     // ============

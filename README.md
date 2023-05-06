@@ -15,7 +15,6 @@ This script does not try to achieve feature parity with the built-in script, but
 - [Contributing](#contributing)
 - [Feedback / Bugs](#feedback--bugs)
 
-
 ## How to Use
 
 _Disclaimer:_ We are not associated with Adobe in any way. For any issues relating to Adobe products or Adobe scripts please contact them directly. We have never had an issue, but **please use this script at your own risk**. We are not responsible for any lost data or damaged PSDs so always make a back-up.
@@ -58,11 +57,11 @@ Some of the features of the script include...
 
 Will only export the selected group. Note that you must selected the group before launching the script, otherwise this option will be disabled. When you run the script this way, all other layers will be left untouched, meaning any visible layers on top or bottom may show in the export.
 
-### Ignore Layers Starting With
+### Ignore/Only Layers Starting With
 
-When this is selected, you can specify a prefix that will be used to match against layer names. Any matching layers will be ignored during the export.
+When this is selected, you can specify whether to ignore or select layers with a specified prefix. Depending on the option selected only layers with prefix or without it will be exported.
 
-For example, if you specify `x` in the input, all layers starting with the letter `x` will not be exported.
+For example, if you specify `x` in the input when 'Ignore' mode is selected, all layers starting with the letter `x` will not be exported. If you select 'Only' mode, just the layers with name starting witx `x` will be exported.
 
 ### Filenames
 
@@ -139,7 +138,6 @@ To use the script this way, follow these instructions:
 5. You can now rerun the script, and it will auto-run with the previous settings.
 
 In order to make changes to the settings again, you'll need to change `BATCH_OPERATION` back to `false` and rerun the script.
-
 
 ## Requirements
 
