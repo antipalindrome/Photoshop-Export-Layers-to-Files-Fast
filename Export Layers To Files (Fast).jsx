@@ -349,6 +349,7 @@ var DEFAULT_SETTINGS = {
     bmpRleCompression: app.stringIDToTypeID("bmpRleCompression"),
     delimiter: app.stringIDToTypeID("delimiter"),
     destination: app.stringIDToTypeID("destFolder"),
+    destinationAsDoc: app.stringIDToTypeID("destinationAsDoc"),
     exportBackground: app.stringIDToTypeID("exportBackground"),
     exportForeground: app.stringIDToTypeID("exportForeground"),
     exportLayerTarget: app.stringIDToTypeID("exportLayerTarget"),
@@ -1188,7 +1189,32 @@ function showDialog() {
     // ===================
     // DESTINATION SECTION
     // ===================
-    fields.txtDestination.text = prefs.destination;
+    if(prefs.destinationAsDoc) 
+        fields.txtDestination.text = app.activeDocument.path;
+    else        
+        fields.txtDestination.text = prefs.destination;
+
+    fields.txtDestination.enabled = !prefs.destinationAsDoc;
+    fields.btnBrowse.enabled = !prefs.destinationAsDoc;
+    fields.cbDestinationAsDoc.value = prefs.destinationAsDoc;
+
+    fields.cbDestinationAsDoc.onClick= function() {
+        fields.txtDestination.enabled = !this.value;
+        fields.btnBrowse.enabled = !this.value;
+
+        if(this.value) 
+        {
+            prefs.destination = app.activeDocument.path;
+            fields.txtDestination.text = app.activeDocument.path;
+        }
+        else
+        {
+            prefs.destination = getSettings().destination;
+            fields.txtDestination.text = prefs.destination;
+        }
+    };
+
+    
     fields.btnBrowse.onClick = function() {
         var newFilePath = Folder.selectDialog("Select destination folder", prefs.destination);
         if (newFilePath) {
@@ -1559,6 +1585,7 @@ function saveSettings(dialog) {
 
     desc.putString(DEFAULT_SETTINGS.delimiter, fields.txtDelimiter.text);
     desc.putString(DEFAULT_SETTINGS.destination, fields.txtDestination.text);
+    desc.putBoolean(DEFAULT_SETTINGS.destinationAsDoc, fields.cbDestinationAsDoc.value);
     desc.putBoolean(DEFAULT_SETTINGS.exportBackground, fields.cbBackground.value);
     desc.putBoolean(DEFAULT_SETTINGS.exportForeground, fields.cbForeground.value);
     desc.putInteger(DEFAULT_SETTINGS.exportLayerTarget, exportLayerTarget);
@@ -1654,6 +1681,7 @@ function getDefaultSettings() {
             bmpRleCompression: false,
             delimiter: "_",
             destination: destinationDefault,
+            destinationAsDoc: false,
             exportBackground: false,
             exportForeground: false,
             exportLayerTarget: ExportLayerTarget.ALL_LAYERS,
@@ -1736,6 +1764,7 @@ function getSettings(formatOpts) {
             bmpRleCompression: desc.getBoolean(DEFAULT_SETTINGS.bmpRleCompression),
             delimiter: desc.getString(DEFAULT_SETTINGS.delimiter),
             destination: desc.getString(DEFAULT_SETTINGS.destination),
+            destinationAsDoc: desc.getBoolean(DEFAULT_SETTINGS.destinationAsDoc),
             exportBackground: desc.getBoolean(DEFAULT_SETTINGS.exportBackground),
             exportForeground: desc.getBoolean(DEFAULT_SETTINGS.exportForeground),
             exportLayerTarget: desc.getInteger(DEFAULT_SETTINGS.exportLayerTarget),
@@ -2465,6 +2494,7 @@ function getDialogFields(dialog) {
     return {
         btnBrowse: dialog.findElement("btnBrowse"),
         txtDestination: dialog.findElement("txtDestination"),
+        cbDestinationAsDoc: dialog.findElement("cbDestinationAsDoc"),
 
         radioAll: dialog.findElement("radioAll"),
         radioSelected: dialog.findElement("radioSelected"),
@@ -2599,19 +2629,36 @@ function makeMainDialog() {
     // ==============
     var pnlDestination = grpCol1.add("panel", undefined, undefined, {name: "pnlDestination"}); 
     pnlDestination.text = "Output Destination"; 
-    pnlDestination.orientation = "row"; 
+    pnlDestination.orientation = "column"; 
     pnlDestination.alignChildren = ["left","center"]; 
     pnlDestination.spacing = 10; 
     pnlDestination.margins = 10; 
     pnlDestination.alignment = ["left","center"]; 
 
-    var txtDestination = pnlDestination.add('edittext {properties: {name: "txtDestination"}}'); 
+    var grpDestination = pnlDestination.add("group", undefined, {name: "grpTrim"}); 
+    grpDestination.orientation = "row"; 
+    grpDestination.alignChildren = ["left","center"]; 
+    grpDestination.spacing = 10; 
+    grpDestination.margins = 0; 
+
+    var txtDestination = grpDestination.add('edittext {properties: {name: "txtDestination"}}'); 
     txtDestination.helpTip = "Where to save the files"; 
     txtDestination.preferredSize.width = 200; 
 
-    var btnBrowse = pnlDestination.add("button", undefined, undefined, {name: "btnBrowse"}); 
+    var btnBrowse = grpDestination.add("button", undefined, undefined, {name: "btnBrowse"}); 
     btnBrowse.text = "Browse..."; 
     btnBrowse.justify = "left"; 
+
+    var grpDestinationCb = pnlDestination.add("group", undefined, {name: "grpTrim"}); 
+    grpDestinationCb.orientation = "row"; 
+    grpDestinationCb.alignChildren = ["left","center"]; 
+    grpDestinationCb.spacing = 10; 
+    grpDestinationCb.margins = 0; 
+
+    var cbDestinationAsDoc = grpDestinationCb.add('checkbox {properties: {name: "cbDestinationAsDoc"}}'); 
+    cbDestinationAsDoc.helpTip = "Output Destination as Document path"; 
+    cbDestinationAsDoc.preferredSize.width = 200; 
+    cbDestinationAsDoc.text = "Destination as Document path"; 
 
     // PNLEXPORT
     // =========
