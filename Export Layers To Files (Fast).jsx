@@ -757,12 +757,13 @@ function exportLayers(exportLayerTarget, progressBarWindow) {
 }
 
 function cropImage(bounds) {
+    // UnitRect format: [left, top, right, bottom]
     if (prefs.trimDirValue == TrimDirType.HORIZONTAL) {
-        var height = app.activeDocument.height.as("px");
-        app.activeDocument.crop([bounds[0], height]);
+        var height = app.activeDocument.height;
+        app.activeDocument.crop([bounds[0], 0, bounds[2], height]);
     } else if (prefs.trimDirValue == TrimDirType.VERTICAL) {
-        var width = app.activeDocument.width.as("px");
-        app.activeDocument.crop([width, bounds[1]]);
+        var width = app.activeDocument.width.value;
+        app.activeDocument.crop([0, bounds[1], width, bounds[3]]);
     } else {
         app.activeDocument.crop(bounds);
     }
