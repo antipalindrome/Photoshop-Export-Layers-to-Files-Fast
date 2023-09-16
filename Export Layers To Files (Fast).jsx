@@ -762,7 +762,7 @@ function cropImage(bounds) {
         var height = app.activeDocument.height;
         app.activeDocument.crop([bounds[0], 0, bounds[2], height]);
     } else if (prefs.trimDirValue == TrimDirType.VERTICAL) {
-        var width = app.activeDocument.width.value;
+        var width = app.activeDocument.width;
         app.activeDocument.crop([0, bounds[1], width, bounds[3]]);
     } else {
         app.activeDocument.crop(bounds);
