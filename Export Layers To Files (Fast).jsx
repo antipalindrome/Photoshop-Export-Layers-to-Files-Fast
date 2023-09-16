@@ -94,6 +94,24 @@ var TrimPrefType = {
     }
 };
 
+var TrimDirType = {
+    BOTH: 1,
+    HORIZONTAL: 2,
+    VERTICAL: 3,
+
+    values: function() {
+        return [this.BOTH, this.HORIZONTAL, this.VERTICAL];
+    },
+
+    forIndex: function(index) {
+        return this.values()[index];
+    },
+
+    getIndex: function(value) {
+        return indexOf(this.values(), value);
+    }
+};
+
 var ExportLayerTarget = {
     ALL_LAYERS: 1,
     SELECTED_LAYERS: 2, // Export selection, leave the rest as is, visibility for parent groups will be forced.
@@ -383,7 +401,8 @@ var DEFAULT_SETTINGS = {
     outputSuffix: app.stringIDToTypeID("outputSuffix"),
     overwrite: app.stringIDToTypeID("overwrite"),
     padding: app.stringIDToTypeID("padding"),
-    paddingValue: app.stringIDToTypeID("paddingValue"),
+    paddingXValue: app.stringIDToTypeID("paddingXValue"),
+    paddingYValue: app.stringIDToTypeID("paddingYValue"),
     png8ColorReduction: app.stringIDToTypeID("png8ColorReduction"),
     png8NumberOfColors: app.stringIDToTypeID("png8NumberOfColors"),
     png8DitherType: app.stringIDToTypeID("png8DitherType"),
@@ -406,6 +425,7 @@ var DEFAULT_SETTINGS = {
     topGroupAsLayer: app.stringIDToTypeID("topGroupAsLayer"),
     trim: app.stringIDToTypeID("trim"),
     trimValue: app.stringIDToTypeID("trimValue"),
+    trimDirValue: app.stringIDToTypeID("trimDirValue"),
     useDelimiter: app.stringIDToTypeID("useDelimiter"),
     visibleOnly: app.stringIDToTypeID('visibleOnly'),
 };
@@ -613,7 +633,7 @@ function exportLayers(exportLayerTarget, progressBarWindow) {
                 }
             }
 
-            doc.trim(TrimType.TRANSPARENT);
+            trimImage();
         }
 
         if (progressBarWindow) {
@@ -681,13 +701,13 @@ function exportLayers(exportLayerTarget, progressBarWindow) {
 
                     if (prefs.trimValue == TrimPrefType.INDIVIDUAL) {
                         try {
-                            doc.crop(layer.bounds);
+                            cropImage(layer.bounds);
                         } catch (e) {
                             useTrim = true;
                         }
                     }
                     if (prefs.trimValue == TrimPrefType.INDIVIDUAL_USE_TRIM) {
-                        doc.trim(TrimType.TRANSPARENT);
+                        trimImage();
                     }
 
                     var folderSafe = true;
@@ -736,6 +756,28 @@ function exportLayers(exportLayerTarget, progressBarWindow) {
     return retVal;
 }
 
+function cropImage(bounds) {
+    // UnitRect format: [left, top, right, bottom]
+    if (prefs.trimDirValue == TrimDirType.HORIZONTAL) {
+        var height = app.activeDocument.height;
+        app.activeDocument.crop([bounds[0], 0, bounds[2], height]);
+    } else if (prefs.trimDirValue == TrimDirType.VERTICAL) {
+        var width = app.activeDocument.width;
+        app.activeDocument.crop([0, bounds[1], width, bounds[3]]);
+    } else {
+        app.activeDocument.crop(bounds);
+    }
+}
+
+function trimImage() {
+    if (prefs.trimDirValue == TrimDirType.HORIZONTAL) {
+        app.activeDocument.trim(TrimType.TRANSPARENT, false, true, false, true);
+    } else if (prefs.trimDirValue == TrimDirType.VERTICAL) {
+        app.activeDocument.trim(TrimType.TRANSPARENT, true, false, true, false);
+    } else {
+        app.activeDocument.trim(TrimType.TRANSPARENT);
+    }
+}
 
 function scaleImage() {
     var width = app.activeDocument.width.as("px") * (prefs.scaleValue / 100);
@@ -746,8 +788,8 @@ function addPadding() {
     oldH = app.activeDocument.height.as("px");
     oldW = app.activeDocument.width.as("px");
 
-    var width = (app.activeDocument.width.as("px")) + (prefs.paddingValue * 2);
-    var height = (app.activeDocument.height.as("px")) + (prefs.paddingValue * 2);
+    var width = (app.activeDocument.width.as("px")) + (prefs.paddingXValue * 2);
+    var height = (app.activeDocument.height.as("px")) + (prefs.paddingYValue * 2);
     var widthUnit = new UnitValue(width + " pixels");
     var heightUnit = new UnitValue(height + " pixels");
 
@@ -1329,27 +1371,47 @@ function showDialog() {
     fields.cbTrim.value = prefs.trim;
     fields.cbTrim.onClick = function() {
         fields.ddTrim.enabled = this.value;
+        fields.ddTrimDir.enabled = this.value;
     };
 
     fields.ddTrim.enabled = prefs.trim;
     fields.ddTrim.selection = prefs.trimValue === TrimPrefType.DONT_TRIM ? 0 : TrimPrefType.getIndex(prefs.trimValue);
 
+    // ============
+    // TRIM DIRECTION SECTION
+    // ============
+    fields.ddTrimDir.enabled = prefs.trim;
+    fields.ddTrimDir.selection = TrimDirType.getIndex(prefs.trimDirValue);
+
     // ===============
     // PADDING SECTION
     // ===============
     fields.cbPadding.value = prefs.padding;
-    fields.grpPaddingLabel.enabled = prefs.padding;
-    fields.txtPadding.text = prefs.paddingValue;
-    fields.txtPadding.onChange = function() {
-    var paddingNum = parseInt(this.text, 10);
-    if (isNaN(paddingNum)) {
-        paddingNum = prefs.paddingValue;
-    }
-    paddingNum = Math.max(paddingNum, 0);
-    this.text = paddingNum;
-    };
     fields.cbPadding.onClick = function() {
-        fields.grpPaddingLabel.enabled = this.value;
+        fields.grpPaddingXLabel.enabled = this.value;
+        fields.grpPaddingYLabel.enabled = this.value;
+    };
+
+    fields.grpPaddingXLabel.enabled = prefs.padding;
+    fields.txtPaddingX.text = prefs.paddingXValue;
+    fields.txtPaddingX.onChange = function() {
+    var paddingXNum = parseInt(this.text, 10);
+    if (isNaN(paddingXNum)) {
+        paddingXNum = prefs.paddingXValue;
+    }
+    paddingXNum = Math.max(paddingXNum, 0);
+    this.text = paddingXNum;
+    };
+
+    fields.grpPaddingYLabel.enabled = prefs.padding;
+    fields.txtPaddingY.text = prefs.paddingYValue;
+    fields.txtPaddingY.onChange = function() {
+    var paddingYNum = parseInt(this.text, 10);
+    if (isNaN(paddingYNum)) {
+        paddingYNum = prefs.paddingYValue;
+    }
+    paddingYNum = Math.max(paddingYNum, 0);
+    this.text = paddingYNum;
     };
 
     // =============
@@ -1361,7 +1423,7 @@ function showDialog() {
     fields.txtScale.onChange = function() {
     var scaleNum = parseInt(this.text, 10);
     if (isNaN(scaleNum)) {
-        scaleNum = prefs.paddingValue;
+        scaleNum = prefs.scaleValue;
     }
     scaleNum = Math.max(scaleNum, 1);
     this.text = scaleNum;
@@ -1598,8 +1660,9 @@ function saveSettings(dialog) {
     desc.putBoolean(DEFAULT_SETTINGS.overwrite, fields.cbOverwriteFiles.value);
     desc.putBoolean(DEFAULT_SETTINGS.silent, fields.cbSilent.value);
     desc.putBoolean(DEFAULT_SETTINGS.padding, fields.cbPadding.value);
-    desc.putInteger(DEFAULT_SETTINGS.paddingValue, parseInt(fields.txtPadding.text));
-    
+    desc.putInteger(DEFAULT_SETTINGS.paddingXValue, parseInt(fields.txtPaddingX.text));
+    desc.putInteger(DEFAULT_SETTINGS.paddingYValue, parseInt(fields.txtPaddingY.text));
+
     desc.putInteger(DEFAULT_SETTINGS.png8ColorReduction, fields.ddPng8ColorReduction.selection.index);
     desc.putInteger(DEFAULT_SETTINGS.png8NumberOfColors, parseInt(fields.txtPng8NumberofColors.text));
     desc.putInteger(DEFAULT_SETTINGS.png8DitherType, fields.ddPng8Dither.selection.index);
@@ -1625,6 +1688,7 @@ function saveSettings(dialog) {
     desc.putBoolean(DEFAULT_SETTINGS.topGroupAsLayer, fields.cbTopGroupsAsLayers.value);
     desc.putBoolean(DEFAULT_SETTINGS.trim, fields.cbTrim.value);
     desc.putInteger(DEFAULT_SETTINGS.trimValue, fields.cbTrim.value ? TrimPrefType.forIndex(fields.ddTrim.selection.index) : TrimPrefType.DONT_TRIM);
+    desc.putInteger(DEFAULT_SETTINGS.trimDirValue, TrimDirType.forIndex(fields.ddTrimDir.selection.index));
     desc.putBoolean(DEFAULT_SETTINGS.useDelimiter, fields.cbDelimiter.value);
     desc.putBoolean(DEFAULT_SETTINGS.visibleOnly, fields.cbVisibleOnly.value);
 
@@ -1671,7 +1735,8 @@ function getDefaultSettings() {
             outputSuffix:"",
             overwrite: false,
             padding: false,
-            paddingValue: 0,
+            paddingXValue: 0,
+            paddingYValue: 0,
             pdfAlphaChannel: false,
             pdfColorConversion: false,
             pdfCompatibility: 0,
@@ -1710,6 +1775,7 @@ function getDefaultSettings() {
             topGroupAsLayer: false,
             trim: false,
             trimValue: TrimPrefType.INDIVIDUAL,
+            trimDirValue: TrimDirType.BOTH,
             useDelimiter: false,
             visibleOnly: false,
         };
@@ -1754,7 +1820,8 @@ function getSettings(formatOpts) {
             outputSuffix: desc.getString(DEFAULT_SETTINGS.outputSuffix),
             overwrite: desc.getBoolean(DEFAULT_SETTINGS.overwrite),
             padding: desc.getBoolean(DEFAULT_SETTINGS.padding),
-            paddingValue: desc.getInteger(DEFAULT_SETTINGS.paddingValue),
+            paddingXValue: desc.getInteger(DEFAULT_SETTINGS.paddingXValue),
+            paddingYValue: desc.getInteger(DEFAULT_SETTINGS.paddingYValue),
             pdfAlphaChannel: desc.getBoolean(DEFAULT_SETTINGS.pdfAlphaChannel),
             pdfColorConversion: desc.getBoolean(DEFAULT_SETTINGS.pdfColorConversion),
             pdfCompatibility: desc.getInteger(DEFAULT_SETTINGS.pdfCompatibility),
@@ -1793,6 +1860,7 @@ function getSettings(formatOpts) {
             topGroupAsLayer: desc.getBoolean(DEFAULT_SETTINGS.topGroupAsLayer),
             trim: desc.getBoolean(DEFAULT_SETTINGS.trim),
             trimValue: desc.getInteger(DEFAULT_SETTINGS.trimValue),
+            trimDirValue: desc.getInteger(DEFAULT_SETTINGS.trimDirValue),
             useDelimiter: desc.getBoolean(DEFAULT_SETTINGS.useDelimiter),
             visibleOnly: desc.getBoolean(DEFAULT_SETTINGS.visibleOnly),
 
@@ -2494,10 +2562,13 @@ function getDialogFields(dialog) {
 
         cbTrim: dialog.findElement("cbTrim"),
         ddTrim: dialog.findElement("ddTrim"),
+        ddTrimDir: dialog.findElement("ddTrimDir"),
 
         cbPadding: dialog.findElement("cbPadding"),
-        grpPaddingLabel: dialog.findElement("grpPaddingLabel"),
-        txtPadding: dialog.findElement("txtPadding"),
+        grpPaddingXLabel: dialog.findElement("grpPaddingXLabel"),
+        txtPaddingX: dialog.findElement("txtPaddingX"),
+        grpPaddingYLabel: dialog.findElement("grpPaddingYLabel"),
+        txtPaddingY: dialog.findElement("txtPaddingY"),
 
         cbScale: dialog.findElement("cbScale"),
         grpScaleLabel: dialog.findElement("grpScaleLabel"),
@@ -2885,6 +2956,22 @@ function makeMainDialog() {
     var ddTrim = grpTrim.add("dropdownlist", undefined, undefined, {name: "ddTrim", items: ddTrim_array}); 
     ddTrim.selection = 0; 
 
+    // GRPTRIMDIR
+    // ==========
+    var grpTrimDir = pnlModifyLayers.add("group", undefined, {name: "grpTrimDir"}); 
+    grpTrimDir.orientation = "row"; 
+    grpTrimDir.alignChildren = ["left","center"]; 
+    grpTrimDir.spacing = 10; 
+    grpTrimDir.margins = 0; 
+
+    var lblTrimDir = grpTrimDir.add("statictext", undefined, undefined, {name: "lblTrimDir"}); 
+    lblTrimDir.helpTip = "Direction to trim before export"; 
+    lblTrimDir.text = "Trim Direction"; 
+
+    var ddTrimDir_array = ["Both","Horizontal","Vertical"]; 
+    var ddTrimDir = grpTrimDir.add("dropdownlist", undefined, undefined, {name: "ddTrimDir", items: ddTrimDir_array}); 
+    ddTrimDir.selection = 0; 
+
     // GRPPADDING
     // ==========
     var grpPadding = pnlModifyLayers.add("group", undefined, {name: "grpPadding"}); 
@@ -2897,20 +2984,37 @@ function makeMainDialog() {
     cbPadding.helpTip = "Whether to add padding to every layer before export"; 
     cbPadding.text = "Padding"; 
 
-    // GRPPADDINGLABEL
-    // ===============
-    var grpPaddingLabel = grpPadding.add("group", undefined, {name: "grpPaddingLabel"}); 
-    grpPaddingLabel.orientation = "row"; 
-    grpPaddingLabel.alignChildren = ["left","center"]; 
-    grpPaddingLabel.spacing = 0; 
-    grpPaddingLabel.margins = 0; 
+    // GRPPADDINGXLABEL
+    // ================
+    var grpPaddingXLabel = grpPadding.add("group", undefined, {name: "grpPaddingXLabel"}); 
+    grpPaddingXLabel.orientation = "row"; 
+    grpPaddingXLabel.alignChildren = ["left","center"]; 
+    grpPaddingXLabel.spacing = 0; 
+    grpPaddingXLabel.margins = 0; 
 
-    var txtPadding = grpPaddingLabel.add('edittext {properties: {name: "txtPadding"}}'); 
-    txtPadding.text = "0"; 
-    txtPadding.preferredSize.width = 29; 
+    var txtPaddingX = grpPaddingXLabel.add('edittext {properties: {name: "txtPaddingX"}}'); 
+    txtPaddingX.helpTip = "The horizontal padding to add to every layer before export"; 
+    txtPaddingX.text = "0"; 
+    txtPaddingX.preferredSize.width = 29; 
 
-    var lblPadding = grpPaddingLabel.add("statictext", undefined, undefined, {name: "lblPadding"}); 
-    lblPadding.text = "px"; 
+    var lblPaddingX = grpPaddingXLabel.add("statictext", undefined, undefined, {name: "lblPaddingX"}); 
+    lblPaddingX.text = "px"; 
+
+    // GRPPADDINGYLABEL
+    // ================
+    var grpPaddingYLabel = grpPadding.add("group", undefined, {name: "grpPaddingYLabel"}); 
+    grpPaddingYLabel.orientation = "row"; 
+    grpPaddingYLabel.alignChildren = ["left","center"]; 
+    grpPaddingYLabel.spacing = 0; 
+    grpPaddingYLabel.margins = 0; 
+
+    var txtPaddingY = grpPaddingYLabel.add('edittext {properties: {name: "txtPaddingY"}}'); 
+    txtPaddingY.helpTip = "The vertical padding to add to every layer before export"; 
+    txtPaddingY.text = "0"; 
+    txtPaddingY.preferredSize.width = 29; 
+
+    var lblPaddingY = grpPaddingYLabel.add("statictext", undefined, undefined, {name: "lblPaddingY"}); 
+    lblPaddingY.text = "px"; 
 
     // GRPSCALE
     // ========
@@ -3449,13 +3553,14 @@ function makeMainDialog() {
     lblMetadata.text = "This document contains {0} layer(s), {1} of them visible, {2} selected"; 
     lblMetadata.justify = "center"; 
 
-    var lblContact = dialog.add("group"); 
+    var lblContact = dialog.add("group", undefined , {name: "lblContact"}); 
+    lblContact.getText = function() { var t=[]; for ( var n=0; n<lblContact.children.length; n++ ) { var text = lblContact.children[n].text || ''; if ( text === '' ) text = ' '; t.push( text ); } return t.join('\n'); }; 
     lblContact.orientation = "column"; 
     lblContact.alignChildren = ["center","center"]; 
     lblContact.spacing = 0; 
 
-    lblContact.add("statictext", undefined, "To get the most recent version, or leave feedback, go to:", {name: "lblContact"}); 
-    lblContact.add("statictext", undefined, "https://github.com/antipalindrome/Photoshop-Export-Layers-to-Files-Fast", {name: "lblContact"}); 
+    lblContact.add("statictext", undefined, "To get the most recent version, or leave feedback, go to:"); 
+    lblContact.add("statictext", undefined, "https://github.com/antipalindrome/Photoshop-Export-Layers-to-Files-Fast"); 
 
-  return dialog;
+    return dialog;
 }
