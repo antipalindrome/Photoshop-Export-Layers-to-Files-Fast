@@ -632,7 +632,7 @@ function exportLayers(exportLayerTarget, progressBarWindow) {
                     }
                 }
             }
-                
+
             trimImage();
         }
 
