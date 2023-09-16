@@ -1422,7 +1422,7 @@ function showDialog() {
     fields.txtScale.onChange = function() {
     var scaleNum = parseInt(this.text, 10);
     if (isNaN(scaleNum)) {
-        scaleNum = prefs.scale;
+        scaleNum = prefs.scaleValue;
     }
     scaleNum = Math.max(scaleNum, 1);
     this.text = scaleNum;
