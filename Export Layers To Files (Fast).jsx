@@ -997,9 +997,23 @@ function getUniqueFileName(fileName, layer, index) {
     return false;
 }
 
+function getSomeLayer(layerSet) {
+	if (layerSet.artLayers.length > 0) {
+		return layerSet.artLayers[0];
+	}
+	for (var i = 0; i < layerSet.layerSets.length; i++) {
+		var l = getSomeLayer(layerSet.layerSets[i]);
+		if (l !== null) {
+			return l;
+		}
+	}
+	return null;
+}
+
 function mergeTopGroups(doc) {
     var layerSets = doc.layerSets;
     var layerSetList = [];
+    doc.activeLayer = getSomeLayer(doc);
     for (var i = 0; i < layerSets.length; i++) {
         layerSetList.push(layerSets[i]);
     }
