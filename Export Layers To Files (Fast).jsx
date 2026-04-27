@@ -479,6 +479,8 @@ function main() {
             finalizeSettingsPrerun();
         }
         prefs.documentName = app.activeDocument.name.split('.')[0];
+        var savedDialogMode = app.displayDialogs;
+        app.displayDialogs = DialogModes.NO;
         env.documentCopy = app.activeDocument.duplicate();
 
         // collect layers
@@ -535,6 +537,7 @@ function main() {
 
         app.activeDocument.close(SaveOptions.DONOTSAVECHANGES);
         env.documentCopy = null;
+        app.displayDialogs = savedDialogMode;
     } else {
         return "cancel";
     }
@@ -781,7 +784,6 @@ function exportLayersWithManifest(layersToExport, count, progressBarWindow, retV
             startIdx = 0;
             csvManifestDebugLog("exportLayersWithManifest", "targetGroup OK", wantPath, filteredLayers.length, layersToExport.length);
         } else {
-            alert("CSV Manifest: could not find this folder in the collected layer tree (nested groups need the full path):\n\n" + wantPath + "\n\nThe export will use all layers in the current export set. Check the Target Folder choice or document structure.", "CSV Manifest", true);
             csvManifestDebugLog("exportLayersWithManifest", "targetGroup NOT FOUND", wantPath, layersToExport.length, count);
         }
     }
@@ -816,8 +818,23 @@ function exportLayersWithManifest(layersToExport, count, progressBarWindow, retV
         var manifestEntry = (csvIdx < csvManifestData.length) ? csvManifestData[csvIdx] : null;
 
         if (manifestEntry && manifestEntry.width > 0 && manifestEntry.height > 0) {
-            resizeImageToFit(manifestEntry.width, manifestEntry.height, manifestEntry.padding);
-            setCanvasToExactSize(manifestEntry.width, manifestEntry.height);
+            var skipLayer = false;
+            if (manifestEntry.mode === "canvas") {
+                if (!padCanvasOnly(manifestEntry.width, manifestEntry.height)) {
+                    skipLayer = true;
+                }
+            } else {
+                resizeImageToFit(manifestEntry.width, manifestEntry.height, manifestEntry.padding);
+                setCanvasToExactSize(manifestEntry.width, manifestEntry.height);
+            }
+
+            if (skipLayer) {
+                restoreHistory();
+                layer.visible = false;
+                csvIdx++;
+                retVal.error = true;
+                continue;
+            }
 
             var localFolders = "";
             if (!prefs.csvFlattenFolders) {
@@ -892,6 +909,29 @@ function addPadding() {
     var heightUnit = new UnitValue(height + " pixels");
 
     app.activeDocument.resizeCanvas(widthUnit, heightUnit, AnchorPosition.MIDDLECENTER);
+}
+
+// Pads the document to exact targetW x targetH (centered, no resampling).
+// Returns false if content is larger than target.
+function padCanvasOnly(targetW, targetH) {
+    var doc = app.activeDocument;
+    if (isNaN(targetW) || isNaN(targetH) || targetW < 1 || targetH < 1) {
+        return false;
+    }
+    var curW = doc.width.as("px");
+    var curH = doc.height.as("px");
+    if (curW > targetW || curH > targetH) {
+        return false;
+    }
+    if (Math.round(curW) === targetW && Math.round(curH) === targetH) {
+        return true;
+    }
+    doc.resizeCanvas(
+        UnitValue(targetW, "px"),
+        UnitValue(targetH, "px"),
+        AnchorPosition.MIDDLECENTER
+    );
+    return true;
 }
 
 // =====================
@@ -1110,17 +1150,22 @@ function parseCsvFile(filePath) {
             var w = parseInt(col0, 10);
             var h = parseInt(csvTrim(parts[1]), 10);
             var p = parseInt(csvTrim(parts[2]), 10);
-            // Filename may contain commas inside quotes, but the spec says
-            // the format is simple: Width, Height, Padding, Filename.
-            // Rejoin remaining parts in case the name had commas.
+
+            // Detect optional 5th column (mode): last part is mode if it
+            // matches a known keyword; otherwise it's part of the filename.
+            var lastPart = csvTrim(parts[parts.length - 1]).toLowerCase();
+            var hasMode = (parts.length >= 5) && (lastPart === "fit" || lastPart === "canvas");
+            var mode = hasMode ? lastPart : "fit";
+
+            var fnEnd = hasMode ? parts.length - 1 : parts.length;
             var nameParts = [];
-            for (var k = 3; k < parts.length; k++) {
+            for (var k = 3; k < fnEnd; k++) {
                 nameParts.push(csvTrim(parts[k]));
             }
             var fn = nameParts.join(",");
 
             if (isNaN(w) || isNaN(h) || isNaN(p)) { continue; }
-            result.push({ width: w, height: h, padding: p, filename: fn });
+            result.push({ width: w, height: h, padding: p, filename: fn, mode: mode });
         }
         f.close();
     } catch (e) {
@@ -1549,7 +1594,8 @@ function showManifestReviewDialog(targetLayerCount) {
     txtManifestPreview.enabled = false;
 
     function manifestRowLabel(row) {
-        return String(row.width) + " x " + String(row.height) + "  pad " + String(row.padding) + "  |  " + row.filename;
+        var m = (row.mode === "canvas") ? "canvas" : "fit";
+        return String(row.width) + " x " + String(row.height) + "  pad " + String(row.padding) + "  " + m + "  |  " + row.filename;
     }
 
     function syncManifestPreview() {
@@ -1580,11 +1626,14 @@ function showManifestReviewDialog(targetLayerCount) {
 
     pnlEdit.add("statictext", undefined, "Name:");
     var txtEditName = pnlEdit.add("edittext", undefined, "");
-    txtEditName.preferredSize.width = 150;
+    txtEditName.preferredSize.width = 120;
+
+    pnlEdit.add("statictext", undefined, "Mode:");
+    var ddEditMode = pnlEdit.add("dropdownlist", undefined, ["fit", "canvas"]);
+    ddEditMode.selection = 0;
 
     var btnApply = pnlEdit.add("button", undefined, "Apply");
 
-    // When user selects a row, populate edit fields
     lstManifest.onChange = function() {
         var sel = lstManifest.selection;
         if (sel) {
@@ -1594,6 +1643,7 @@ function showManifestReviewDialog(targetLayerCount) {
             txtEditH.text = String(entry.height);
             txtEditP.text = String(entry.padding);
             txtEditName.text = entry.filename;
+            ddEditMode.selection = (entry.mode === "canvas") ? 1 : 0;
         }
     };
 
@@ -1615,6 +1665,7 @@ function showManifestReviewDialog(targetLayerCount) {
         csvManifestData[idx].height = h;
         csvManifestData[idx].padding = p;
         csvManifestData[idx].filename = csvTrim(txtEditName.text);
+        csvManifestData[idx].mode = (ddEditMode.selection && ddEditMode.selection.index === 1) ? "canvas" : "fit";
 
         sel.text = manifestRowLabel(csvManifestData[idx]);
         syncManifestPreview();
@@ -1629,7 +1680,7 @@ function showManifestReviewDialog(targetLayerCount) {
     var btnDelete = grpRowActions.add("button", undefined, "Delete Selected");
 
     btnAdd.onClick = function() {
-        csvManifestData.push({ width: 0, height: 0, padding: 0, filename: "" });
+        csvManifestData.push({ width: 0, height: 0, padding: 0, filename: "", mode: "fit" });
         refreshList();
     };
 
@@ -2690,13 +2741,19 @@ function bootstrap() {
         }
 
         if (env.documentCopy) {
+            var _dm = app.displayDialogs;
+            app.displayDialogs = DialogModes.NO;
             env.documentCopy.close(SaveOptions.DONOTSAVECHANGES);
+            app.displayDialogs = _dm;
         }
     } catch (e) {
         // report errors unless the user cancelled
         if (e.number != 8007) showError(e);
         if (env.documentCopy) {
+            var _dm2 = app.displayDialogs;
+            app.displayDialogs = DialogModes.NO;
             env.documentCopy.close(SaveOptions.DONOTSAVECHANGES);
+            app.displayDialogs = _dm2;
         }
         return "cancel";
     }

@@ -1,166 +1,214 @@
-# Photoshop-Export-Layers-to-Files-Fast
+# Photoshop Export Layers to Files (Fast)
 
-This script allows you to export layers in your Photoshop document as individual files at a speed much faster than the built-in script from Adobe.
+![Version](https://img.shields.io/badge/version-v2.7.1-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
 
-This script does not try to achieve feature parity with the built-in script, but rather provide a more streamlined / performant experience. That being said, feel free to [make feature requests](https://github.com/antipalindrome/Photoshop-Export-Layers-to-Files-Fast/issues/new), and feel free to contribute to it and make it even more powerful!
-
-## Table of Contents
-
-- [How to Use](#how-to-use)
-- [Example Screenshot](#example-screenshot)
-- [Features](#features)
-- [Extra Field Documentation](#extra-field-documentation)
-- [Batch Processing / Actions](#batch-processing--actions)
-- [Requirements](#requirements)
-- [Contributing](#contributing)
-- [Feedback / Bugs](#feedback--bugs)
-
-
-## How to Use
-
-_Disclaimer:_ We are not associated with Adobe in any way. For any issues relating to Adobe products or Adobe scripts please contact them directly. We have never had an issue, but **please use this script at your own risk**. We are not responsible for any lost data or damaged PSDs so always make a back-up.
-
-- Go to the [releases page](https://github.com/antipalindrome/Photoshop-Export-Layers-to-Files-Fast/releases) and download [the most recent release](https://github.com/antipalindrome/Photoshop-Export-Layers-to-Files-Fast/releases/latest).
-- In Photoshop go to `File -> Scripts -> Browse...` and select the `Export Layers To Files (Fast).jsx` file.
-  - NOTE: The script needs the `Export Layers To Files (Fast)-progress_bar.json` file to run as well. Without this you will get a "Progress bar resource corrupt" error. Please ensure that the `.jsx` and the `.json` files are siblings in the same directory.
-- You can add the script to the Scripts menu by adding all of the script files to `Photoshop > Presets > Scripts`
-  - Windows: `/Program Files/Adobe/Adobe Photoshop VERSION/Presets/Scripts`
-  - Mac: `/Applications/Adobe Photoshop VERSION/Presets/Scripts`
-
-## Example Screenshot
+Export every layer in your Photoshop document as its own image file — much faster than Adobe's built-in export script. Supports PNG, JPEG, TIFF, PDF, Targa, BMP, and PSD. Includes a **CSV Manifest** mode that lets you define exact output dimensions, padding, and filenames per layer from a spreadsheet.
 
 ![Screenshot of the script dialog](example.png)
 
-## Features
+---
 
-Some of the features of the script include...
+## Table of Contents
 
-- Supported export formats:
-  - PNG (8 and 24 bit)
-  - JPEG
-  - TIFF
-  - PDF
-  - Targa
-  - BMP
-  - PSD
-- Handles nesting in grouped layers
-- Export either all layers or visible only
-- Files are named either using layer names, layer + group names, or automatic layer indices
-- Lowest layer can be treated as common background
-- Exported images can have layer size or canvas size (trimming option)
-- Last used dialog settings are remembered
-- A selected group can be exported as usual (layer by layer) while everything else is left in tact. (This way variable content can be exported for complex fixed background and foreground.)
-- Can export groups as folder hierarchy; conflicting folders are renamed
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [Export Options](#export-options)
+  - [Format](#format)
+  - [Layers](#layers)
+  - [Filenames](#filenames)
+  - [Trimming & Padding](#trimming--padding)
+  - [Scaling](#scaling)
+  - [Prefix & Suffix](#prefix--suffix)
+- [CSV Manifest Export](#csv-manifest-export)
+- [Batch Processing](#batch-processing)
+- [Contributing](#contributing)
+- [Requirements](#requirements)
+- [License](#license)
 
-## Extra Field Documentation
+---
 
-### Selected Group
+## Installation
 
-Will only export the selected group. Note that you must selected the group before launching the script, otherwise this option will be disabled. When you run the script this way, all other layers will be left untouched, meaning any visible layers on top or bottom may show in the export.
+> **Note:** This script is not affiliated with Adobe. Use at your own risk — always back up your PSDs before running.
 
-### Ignore Layers Starting With
+**Option A — Run once:**
+1. Go to `File → Scripts → Browse…` in Photoshop
+2. Select `Export Layers To Files (Fast).jsx`
 
-When this is selected, you can specify a prefix that will be used to match against layer names. Any matching layers will be ignored during the export.
+**Option B — Add to Scripts menu (permanent):**
+1. Copy both `Export Layers To Files (Fast).jsx` **and** `Export Layers To Files (Fast)-progress_bar.json` into your Photoshop Scripts folder:
+   - **Mac:** `/Applications/Adobe Photoshop <VERSION>/Presets/Scripts`
+   - **Windows:** `C:\Program Files\Adobe\Adobe Photoshop <VERSION>\Presets\Scripts`
+2. Restart Photoshop — the script will appear under `File → Scripts`
 
-For example, if you specify `x` in the input, all layers starting with the letter `x` will not be exported.
+> **Important:** The `.jsx` and `.json` files must stay in the same directory. Without the JSON file you will get a *"Progress bar resource corrupt"* error.
+
+---
+
+## Quick Start
+
+1. Open your Photoshop document
+2. Run the script (`File → Scripts → Browse…` → select the `.jsx`)
+3. Choose your output folder and export format
+4. Click **Run**
+
+Settings are remembered between runs.
+
+---
+
+## Export Options
+
+### Format
+
+| Format | Notes |
+|--------|-------|
+| PNG-24 | Full quality, transparency supported |
+| PNG-8  | Indexed color, smaller file size |
+| JPEG   | Adjustable quality (0–100) |
+| TIFF   | Lossless, large files |
+| PDF    | Choose PDF standard |
+| Targa  | 24-bit with optional alpha |
+| BMP    | Uncompressed raster |
+| PSD    | Full Photoshop document per layer |
+
+### Layers
+
+| Option | Behavior |
+|--------|----------|
+| All layers | Exports every layer in the document |
+| Visible only | Skips hidden layers |
+| Selected group | Exports only the layers inside the currently selected group; all other layers remain untouched |
+
+Use **Ignore Layers Starting With** to skip layers whose names begin with a specified prefix (e.g. `x` to ignore `x_draft`, `x_old`).
 
 ### Filenames
 
-| Option                             | Example                                                    |
-| ---------------------------------- | ---------------------------------------------------------- |
-| `Use Layer Name (strip extension)` | `layer-3.png` => `layer-3.png`                             |
-| `Use Layer Name (keep extension)`  | `layer-3.png` => `layer-3.png.png`                         |
-| `Use layer and parent group names` | `group 1 > layer-3` => `group-1-layer-3.png`               |
-| `Use index descending`             | `layer-10`, where `layer-10` is the top-most layer => `01` |
-| `Use index ascending`              | `layer-5`, where `layer-5` is the top-most layer => `5`    |
+| Option | Example |
+|--------|---------|
+| Use Layer Name (strip extension) | `icon.png` → `icon.png` |
+| Use Layer Name (keep extension) | `icon.png` → `icon.png.png` |
+| Use layer and parent group names | `Group 1 > icon` → `Group-1-icon.png` |
+| Use index ascending | Top-most layer → `1`, next → `2`, … |
+| Use index descending | Top-most layer → `N`, next → `N-1`, … |
 
-### Use Custom Delimiter
+**Custom Delimiter:** Replaces spaces in layer names. Default is `-`. The following characters are not allowed: `\ / * ? | . : " < > % , ; =`
 
-`Use Custom Delimiter` will enable the use of a custom delimiter. Custom delimiters will be used instead of spaces in layer names and in the prefix/suffix fields. Note that the use of a space inside the file name is not supported by Photoshop, so by default a `-` delimiter will be used if not custom delimiter is specified.
+### Trimming & Padding
 
-For example:
-`my layer 1` will export as `my-layer-1`
+- **Trim each layer individually** — crops each exported image to its content bounds
+- **Trim combined** — crops to the combined bounds of all layers
+- **Padding** — adds pixel padding around trimmed content (enter a value in pixels)
 
-The following characters are **not** supported in the delimiter field:
-`\`, `/`, `*`, `?`, `|`, `.`, `:`, `"`, `<`, `>`, `%`, `,`, `;`, `=`
+### Scaling
 
-### Prefix/Suffix
+Enter a percentage to scale all exported images (e.g. `50` for half-size, `200` for double). Leave at `100` for no scaling.
 
-`Prefix` and `Suffix` will add a prefix and suffix, respectively, to every exported filename, and is compatible with all the options in Filenames above.
+### Prefix & Suffix
 
-The following characters are **not** supported in the prefix or suffix field:
-`\`, `/`, `*`, `?`, `|`, `:`, `"`, `<`, `>`
+Added to every exported filename. Support variable substitution:
 
-| Prefix    | Suffix       | Output Example               |
-| --------- | ------------ | ---------------------------- |
-| `test-`   | N/A          | `test-layer-3.png`           |
-| N/A       | `.scale-100` | `layer-3.scale-100.png`      |
-| `test-`   | `.scale-100` | `test-layer-3.scale-100.png` |
-| `{ii}-`   | N/A          | `04-layer-3.png`             |
-| `{YYYY}-` | N/A          | `2021-layer-3.png`           |
+| Variable | Replaced with |
+|----------|--------------|
+| `{i}` | Layer index |
+| `{ii}` | Layer index with leading zero |
+| `{iii}` | Layer index with up to two leading zeros |
+| `{iiii}` | Layer index with up to three leading zeros |
+| `{ln}` | Layer name (useful when exporting by index) |
+| `{dn}` | Document name |
+| `{M}` | Month |
+| `{MM}` | Month with leading zero |
+| `{D}` | Day of month |
+| `{DD}` | Day of month with leading zero |
+| `{YY}` | Year (last two digits) |
+| `{YYYY}` | Year (four digits) |
+| `{HH}` | Hours with leading zero |
+| `{mm}` | Minutes with leading zero |
+| `{ss}` | Seconds with leading zero |
+| `{sss}` | Milliseconds with leading zeros |
 
-#### Variable Substitution
+**Examples:**
 
-Prefix and Suffix fields can take the following string substitutes.
+| Prefix | Suffix | Output |
+|--------|--------|--------|
+| `icon-` | — | `icon-layer-name.png` |
+| `{ii}-` | — | `04-layer-name.png` |
+| `{YYYY}-` | — | `2024-layer-name.png` |
+| — | `.scale-100` | `layer-name.scale-100.png` |
 
-| Option   | Example                                                                                  |
-| -------- | ---------------------------------------------------------------------------------------- |
-| `{i}`    | Will be replaced with the index of the layer                                             |
-| `{ii}`   | Will be replaced with the index of the layer, with a leading zero                        |
-| `{iii}`  | Will be replaced with the index of the layer, with up to two leading zeros               |
-| `{iiii}` | Will be replaced with the index of the layer, with up to three leading zeros             |
-| `{ln}`   | Will be replaced with the layer name. Useful for when exporting filenames as their index |
-| `{dn}`   | Will be replaced with the document name                                                  |
-| `{M}`    | Will be replaced with the month                                                          |
-| `{MM}`   | Will be replaced with the month, with a leading zero                                     |
-| `{D}`    | Will be replaced with the date of the month                                              |
-| `{DD}`   | Will be replaced with the date of the month, with a leading zero                         |
-| `{YY}`   | Will be replaced with the year, as the last two digits                                   |
-| `{YYYY}` | Will be replaced with the year, as all four digits                                       |
-| `{HH}`   | Will be replaced with the hours, with a leading zero                                     |
-| `{mm}`   | Will be replaced with the minutes, with a leading zero                                   |
-| `{ss}`   | Will be replaced with the seconds, with a leading zero                                   |
-| `{sss}`  | Will be replaced with the milliseconds, with leading zeros                               |
+---
 
-### Known Gaps
+## CSV Manifest Export
 
-- Currently we do not support multiple artboards for export
+The **CSV Manifest Export** panel lets you define exact output dimensions, padding, and a custom filename for each layer from a CSV file. Layers are matched to rows by their order in the document (top-to-bottom).
 
-## Batch Processing / Actions
+This is useful when different layers need different canvas sizes — for example, a slot game where each symbol has a different aspect ratio.
 
-Many people like to set up the script once, and then use batch processing or actions to automatically run the script.
+### CSV Format
 
-To use the script this way, follow these instructions:
+```csv
+Width,Height,Padding,Filename,Mode
+500,500,10,symbol_01,fit
+600,400,5,banner_01,canvas
+```
 
-1. Run the script, set your desired settings in the dialog and then hit "Save and Close"
-2. Open up the script file, in TextEdit (Mac), Notepad (Windows), or in a code IDE.
-3. At the top of the script, locate the code that reads `var BATCH_OPERATION = false;`
-4. Change this to say `var BATCH_OPERATION = true;`
-5. You can now rerun the script, and it will auto-run with the previous settings.
+| Column | Required | Description |
+|--------|----------|-------------|
+| `Width` | Yes | Output canvas width in pixels |
+| `Height` | Yes | Output canvas height in pixels |
+| `Padding` | Yes | Padding in pixels applied around the layer content |
+| `Filename` | Yes | Output filename without extension |
+| `Mode` | No | `fit` (default) or `canvas` — see below |
 
-In order to make changes to the settings again, you'll need to change `BATCH_OPERATION` back to `false` and rerun the script.
+### Mode Values
 
+| Mode | Behavior |
+|------|----------|
+| `fit` | Scales the layer to fit inside the canvas minus padding |
+| `canvas` | Resizes the canvas to `Width × Height` without scaling the layer |
 
-## Requirements
+See [`example_manifest.csv`](example_manifest.csv) for a working example.
 
-We do our best to have the script be backwards compatible (back to Adobe Photoshop CS2) but are limited in what we can test for, both by Photoshop versions as well as OS. If you are encountering any issues with the current version, try downloading [previous versions](https://github.com/antipalindrome/Photoshop-Export-Layers-to-Files-Fast/releases) of the script instead.
+### How to Use
+
+1. In the script dialog, find the **Manifest Export (CSV)** panel
+2. Click the folder icon and select your `.csv` file
+3. Click **Run** — the script reads each row and exports the corresponding layer with the specified settings
+
+> The number of CSV rows should match the number of exported layers. Extra rows are ignored; layers without a matching row export with default settings.
+
+---
+
+## Batch Processing
+
+Run the script silently with no dialog, using previously saved settings:
+
+1. Run the script normally, configure your settings, and click **Save and Close**
+2. Open `Export Layers To Files (Fast).jsx` in a text editor
+3. Near the top, find: `var BATCH_OPERATION = false;`
+4. Change it to: `var BATCH_OPERATION = true;`
+5. Save the file — the script now runs without a dialog every time
+
+To edit settings again, set `BATCH_OPERATION` back to `false` and re-run.
+
+---
 
 ## Contributing
 
-Please feel free to contribute! We appreciate it!
+Contributions are welcome!
 
-Here are some things to know:
+- **UI changes:** Load `dev/dialog.js` at [scriptui.joonas.me](https://scriptui.joonas.me/), make your changes, export the dialog, paste the comment block back into `dev/dialog.js`, and paste the generated code into the `showDialog` function in the `.jsx` file.
+- **Settings persistence:** Any new UI control must save and restore its value between script runs.
+- **Issues / feature requests:** [Open an issue](https://github.com/antipalindrome/Photoshop-Export-Layers-to-Files-Fast/issues/new)
 
-- When updating the dialog UI, please reference the `dev/dialog.js` and import it at https://scriptui.joonas.me/. Then, when you've made the appropriate UI changes, export the dialog and copy/paste the top comment block into the `dev/dialog.js` file and copy/paste the remainder into the `showDialog` function inside `Export Layers To Files (Fast).jsx`.
-- Be sure to test that any UI you add gets saved between script runs. i.e. If the user checks a checkbox, that checkbox should remain checked the next time they run the script.
+---
 
-## Feedback / Bugs
+## Requirements
 
-Please use GitHub to write feedback/bugs/suggestions by [filing an issue](https://github.com/antipalindrome/Photoshop-Export-Layers-to-Files-Fast/issues).
+Adobe Photoshop CS2 or higher. Tested on Mac and Windows. If you encounter version-specific issues, try a [previous release](https://github.com/antipalindrome/Photoshop-Export-Layers-to-Files-Fast/releases).
 
-If you encounter a bug, please include the following information:
+---
 
-- Your OS and OS Version
-- Your Photoshop version and release number
-- A screenshot (if applicable)
-- A `.psd` that reproduces the issue (the simpler the better)
+## License
+
+MIT © 2012–2024
