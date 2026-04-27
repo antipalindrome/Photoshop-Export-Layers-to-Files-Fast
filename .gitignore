@@ -1,0 +1,15 @@
+# macOS
+.DS_Store
+
+# Test outputs and test assets
+Test/
+*.psb
+
+# Development artifacts
+dev/
+debug/
+*.log
+
+# CSV test/working files (only example_manifest.csv is kept)
+CSV/
+Version_02.csv
